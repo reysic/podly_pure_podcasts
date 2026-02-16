@@ -231,11 +231,11 @@ export default function JobsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-base font-semibold text-gray-900">Jobs Manager</h2>
-            <p className="text-xs text-gray-600">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Jobs Manager</h2>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
               {run
                 ? hasActiveWork
                   ? `Processing · Last update ${formatDateTime(run.updated_at)}`
@@ -246,14 +246,14 @@ export default function JobsPage() {
           {run ? (
             <StatusBadge status={run.status} />
           ) : (
-            <span className="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-800">
+            <span className="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
               idle
             </span>
           )}
         </div>
 
         {statusError && (
-          <div className="mt-2 text-xs text-red-600">{statusError}</div>
+          <div className="mt-2 text-xs text-red-600 dark:text-red-400">{statusError}</div>
         )}
 
         {run ? (
@@ -267,15 +267,15 @@ export default function JobsPage() {
             </div>
             <div className="mt-4 space-y-1">
               <ProgressBar value={run.progress_percentage} />
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500 dark:text-gray-400">
                 {run.completed_jobs} completed · {run.skipped_jobs} skipped · {run.failed_jobs} failed of {run.total_jobs} jobs
               </div>
             </div>
-            <div className="mt-3 text-xs text-gray-500">
-              Trigger: <span className="font-medium text-gray-700">{run.trigger}</span>
+            <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+              Trigger: <span className="font-medium text-gray-700 dark:text-gray-300">{run.trigger}</span>
             </div>
             {run.counters_reset_at ? (
-              <div className="mt-1 text-xs text-gray-500">
+              <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 Stats since {formatDateTime(run.counters_reset_at)}
               </div>
             ) : null}
@@ -283,19 +283,19 @@ export default function JobsPage() {
         ) : null}
       </div>
 
-      <div className="rounded border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-base font-semibold text-gray-900">Post Cleanup</h3>
-            <p className="text-xs text-gray-600">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Post Cleanup</h3>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
               {cleanupDisabled
                 ? 'Cleanup is disabled while retention days are unset or zero.'
                 : `Episodes older than ${retentionDays} day${retentionDays === 1 ? '' : 's'} will be removed.`}
             </p>
           </div>
           <div className="text-right">
-            <div className="text-xs uppercase tracking-wide text-gray-500">Eligible</div>
-            <div className="text-lg font-semibold text-gray-900">
+            <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Eligible</div>
+            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               {cleanupLoading ? '…' : cleanupEligibleCount}
             </div>
           </div>
@@ -385,31 +385,31 @@ export default function JobsPage() {
       )}
 
       {jobs.length === 0 && !loading ? (
-        <div className="text-sm text-gray-600">No jobs to display.</div>
+        <div className="text-sm text-gray-600 dark:text-gray-400">No jobs to display.</div>
       ) : null}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {jobs.map((job) => (
-          <div key={job.job_id} className="bg-white border rounded shadow-sm p-4 space-y-3">
+          <div key={job.job_id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-gray-900 truncate">
+              <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                 {job.post_title || 'Untitled episode'}
               </div>
               <StatusBadge status={job.status} />
             </div>
-            <div className="text-xs text-gray-600 truncate">{job.feed_title || 'Unknown feed'}</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400 truncate">{job.feed_title || 'Unknown feed'}</div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs text-gray-700">
+              <div className="flex items-center justify-between text-xs text-gray-700 dark:text-gray-300">
                 <span>Priority</span>
                 <span className="font-medium">{job.priority}</span>
               </div>
-              <div className="flex items-center justify-between text-xs text-gray-700">
+              <div className="flex items-center justify-between text-xs text-gray-700 dark:text-gray-300">
                 <span>Step</span>
                 <span className="font-medium">{job.step}/{job.total_steps} {job.step_name ? `· ${job.step_name}` : ''}</span>
               </div>
               <div className="space-y-1">
-                <div className="flex items-center justify-between text-xs text-gray-700">
+                <div className="flex items-center justify-between text-xs text-gray-700 dark:text-gray-300">
                   <span>Progress</span>
                   <span className="font-medium">{Math.round(job.progress_percentage)}%</span>
                 </div>
@@ -417,7 +417,7 @@ export default function JobsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+            <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400">
               <div>
                 <div className="text-gray-500">Job ID</div>
                 <div className="truncate" title={job.job_id}>{job.job_id}</div>

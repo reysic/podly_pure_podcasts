@@ -461,14 +461,14 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
   };
 
   return (
-    <div className="h-full flex flex-col bg-white relative">
+    <div className="h-full flex flex-col bg-white dark:bg-gray-800 relative">
       {/* Mobile Header */}
-      <div className="flex items-center justify-between p-4 border-b lg:hidden">
-        <h2 className="text-lg font-semibold text-gray-900">Podcast Details</h2>
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 lg:hidden">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Podcast Details</h2>
         {onClose && (
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600"
+            className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -478,7 +478,7 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
       </div>
 
       {/* Sticky Header - appears when scrolling */}
-      <div className={`absolute top-16 lg:top-0 left-0 right-0 z-10 bg-white border-b transition-all duration-300 ${
+      <div className={`absolute top-16 lg:top-0 left-0 right-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 transition-all duration-300 ${
         showStickyHeader ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'
       }`}>
         <div className="p-4">
@@ -491,15 +491,15 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
               />
             )}
             <div className="flex-1 min-w-0">
-              <h2 className="font-semibold text-gray-900 truncate">{currentFeed.title}</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{currentFeed.title}</h2>
               {currentFeed.author && (
-                <p className="text-sm text-gray-600 truncate">by {currentFeed.author}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 truncate">by {currentFeed.author}</p>
               )}
             </div>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="text-sm border border-gray-300 rounded-md px-3 py-1 bg-white"
+              className="text-sm border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
@@ -631,7 +631,7 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
               <div className="relative menu-container">
                 <button
                   onClick={() => setShowMenu(!showMenu)}
-                  className="w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors"
+                  className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors"
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
@@ -640,7 +640,7 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
 
                 {/* Dropdown Menu */}
                 {showMenu && (
-                  <div className="absolute top-full right-0 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20 max-w-[calc(100vw-2rem)]">
+                  <div className="absolute top-full right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-20 max-w-[calc(100vw-2rem)]">
                       {canBulkModifyEpisodes && (
                         <>
                           <button
@@ -651,9 +651,9 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                             setShowMenu(false);
                           }}
                           disabled={bulkWhitelistMutation.isPending || totalCount === 0 || allWhitelisted}
-                          className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <span className="text-green-600">✓</span>
+                          <span className="text-green-600 dark:text-green-400">✓</span>
                           Enable all episodes
                         </button>
 
@@ -665,9 +665,9 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                             setShowMenu(false);
                           }}
                           disabled={bulkWhitelistMutation.isPending || totalCount === 0 || !allWhitelisted}
-                          className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <span className="text-red-600">⛔</span>
+                          <span className="text-red-600 dark:text-red-400">⛔</span>
                           Disable all episodes
                         </button>
                       </>

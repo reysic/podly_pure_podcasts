@@ -77,43 +77,43 @@ export default function BillingPage() {
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Billing</h1>
-        <p className="text-sm text-gray-600 mt-1">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Billing</h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
           Pay what you want for the Starter Bundle (10 feeds).
         </p>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5 space-y-4">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-5 space-y-4">
         <div className="flex flex-wrap gap-3 items-center justify-between">
           <div>
-            <div className="text-sm text-gray-600">Current plan</div>
-            <div className="text-lg font-semibold text-gray-900">
+            <div className="text-sm text-gray-600 dark:text-gray-400">Current plan</div>
+            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               {isSubscribed ? 'Starter Bundle (10 Feeds)' : 'Free Tier'}
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
               {planLimitInfo}
             </div>
           </div>
           <div className="text-right">
-            <div className="text-sm text-gray-600">Monthly payment</div>
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-sm text-gray-600 dark:text-gray-400">Monthly payment</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {isSubscribed ? `$${currentAmountDollars.toFixed(2)}` : '$0.00'}
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
               Subscription status: {data.subscription_status || 'inactive'}
             </div>
           </div>
         </div>
 
-        <div className="space-y-3 pt-4 border-t border-gray-100">
-          <div className="text-sm text-gray-700 font-medium">
+        <div className="space-y-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+          <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">
             {isSubscribed ? 'Update your price' : 'Subscribe to Starter Bundle'}
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             Get 10 feeds for a monthly price of your choice (min ${minAmountDollars.toFixed(2)}).
           </p>
           
-          <div className="text-xs text-amber-800 bg-amber-50 p-3 rounded-md border border-amber-200">
+          <div className="text-xs text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-900/30 p-3 rounded-md border border-amber-200 dark:border-amber-700">
             <strong>Note:</strong> We suggest paying ~$1 per feed you use. If revenue doesn't cover server costs, we may have to shut down the service.
           </div>
           

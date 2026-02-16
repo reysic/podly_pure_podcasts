@@ -152,14 +152,14 @@ export default function AudioPlayer() {
   const shouldShowError = error && error !== dismissedError;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg z-50">
       <div className="max-w-7xl mx-auto px-4 py-3">
         {shouldShowError && (
-          <div className="mb-2 p-2 bg-red-100 border border-red-300 rounded text-red-700 text-sm flex items-center justify-between">
+          <div className="mb-2 p-2 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded text-red-700 dark:text-red-300 text-sm flex items-center justify-between">
             <span>{error}</span>
             <button
               onClick={dismissError}
-              className="ml-2 p-1 hover:bg-red-200 rounded transition-colors"
+              className="ml-2 p-1 hover:bg-red-200 dark:hover:bg-red-800/50 rounded transition-colors"
               aria-label="Dismiss error"
             >
               <XMarkIcon className="w-4 h-4" />
