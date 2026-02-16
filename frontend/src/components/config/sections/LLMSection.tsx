@@ -90,10 +90,10 @@ export default function LLMSection() {
         <label className="flex items-start justify-between gap-3">
           <div className="w-60">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700">OpenAI Base URL</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">OpenAI Base URL</span>
               <button
                 type="button"
-                className="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50"
+                className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700"
                 onClick={() => setShowBaseUrlInfo((v) => !v)}
                 title="When is this used?"
               >
