@@ -129,11 +129,11 @@ export default function LLMSection() {
                 onChange={(e) => setField(['llm', 'llm_model'], e.target.value)}
                 placeholder="e.g. groq/openai/gpt-oss-120b"
               />
-              <div className="mt-3 p-3 bg-gray-50 rounded-md border border-gray-200">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   GitHub Copilot Integration
                 </label>
-                <p className="text-xs text-gray-500 mb-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                   Enter your GitHub Personal Access Token to browse and select Copilot AI models
                 </p>
                 <div className="flex gap-2 items-center">
