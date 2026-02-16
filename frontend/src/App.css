@@ -111,5 +111,6 @@ select.input {
 }
 
 textarea.input {
-  @apply min-h-[80px] resize-vertical;
+  @apply min-h-[80px];
+  resize: vertical;
 }
