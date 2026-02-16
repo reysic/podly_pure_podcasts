@@ -175,14 +175,14 @@ function AppShell() {
                   {billingSummary && !isAdmin && (
                     <>
                       <div
-                        className="px-2 py-1 rounded-md border border-blue-200 text-blue-700 bg-blue-50 text-xs whitespace-nowrap"
+                        className="px-2 py-1 rounded-md border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 text-xs whitespace-nowrap"
                         title="Feeds included in your plan"
                       >
                         Feeds {billingSummary.feeds_in_use}/{billingSummary.feed_allowance}
                       </div>
                       <Link
                         to="/billing"
-                        className="px-2 py-1 rounded-md border border-blue-200 text-blue-700 bg-white hover:bg-blue-50 text-xs whitespace-nowrap transition-colors"
+                        className="px-2 py-1 rounded-md border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-400 bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-xs whitespace-nowrap transition-colors"
                       >
                         Change plan
                       </Link>
@@ -204,14 +204,14 @@ function AppShell() {
               {requireAuth && user && billingSummary && !isAdmin && (
                 <>
                   <div
-                    className="px-2 py-1 rounded-md border border-blue-200 text-blue-700 bg-blue-50 text-xs whitespace-nowrap"
+                    className="px-2 py-1 rounded-md border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 text-xs whitespace-nowrap"
                     title="Feeds included in your plan"
                   >
                     Feeds {billingSummary.feeds_in_use}/{billingSummary.feed_allowance}
                   </div>
                   <Link
                     to="/billing"
-                    className="px-2 py-1 rounded-md border border-blue-200 text-blue-700 bg-white text-xs whitespace-nowrap"
+                    className="px-2 py-1 rounded-md border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-400 bg-white dark:bg-gray-800 text-xs whitespace-nowrap"
                   >
                     Change plan
                   </Link>
@@ -291,8 +291,8 @@ function AppShell() {
                     </button>
                     {requireAuth && user && (
                       <>
-                        <div className="border-t border-gray-100 my-2" />
-                        <div className="px-4 py-2 text-sm text-gray-500">
+                        <div className="border-t border-gray-100 dark:border-gray-700 my-2" />
+                        <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
                           {user.username}
                         </div>
                         <button
@@ -300,7 +300,7 @@ function AppShell() {
                             logout();
                             setMobileMenuOpen(false);
                           }}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                         >
                           Logout
                         </button>

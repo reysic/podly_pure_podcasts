@@ -50,13 +50,13 @@ export default function FeedList({ feeds, onFeedDeleted: _onFeedDeleted, onFeedS
           placeholder="Search feeds"
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
-          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-700"
         />
       </div>
       <div className="space-y-2 overflow-y-auto h-full pb-20">
         {filteredFeeds.length === 0 ? (
-          <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-center">
-            <p className="text-sm text-gray-500">
+          <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 px-4 py-8 text-center">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               No podcasts match &quot;{searchTerm}&quot;
             </p>
           </div>
@@ -64,8 +64,8 @@ export default function FeedList({ feeds, onFeedDeleted: _onFeedDeleted, onFeedS
           filteredFeeds.map((feed) => (
             <div 
               key={feed.id} 
-              className={`bg-white rounded-lg shadow border cursor-pointer transition-all hover:shadow-md group ${
-                selectedFeedId === feed.id ? 'ring-2 ring-blue-500 border-blue-200' : ''
+              className={`bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 cursor-pointer transition-all hover:shadow-md group ${
+                selectedFeedId === feed.id ? 'ring-2 ring-blue-500 dark:ring-blue-400 border-blue-200 dark:border-blue-600' : ''
               }`}
               onClick={() => onFeedSelected(feed)}
             >

@@ -176,7 +176,7 @@ export default function HomePage() {
       {selectedFeed && (
         <div className={`flex-1 lg:flex-[2] ${
           selectedFeed ? 'flex' : 'hidden lg:flex'
-        } flex-col bg-white rounded-lg shadow border overflow-hidden`}>
+        } flex-col bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 overflow-hidden`}>
           <FeedDetail 
             feed={selectedFeed} 
             onClose={() => setSelectedFeed(null)}
@@ -190,13 +190,13 @@ export default function HomePage() {
 
       {/* Empty State for Desktop */}
       {!selectedFeed && (
-        <div className="hidden lg:flex flex-[2] items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+        <div className="hidden lg:flex flex-[2] items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
           <div className="text-center">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
             </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No podcast selected</h3>
-            <p className="mt-1 text-sm text-gray-500">Select a podcast from the list to view details and episodes.</p>
+            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No podcast selected</h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Select a podcast from the list to view details and episodes.</p>
           </div>
         </div>
       )}
@@ -207,13 +207,13 @@ export default function HomePage() {
           onClick={() => setShowAddForm(false)}
         >
           <div
-            className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col max-h-[90vh]"
+            className="w-full max-w-3xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col max-h-[90vh]"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-gray-200 px-4 sm:px-6 py-4">
+            <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-4">
               <div>
-                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Add a Podcast Feed</h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100">Add a Podcast Feed</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   Paste an RSS URL or search the catalog to find shows to follow.
                 </p>
               </div>

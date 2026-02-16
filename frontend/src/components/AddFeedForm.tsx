@@ -164,10 +164,10 @@ export default function AddFeedForm({ onSuccess, onUpgradePlan, planLimitReached
   );
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Add New Podcast Feed</h3>
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 sm:p-6">
+      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Add New Podcast Feed</h3>
       {planLimitReached && (
-        <div className="mb-3 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+        <div className="mb-3 text-sm text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-md px-3 py-2">
           Your plan is full. Increase your feed allowance to add more.
         </div>
       )}
