@@ -478,9 +478,8 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
       </div>
 
       {/* Sticky Header - appears when scrolling */}
-      <div className={`absolute top-16 lg:top-0 left-0 right-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 transition-all duration-300 ${
-        showStickyHeader ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'
-      }`}>
+      <div className={`absolute top-16 lg:top-0 left-0 right-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 transition-all duration-300 ${showStickyHeader ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'
+        }`}>
         <div className="p-4">
           <div className="flex items-center gap-3">
             {currentFeed.image_url && (
@@ -547,11 +546,10 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                 {requireAuth && isAdmin && (
                   <div className="mt-2 flex items-center gap-2 flex-wrap text-sm">
                     <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium border ${
-                        isMember
+                      className={`px-2 py-1 rounded-full text-xs font-medium border ${isMember
                           ? 'bg-green-50 text-green-700 border-green-200'
                           : 'bg-gray-100 text-gray-600 border-gray-200'
-                      }`}
+                        }`}
                     >
                       {isMember ? 'Joined' : 'Not joined'}
                     </span>
@@ -572,9 +570,8 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                 <button
                   onClick={handleCopyRssToClipboard}
                   title="Copy Podly RSS feed URL"
-                  className={`flex items-center gap-3 px-5 py-2 bg-black hover:bg-gray-900 text-white rounded-lg font-medium transition-colors ${
-                    !canSubscribe ? 'opacity-60 cursor-not-allowed' : ''
-                  }`}
+                  className={`flex items-center gap-3 px-5 py-2 bg-black hover:bg-gray-900 text-white rounded-lg font-medium transition-colors ${!canSubscribe ? 'opacity-60 cursor-not-allowed' : ''
+                    }`}
                   disabled={!canSubscribe}
                 >
                   <img
@@ -593,11 +590,10 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                 <button
                   onClick={() => joinFeedMutation.mutate()}
                   disabled={joinFeedMutation.isPending}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                    joinFeedMutation.isPending
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${joinFeedMutation.isPending
                       ? 'bg-blue-100 text-blue-300 cursor-not-allowed'
                       : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
+                    }`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -611,11 +607,10 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                   onClick={() => refreshFeedMutation.mutate()}
                   disabled={refreshFeedMutation.isPending}
                   title="Refresh feed from source"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                    refreshFeedMutation.isPending
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${refreshFeedMutation.isPending
                       ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                    }`}
                 >
                   <img
                     className={`w-4 h-4 ${refreshFeedMutation.isPending ? 'animate-spin' : ''}`}
@@ -634,19 +629,19 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                   className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors"
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                    <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
                   </svg>
                 </button>
 
                 {/* Dropdown Menu */}
                 {showMenu && (
                   <div className="absolute top-full right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-20 max-w-[calc(100vw-2rem)]">
-                      {canBulkModifyEpisodes && (
-                        <>
-                          <button
-                            onClick={() => {
-                              if (!allWhitelisted) {
-                                handleBulkWhitelistToggle();
+                    {canBulkModifyEpisodes && (
+                      <>
+                        <button
+                          onClick={() => {
+                            if (!allWhitelisted) {
+                              handleBulkWhitelistToggle();
                             }
                             setShowMenu(false);
                           }}
@@ -671,20 +666,20 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                           Disable all episodes
                         </button>
                       </>
-                      )}
+                    )}
 
-                      {isAdmin && (
-                        <button
-                          onClick={() => {
-                            setShowHelp(!showHelp);
-                            setShowMenu(false);
-                          }}
-                          className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
-                        >
-                          <span className="text-blue-600">ℹ️</span>
-                          Explain whitelist
-                        </button>
-                      )}
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          setShowHelp(!showHelp);
+                          setShowMenu(false);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                      >
+                        <span className="text-blue-600">ℹ️</span>
+                        Explain whitelist
+                      </button>
+                    )}
 
                     <button
                       onClick={() => {
@@ -762,11 +757,10 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                     value={autoWhitelistSelectValue}
                     onChange={(e) => handleAutoWhitelistOverrideChange(e.target.value)}
                     disabled={updateFeedSettingsMutation.isPending}
-                    className={`text-sm border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
-                      updateFeedSettingsMutation.isPending
+                    className={`text-sm border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${updateFeedSettingsMutation.isPending
                         ? 'opacity-60 cursor-not-allowed'
                         : ''
-                    }`}
+                      }`}
                   >
                     <option value="inherit">Use global setting ({autoWhitelistDefaultLabel})</option>
                     <option value="on">On</option>
@@ -809,8 +803,8 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
           </div>
         </div>
 
-            {/* Help Explainer (admins only) */}
-            {showHelp && isAdmin && (
+        {/* Help Explainer (admins only) */}
+        {showHelp && isAdmin && (
           <div className="bg-blue-50 border-b border-blue-200 p-4">
             <div className="max-w-2xl">
               <h4 className="font-semibold text-blue-900 mb-2">About Enabling & Disabling Ad Removal</h4>
@@ -907,11 +901,10 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                           <button
                             onClick={() => handleWhitelistToggle(episode)}
                             disabled={whitelistMutation.isPending}
-                            className={`px-2 py-1 text-xs font-medium rounded-full transition-colors flex items-center justify-center gap-1 ${
-                              episode.whitelisted
+                            className={`px-2 py-1 text-xs font-medium rounded-full transition-colors flex items-center justify-center gap-1 ${episode.whitelisted
                                 ? 'bg-green-100 text-green-800 hover:bg-green-200'
                                 : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                            } ${whitelistMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              } ${whitelistMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             {whitelistMutation.isPending ? (
                               <>
@@ -1004,11 +997,10 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
               <button
                 onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                 disabled={page === 1 || isLoading || isFetching}
-                className={`px-3 py-1 text-sm rounded-md border transition-colors ${
-                  page === 1 || isLoading || isFetching
+                className={`px-3 py-1 text-sm rounded-md border transition-colors ${page === 1 || isLoading || isFetching
                     ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                }`}
+                  }`}
               >
                 Previous
               </button>
@@ -1018,11 +1010,10 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
               <button
                 onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
                 disabled={page >= totalPages || isLoading || isFetching}
-                className={`px-3 py-1 text-sm rounded-md border transition-colors ${
-                  page >= totalPages || isLoading || isFetching
+                className={`px-3 py-1 text-sm rounded-md border transition-colors ${page >= totalPages || isLoading || isFetching
                     ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                }`}
+                  }`}
               >
                 Next
               </button>
@@ -1070,11 +1061,10 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                   isEstimating ||
                   !processingEstimate?.can_process
                 }
-                className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                  whitelistMutation.isPending || isEstimating || !processingEstimate?.can_process
+                className={`px-4 py-2 rounded-lg text-sm font-medium ${whitelistMutation.isPending || isEstimating || !processingEstimate?.can_process
                     ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                     : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
+                  }`}
               >
                 {whitelistMutation.isPending ? 'Starting…' : 'Confirm & process'}
               </button>

@@ -109,9 +109,8 @@ export default function HomePage() {
   return (
     <div className="h-full flex flex-col lg:flex-row gap-6">
       {/* Left Panel - Feed List (hidden on mobile when feed is selected) */}
-      <div className={`flex-1 lg:max-w-md xl:max-w-lg flex flex-col ${
-        selectedFeed ? 'hidden lg:flex' : 'flex'
-      }`}>
+      <div className={`flex-1 lg:max-w-md xl:max-w-lg flex flex-col ${selectedFeed ? 'hidden lg:flex' : 'flex'
+        }`}>
         <div className="flex justify-between items-center mb-6 gap-3">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Podcast Feeds</h2>
           <div className="flex items-center gap-2">
@@ -120,11 +119,10 @@ export default function HomePage() {
                 onClick={() => refreshAllMutation.mutate()}
                 disabled={refreshAllMutation.isPending}
                 title="Refresh all feeds"
-                className={`flex items-center justify-center px-3 py-2 rounded-md border transition-colors ${
-                  refreshAllMutation.isPending
+                className={`flex items-center justify-center px-3 py-2 rounded-md border transition-colors ${refreshAllMutation.isPending
                     ? 'border-gray-200 dark:border-gray-600 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                     : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
+                  }`}
               >
                 <img
                   src="/reload-icon.svg"
@@ -150,11 +148,10 @@ export default function HomePage() {
                   setShowAddForm((prev) => !prev);
                 }
               }}
-              className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                planLimitReached
+              className={`px-4 py-2 rounded-md font-medium transition-colors ${planLimitReached
                   ? 'bg-amber-600 hover:bg-amber-700 text-white'
                   : 'bg-blue-600 hover:bg-blue-700 text-white'
-              }`}
+                }`}
               title={planLimitReached ? 'Your plan is full. Click to upgrade.' : undefined}
             >
               {planLimitReached ? 'Plan full' : showAddForm ? 'Close' : 'Add Feed'}
@@ -163,8 +160,8 @@ export default function HomePage() {
         </div>
 
         <div className="flex-1 min-h-0 overflow-hidden">
-          <FeedList 
-            feeds={feeds || []} 
+          <FeedList
+            feeds={feeds || []}
             onFeedDeleted={refetch}
             onFeedSelected={setSelectedFeed}
             selectedFeedId={selectedFeed?.id}
@@ -174,11 +171,10 @@ export default function HomePage() {
 
       {/* Right Panel - Feed Detail */}
       {selectedFeed && (
-        <div className={`flex-1 lg:flex-[2] ${
-          selectedFeed ? 'flex' : 'hidden lg:flex'
-        } flex-col bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 overflow-hidden`}>
-          <FeedDetail 
-            feed={selectedFeed} 
+        <div className={`flex-1 lg:flex-[2] ${selectedFeed ? 'flex' : 'hidden lg:flex'
+          } flex-col bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 overflow-hidden`}>
+          <FeedDetail
+            feed={selectedFeed}
             onClose={() => setSelectedFeed(null)}
             onFeedDeleted={() => {
               setSelectedFeed(null);

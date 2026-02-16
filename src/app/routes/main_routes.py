@@ -174,7 +174,7 @@ def get_version() -> flask.Response:
             capture_output=True,
             text=True,
             check=False,
-            timeout=5
+            timeout=5,
         )
         if result.returncode == 0:
             version = result.stdout.strip()
@@ -182,6 +182,5 @@ def get_version() -> flask.Response:
             version = "unknown"
     except Exception:  # pylint: disable=broad-except
         version = "unknown"
-    
-    return flask.make_response(flask.jsonify({"version": version}), 200)
 
+    return flask.make_response(flask.jsonify({"version": version}), 200)

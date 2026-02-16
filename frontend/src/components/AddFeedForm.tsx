@@ -178,11 +178,10 @@ export default function AddFeedForm({ onSuccess, onUpgradePlan, planLimitReached
           onClick={() => {
             setActiveMode('url');
           }}
-          className={`flex-1 px-3 py-2 rounded-md border transition-colors ${
-            activeMode === 'url'
+          className={`flex-1 px-3 py-2 rounded-md border transition-colors ${activeMode === 'url'
               ? 'bg-blue-50 border-blue-500 text-blue-700'
               : 'border-gray-200 text-gray-600 hover:bg-gray-100'
-          }`}
+            }`}
         >
           Enter RSS URL
         </button>
@@ -193,11 +192,10 @@ export default function AddFeedForm({ onSuccess, onUpgradePlan, planLimitReached
             setError('');
             resetSearchState();
           }}
-          className={`flex-1 px-3 py-2 rounded-md border ${
-            activeMode === 'search'
+          className={`flex-1 px-3 py-2 rounded-md border ${activeMode === 'search'
               ? 'bg-blue-50 border-blue-500 text-blue-700'
               : 'border-gray-200 text-gray-600 hover:bg-gray-100'
-          }`}
+            }`}
         >
           Search Podcasts
         </button>
@@ -221,33 +219,33 @@ export default function AddFeedForm({ onSuccess, onUpgradePlan, planLimitReached
             />
           </div>
 
-      {error && (
-        <div className="text-red-600 text-sm">{error}</div>
-      )}
-      {upgradePrompt && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 border border-amber-200 bg-amber-50 rounded-md text-sm text-amber-800">
-          <span>{upgradePrompt}</span>
-          {onUpgradePlan && (
-            <button
-              type="button"
-              onClick={onUpgradePlan}
-              className="inline-flex items-center justify-center px-3 py-2 rounded-md bg-blue-600 text-white text-xs font-medium hover:bg-blue-700"
-            >
-              Increase plan
-            </button>
+          {error && (
+            <div className="text-red-600 text-sm">{error}</div>
           )}
-        </div>
-      )}
+          {upgradePrompt && (
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 border border-amber-200 bg-amber-50 rounded-md text-sm text-amber-800">
+              <span>{upgradePrompt}</span>
+              {onUpgradePlan && (
+                <button
+                  type="button"
+                  onClick={onUpgradePlan}
+                  className="inline-flex items-center justify-center px-3 py-2 rounded-md bg-blue-600 text-white text-xs font-medium hover:bg-blue-700"
+                >
+                  Increase plan
+                </button>
+              )}
+            </div>
+          )}
 
-        <div className="flex flex-col sm:flex-row sm:justify-end gap-3">
-          <button
-            type="submit"
-            disabled={isSubmitting || !url.trim() || !!planLimitReached}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md font-medium transition-colors sm:w-auto w-full"
-          >
-            {isSubmitting && addingFeedUrl === 'manual' ? 'Adding...' : 'Add Feed'}
-          </button>
-        </div>
+          <div className="flex flex-col sm:flex-row sm:justify-end gap-3">
+            <button
+              type="submit"
+              disabled={isSubmitting || !url.trim() || !!planLimitReached}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md font-medium transition-colors sm:w-auto w-full"
+            >
+              {isSubmitting && addingFeedUrl === 'manual' ? 'Adding...' : 'Add Feed'}
+            </button>
+          </div>
         </form>
       )}
 

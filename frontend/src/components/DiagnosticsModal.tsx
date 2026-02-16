@@ -145,17 +145,17 @@ export default function DiagnosticsModal() {
           <div className="border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900 overflow-hidden">
             <div className="max-h-[45vh] overflow-auto">
               <pre className="text-xs text-gray-800 dark:text-gray-200 p-3 whitespace-pre-wrap break-words">
-{recentEntries
-  .map((e) => {
-    const base = `[${formatTs(e.ts)}] ${e.level.toUpperCase()}: ${e.message}`;
-    if (e.data === undefined) return base;
-    try {
-      return base + `\n  ${JSON.stringify(e.data)}`;
-    } catch {
-      return base;
-    }
-  })
-  .join('\n')}
+                {recentEntries
+                  .map((e) => {
+                    const base = `[${formatTs(e.ts)}] ${e.level.toUpperCase()}: ${e.message}`;
+                    if (e.data === undefined) return base;
+                    try {
+                      return base + `\n  ${JSON.stringify(e.data)}`;
+                    } catch {
+                      return base;
+                    }
+                  })
+                  .join('\n')}
               </pre>
             </div>
           </div>

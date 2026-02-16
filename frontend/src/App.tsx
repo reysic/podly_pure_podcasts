@@ -43,7 +43,7 @@ function AppShell() {
     enabled: !!user && requireAuth && isAuthenticated,
     retry: false,
   });
-  
+
   const { data: versionData } = useQuery({
     queryKey: ['version'],
     queryFn: versionApi.getVersion,
@@ -110,9 +110,9 @@ function AppShell() {
           <div className="flex items-center justify-between h-12">
             <div className="flex items-center">
               <Link to="/" className="flex items-center">
-                <img 
-                  src="/images/logos/logo.webp" 
-                  alt="Podly" 
+                <img
+                  src="/images/logos/logo.webp"
+                  alt="Podly"
                   className="h-6 w-auto"
                 />
                 <h1 className="ml-2 text-lg font-semibold text-gray-900 dark:text-gray-100">

@@ -62,11 +62,10 @@ export default function FeedList({ feeds, onFeedDeleted: _onFeedDeleted, onFeedS
           </div>
         ) : (
           filteredFeeds.map((feed) => (
-            <div 
-              key={feed.id} 
-              className={`bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 cursor-pointer transition-all hover:shadow-md group ${
-                selectedFeedId === feed.id ? 'ring-2 ring-blue-500 dark:ring-blue-400 border-blue-200 dark:border-blue-600' : ''
-              }`}
+            <div
+              key={feed.id}
+              className={`bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 cursor-pointer transition-all hover:shadow-md group ${selectedFeedId === feed.id ? 'ring-2 ring-blue-500 dark:ring-blue-400 border-blue-200 dark:border-blue-600' : ''
+                }`}
               onClick={() => onFeedSelected(feed)}
             >
               <div className="p-4">
@@ -99,11 +98,10 @@ export default function FeedList({ feeds, onFeedDeleted: _onFeedDeleted, onFeedS
                       {showMembership && (
                         <div className="flex items-center gap-2">
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
-                              feed.is_member
+                            className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${feed.is_member
                                 ? 'bg-green-100 text-green-700 border border-green-200'
                                 : 'bg-gray-100 text-gray-600 border border-gray-200'
-                            }`}
+                              }`}
                           >
                             {feed.is_member ? 'Joined' : 'Not joined'}
                           </span>
