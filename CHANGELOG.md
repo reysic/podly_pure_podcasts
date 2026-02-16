@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/reysic/podly_pure_podcasts/compare/v1.0.1...v1.0.2) (2026-02-16)
+
+
+### Bug Fixes
+
+* resolve remaining mypy type errors ([51ebbe2](https://github.com/reysic/podly_pure_podcasts/commit/51ebbe2fcfd430d915fb4baf1062a8d378750641))
+
 ## [1.0.1](https://github.com/reysic/podly_pure_podcasts/compare/v1.0.0...v1.0.1) (2026-02-16)
 
 
