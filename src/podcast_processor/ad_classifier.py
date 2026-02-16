@@ -684,7 +684,7 @@ class AdClassifier:
                 from copilot import CopilotClient
                 
                 # Create client with PAT
-                client = CopilotClient(options={'github_token': pat})  # type: ignore[arg-type]
+                client = CopilotClient(options={'github_token': pat})
                 
                 # Start the client (initializes JSON-RPC connection)
                 await client.start()

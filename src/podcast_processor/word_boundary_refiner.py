@@ -117,7 +117,7 @@ Ad: {{ad_start}}s-{{ad_end}}s
                         timeout = getattr(self.config, 'openai_timeout', 300)
                         response = await session.send_and_wait({'prompt': prompt}, timeout=timeout)
                         if response and hasattr(response, 'data') and hasattr(response.data, 'content'):
-                            return response.data.content
+                            return str(response.data.content)
                         raise RuntimeError(f"No content in Copilot response")
                     finally:
                         await session.destroy()
