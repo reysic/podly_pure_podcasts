@@ -71,6 +71,7 @@ class LocalWhisperConfig(BaseModel):
 
 class Config(BaseModel):
     llm_api_key: Optional[str] = Field(default=None)
+    llm_github_pat: Optional[str] = Field(default=None)
     llm_model: str = Field(default=DEFAULTS.LLM_DEFAULT_MODEL)
     openai_base_url: Optional[str] = None
     openai_max_tokens: int = DEFAULTS.OPENAI_DEFAULT_MAX_TOKENS
@@ -154,6 +155,7 @@ class Config(BaseModel):
         return self.model_copy(
             update={
                 "llm_api_key": "X" * 10,
+                "llm_github_pat": "X" * 10,
             },
             deep=True,
         )

@@ -100,18 +100,44 @@ Ad: {{ad_start}}s-{{ad_end}}s
         raw_response: Optional[str] = None
 
         try:
-            response = litellm.completion(
-                model=self.config.llm_model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,
-                max_tokens=2048,
-                timeout=self.config.openai_timeout,
-                api_key=self.config.llm_api_key,
-                base_url=self.config.openai_base_url,
-            )
+            # Check if this is a GitHub Copilot model
+            github_pat = getattr(self.config, "llm_github_pat", None)
+            is_copilot_model = bool(github_pat) and "/" not in self.config.llm_model
+            
+            if is_copilot_model:
+                # Use Copilot SDK
+                import asyncio
+                
+                async def _call_copilot():
+                    from copilot import CopilotClient
+                    client = CopilotClient(options={'github_token': github_pat})
+                    await client.start()
+                    session = await client.create_session({'model': self.config.llm_model})
+                    try:
+                        timeout = getattr(self.config, 'openai_timeout', 300)
+                        response = await session.send_and_wait({'prompt': prompt}, timeout=timeout)
+                        if hasattr(response, 'data') and hasattr(response.data, 'content'):
+                            return response.data.content
+                        raise RuntimeError(f"No content in Copilot response")
+                    finally:
+                        await session.destroy()
+                
+                content = asyncio.run(_call_copilot())
+                raw_response = content
+            else:
+                # Use litellm
+                response = litellm.completion(
+                    model=self.config.llm_model,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.1,
+                    max_tokens=2048,
+                    timeout=self.config.openai_timeout,
+                    api_key=self.config.llm_api_key,
+                    base_url=self.config.openai_base_url,
+                )
 
-            content = extract_litellm_content(response)
-            raw_response = content
+                content = extract_litellm_content(response)
+                raw_response = content
             self._update_model_call(
                 model_call_id,
                 status="received_response",

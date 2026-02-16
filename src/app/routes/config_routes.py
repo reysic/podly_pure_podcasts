@@ -24,6 +24,7 @@ config_bp = Blueprint("config", __name__)
 def _mask_secret(value: Any | None) -> str | None:
     if value is None:
         return None
+
     try:
         secret = str(value).strip()
     except Exception:  # pragma: no cover - defensive
@@ -433,66 +434,177 @@ def api_test_llm() -> flask.Response:
     payload: Dict[str, Any] = request.get_json(silent=True) or {}
     llm: Dict[str, Any] = dict(payload.get("llm", {}))
 
-    api_key: str | None = llm.get("llm_api_key") or getattr(
-        runtime_config, "llm_api_key", None
-    )
     model_val = llm.get("llm_model")
     model: str = (
         model_val
         if isinstance(model_val, str)
         else getattr(runtime_config, "llm_model", "gpt-4o")
     )
-    base_url: str | None = llm.get("openai_base_url") or getattr(
-        runtime_config, "openai_base_url", None
-    )
-    timeout_val = llm.get("openai_timeout")
-    timeout: int = (
-        int(timeout_val)
-        if timeout_val is not None
-        else int(getattr(runtime_config, "openai_timeout", 30))
-    )
-
-    if not api_key:
-        return flask.make_response(
-            jsonify({"ok": False, "error": "Missing llm_api_key"}), 400
+    
+    # Check if this is a GitHub Copilot model
+    # Copilot models don't have provider prefixes (no "/"), while litellm models do (e.g., "openai/gpt-4")
+    github_pat: str | None = getattr(runtime_config, "llm_github_pat", None)
+    is_copilot_model = bool(github_pat) and "/" not in model
+    
+    if is_copilot_model:
+        # Test GitHub Copilot connection
+        import asyncio
+        
+        async def _test_copilot():
+            """Test Copilot connection by creating client and listing models"""
+            try:
+                from copilot import CopilotClient
+                
+                client = CopilotClient(options={'github_token': github_pat})
+                await client.start()
+                models = await client.list_models()
+                
+                # Verify the configured model is available
+                model_ids = [getattr(m, 'id', str(m)) for m in models]
+                if model not in model_ids:
+                    return False, f"Configured model '{model}' not found in available Copilot models"
+                
+                return True, None
+            except Exception as e:
+                return False, str(e)
+        
+        try:
+            success, error = asyncio.run(_test_copilot())
+            if not success:
+                logger.error(f"Copilot connection test failed: {error}")
+                return flask.make_response(jsonify({"ok": False, "error": error}), 400)
+        except Exception as e:
+            logger.error(f"Copilot connection test failed: {e}")
+            return flask.make_response(jsonify({"ok": False, "error": str(e)}), 400)
+    else:
+        # Test standard LLM connection via litellm
+        api_key: str | None = llm.get("llm_api_key") or getattr(
+            runtime_config, "llm_api_key", None
         )
+        base_url: str | None = llm.get("openai_base_url") or getattr(
+            runtime_config, "openai_base_url", None
+        )
+        timeout_val = llm.get("openai_timeout")
+        timeout: int = (
+            int(timeout_val)
+            if timeout_val is not None
+            else int(getattr(runtime_config, "openai_timeout", 30))
+        )
+
+        if not api_key:
+            return flask.make_response(
+                jsonify({"ok": False, "error": "Missing llm_api_key"}), 400
+            )
+
+        try:
+            # Configure litellm for this probe
+            litellm.api_key = api_key
+            if base_url:
+                litellm.api_base = base_url
+
+            # Minimal completion to validate connectivity and credentials
+            messages = [
+                {"role": "system", "content": "You are a healthcheck probe."},
+                {"role": "user", "content": "ping"},
+            ]
+
+            try:
+                _ = litellm.completion(model=model, messages=messages, timeout=timeout)
+            except Exception as le:
+                raise
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error(f"LLM connection test failed: {e}")
+            return flask.make_response(jsonify({"ok": False, "error": str(e)}), 400)
+    
+    # Success
+    return flask.make_response(jsonify({"ok": True}), 200)
+
+
+# Runtime pip install endpoint removed: Copilot SDK is included in the image via Pipfile updates.
+
+
+@config_bp.route("/api/config/copilot-models", methods=["GET", "POST"])
+def api_copilot_models() -> flask.Response:
+    _, error_response = require_admin()
+    if error_response:
+        return error_response
+
+    # PAT can be provided in body (POST) or read from runtime config
+    payload = request.get_json(silent=True) or {}
+    pat = payload.get("github_pat") or getattr(runtime_config, "llm_github_pat", None) or getattr(runtime_config, "llm_api_key", None)
+
+    if not pat:
+        return _make_error_response("Missing GitHub PAT (github_pat) or configured llm_github_pat", 400)
+
+    # Create and use Copilot client entirely within async context
+    import asyncio
+    
+    async def _create_and_list_models():
+        """Create Copilot client, start it, and list models - all in one async context"""
+        try:
+            from copilot import CopilotClient
+            
+            # Create client with the PAT
+            client = CopilotClient(options={'github_token': pat})
+            
+            # Start the client (initializes JSON-RPC connection)
+            await client.start()
+            
+            # List models
+            models = await client.list_models()
+            return models
+        except Exception as e:
+            import sys
+            import traceback
+            print(f"[DEBUG] Exception in _create_and_list_models:")
+            traceback.print_exc()
+            sys.stdout.flush()
+            return None
 
     try:
-        # Configure litellm for this probe
-        litellm.api_key = api_key
-        if base_url:
-            litellm.api_base = base_url
+        # Run the entire client lifecycle in one async context
+        models = asyncio.run(_create_and_list_models())
+    except Exception as exc:
+        logger.exception("Error creating Copilot client or listing models: %s", exc)
+        models = None
 
-        # Minimal completion to validate connectivity and credentials
-        messages = [
-            {"role": "system", "content": "You are a healthcheck probe."},
-            {"role": "user", "content": "ping"},
-        ]
-
-        completion_kwargs: Dict[str, Any] = {
-            "model": model,
-            "messages": messages,
-            "timeout": timeout,
-        }
-
-        if model_uses_max_completion_tokens(model):
-            completion_kwargs["max_completion_tokens"] = 1
-        else:
-            completion_kwargs["max_tokens"] = 1
-
-        _ = litellm.completion(**completion_kwargs)
-
-        return flask.jsonify(
-            {
-                "ok": True,
-                "message": "LLM connection OK",
-                "model": model,
-                "base_url": base_url,
-            }
+    if models is None:
+        return _make_error_response(
+            "Failed to enumerate Copilot models from SDK. Ensure the SDK supports model listing and your token has access.",
+            500,
         )
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"LLM connection test failed: {e}")
-        return flask.make_response(jsonify({"ok": False, "error": str(e)}), 400)
+
+    # Normalize model entries
+    normalized = []
+    for m in models:
+        try:
+            if isinstance(m, dict):
+                mid = m.get("id") or m.get("name") or m.get("model_id")
+                display = m.get("name") or mid
+                cost = m.get("cost_multiplier") if "cost_multiplier" in m else None
+            else:
+                # Try attributes - check for billing.multiplier pattern
+                mid = getattr(m, "id", None) or getattr(m, "name", None) or str(m)
+                display = getattr(m, "name", None) or mid
+                
+                # Try to extract cost multiplier from various possible locations
+                cost = None
+                if hasattr(m, "billing") and hasattr(m.billing, "multiplier"):
+                    cost = m.billing.multiplier
+                elif hasattr(m, "cost_multiplier"):
+                    cost = m.cost_multiplier
+                elif hasattr(m, "multiplier"):
+                    cost = m.multiplier
+            
+            # Default to 1.0 if still None
+            if cost is None:
+                cost = 1.0
+            
+            normalized.append({"id": mid, "name": display, "cost_multiplier": cost})
+        except Exception:
+            continue
+
+    return flask.jsonify({"ok": True, "models": normalized})
 
 
 def _make_error_response(error_msg: str, status_code: int = 400) -> flask.Response:

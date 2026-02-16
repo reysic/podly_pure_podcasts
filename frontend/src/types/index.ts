@@ -25,7 +25,7 @@ export interface Episode {
   download_url: string;
   image_url: string | null;
   download_count: number;
-} 
+}
 
 export interface PagedResult<T> {
   items: T[];
@@ -95,6 +95,9 @@ export interface CleanupRunResult {
 export interface LLMConfig {
   llm_api_key?: string | null;
   llm_api_key_preview?: string | null;
+  // Optional GitHub PAT for Copilot models
+  llm_github_pat?: string | null;
+  github_pat?: string | null;
   llm_model: string;
   openai_base_url?: string | null;
   openai_timeout: number;
@@ -111,23 +114,23 @@ export interface LLMConfig {
 export type WhisperConfig =
   | { whisper_type: 'local'; model: string }
   | {
-      whisper_type: 'remote';
-      model: string;
-      api_key?: string | null;
-      api_key_preview?: string | null;
-      base_url?: string;
-      language: string;
-      timeout_sec: number;
-      chunksize_mb: number;
-    }
+    whisper_type: 'remote';
+    model: string;
+    api_key?: string | null;
+    api_key_preview?: string | null;
+    base_url?: string;
+    language: string;
+    timeout_sec: number;
+    chunksize_mb: number;
+  }
   | {
-      whisper_type: 'groq';
-      api_key?: string | null;
-      api_key_preview?: string | null;
-      model: string;
-      language: string;
-      max_retries: number;
-    }
+    whisper_type: 'groq';
+    api_key?: string | null;
+    api_key_preview?: string | null;
+    model: string;
+    language: string;
+    max_retries: number;
+  }
   | { whisper_type: 'test' };
 
 export interface ProcessingConfigUI {

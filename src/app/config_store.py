@@ -107,6 +107,7 @@ def ensure_defaults() -> None:
         LLMSettings,
         {
             "llm_model": DEFAULTS.LLM_DEFAULT_MODEL,
+            "llm_github_pat": None,
             "openai_timeout": DEFAULTS.OPENAI_DEFAULT_TIMEOUT_SEC,
             "openai_max_tokens": DEFAULTS.OPENAI_DEFAULT_MAX_TOKENS,
             "llm_max_concurrent_calls": DEFAULTS.LLM_DEFAULT_MAX_CONCURRENT_CALLS,
@@ -177,6 +178,10 @@ def _apply_llm_env_overrides_to_db(llm: Any) -> bool:
         or os.environ.get("GROQ_API_KEY")
     )
     changed = _set_if_empty(llm, "llm_api_key", env_llm_key) or changed
+
+    # Allow a dedicated GitHub PAT for Copilot usage
+    env_github_pat = os.environ.get("GITHUB_PAT")
+    changed = _set_if_empty(llm, "llm_github_pat", env_github_pat) or changed
 
     env_llm_model = os.environ.get("LLM_MODEL")
     changed = (
@@ -442,6 +447,7 @@ def read_combined() -> Dict[str, Any]:
     return {
         "llm": {
             "llm_api_key": llm.llm_api_key,
+            "github_pat": llm.llm_github_pat,
             "llm_model": llm.llm_model,
             "openai_base_url": llm.openai_base_url,
             "openai_timeout": llm.openai_timeout,
@@ -481,6 +487,7 @@ def _update_section_llm(data: Dict[str, Any]) -> None:
     assert row is not None
     for key in [
         "llm_api_key",
+        "llm_github_pat",
         "llm_model",
         "openai_base_url",
         "openai_timeout",
@@ -498,6 +505,11 @@ def _update_section_llm(data: Dict[str, Any]) -> None:
             if key == "llm_api_key" and _is_empty(new_val):
                 continue
             setattr(row, key, new_val)
+    # Backwards/alternative key for UI: accept `github_pat` as well
+    if "github_pat" in data:
+        new_val = data["github_pat"]
+        if not (_is_empty(new_val)):
+            row.llm_github_pat = new_val
     safe_commit(
         db.session,
         must_succeed=True,
@@ -718,6 +730,7 @@ def to_pydantic_config() -> PydanticConfig:
 
     return PydanticConfig(
         llm_api_key=data["llm"].get("llm_api_key"),
+        llm_github_pat=data["llm"].get("github_pat"),
         llm_model=data["llm"].get("llm_model", DEFAULTS.LLM_DEFAULT_MODEL),
         openai_base_url=data["llm"].get("openai_base_url"),
         openai_max_tokens=int(

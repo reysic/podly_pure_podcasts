@@ -17,7 +17,7 @@ services:
         - USE_GPU_AMD=${USE_GPU_AMD:-false}
         - LITE_BUILD=${LITE_BUILD:-false}
     ports:
-      - "5001:5001"
+      - "5003:5001"
     environment:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}

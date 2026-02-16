@@ -21,6 +21,7 @@ if is_test:
 else:
     config = RuntimeConfig(
         llm_api_key=None,
+        llm_github_pat=None,
         llm_model=DEFAULTS.LLM_DEFAULT_MODEL,
         openai_base_url=None,
         openai_max_tokens=DEFAULTS.OPENAI_DEFAULT_MAX_TOKENS,
