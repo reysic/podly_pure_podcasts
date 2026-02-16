@@ -6,7 +6,7 @@ import { Section } from '../shared';
 
 export default function DiscordTab() {
   const queryClient = useQueryClient();
-  
+
   const { data, isLoading, error } = useQuery({
     queryKey: ['discord-config'],
     queryFn: discordApi.getConfig,
@@ -51,7 +51,7 @@ export default function DiscordTab() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const payload: Record<string, unknown> = {
       client_id: form.client_id,
       redirect_uri: form.redirect_uri,
@@ -81,7 +81,7 @@ export default function DiscordTab() {
     <div className="space-y-6">
       <Section title="Discord SSO Configuration">
         <StatusIndicator enabled={data?.config.enabled ?? false} />
-        
+
         <form onSubmit={handleSubmit} className="mt-6 space-y-4 max-w-xl">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -207,7 +207,7 @@ export default function DiscordTab() {
       <Section title="Setup Instructions">
         <SetupInstructions />
       </Section>
-      
+
       <style>{`.input{width:100%;padding:0.5rem;border:1px solid #e5e7eb;border-radius:0.375rem;font-size:0.875rem}`}</style>
     </div>
   );
@@ -217,9 +217,8 @@ function StatusIndicator({ enabled }: { enabled: boolean }) {
   return (
     <div className="flex items-center gap-3">
       <div
-        className={`w-3 h-3 rounded-full ${
-          enabled ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
-        }`}
+        className={`w-3 h-3 rounded-full ${enabled ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+          }`}
       />
       <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
         {enabled ? 'Discord SSO is enabled' : 'Discord SSO is not configured'}
@@ -252,10 +251,10 @@ function SetupInstructions() {
         <li>Add your redirect URI to the list of allowed redirects</li>
         <li>The redirect URI should be: <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded text-xs">https://your-domain/api/auth/discord/callback</code></li>
       </ol>
-      
+
       <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          <strong>Note:</strong> Environment variables (DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, etc.) 
+          <strong>Note:</strong> Environment variables (DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, etc.)
           take precedence over values configured here.
         </p>
       </div>

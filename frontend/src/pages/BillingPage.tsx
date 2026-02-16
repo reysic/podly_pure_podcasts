@@ -14,7 +14,7 @@ export default function BillingPage() {
     queryKey: ['billing', 'summary'],
     queryFn: billingApi.getSummary,
   });
-  
+
   // Amount in dollars
   const [amount, setAmount] = useState<number>(5);
 
@@ -36,7 +36,7 @@ export default function BillingPage() {
       }
       toast.success('Plan updated');
       if (res.current_amount) {
-          setAmount(res.current_amount / 100);
+        setAmount(res.current_amount / 100);
       }
       refetch();
     },
@@ -97,7 +97,7 @@ export default function BillingPage() {
           <div className="text-right">
             <div className="text-sm text-gray-600 dark:text-gray-400">Monthly payment</div>
             <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {isSubscribed ? `$${currentAmountDollars.toFixed(2)}` : '$0.00'}
+              {isSubscribed ? `$${currentAmountDollars.toFixed(2)}` : '$0.00'}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">
               Subscription status: {data.subscription_status || 'inactive'}
@@ -112,11 +112,11 @@ export default function BillingPage() {
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Get 10 feeds for a monthly price of your choice (min ${minAmountDollars.toFixed(2)}).
           </p>
-          
+
           <div className="text-xs text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-900/30 p-3 rounded-md border border-amber-200 dark:border-amber-700">
             <strong>Note:</strong> We suggest paying ~$1 per feed you use. If revenue doesn't cover server costs, we may have to shut down the service.
           </div>
-          
+
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="relative rounded-md shadow-sm w-32">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -132,7 +132,7 @@ export default function BillingPage() {
                 placeholder="5.00"
               />
             </div>
-            
+
             <div className="flex items-center gap-2 text-xs text-gray-600">
               <span>Suggested:</span>
               {[3, 5, 10, 15].map((preset) => (
@@ -140,11 +140,10 @@ export default function BillingPage() {
                   key={preset}
                   type="button"
                   onClick={() => setAmount(preset)}
-                  className={`px-2 py-1 rounded-md border text-xs transition-colors ${
-                    amount === preset
+                  className={`px-2 py-1 rounded-md border text-xs transition-colors ${amount === preset
                       ? 'border-blue-200 bg-blue-50 text-blue-700'
                       : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
+                    }`}
                   disabled={updateSubscription.isPending}
                 >
                   ${preset}
@@ -152,28 +151,28 @@ export default function BillingPage() {
               ))}
             </div>
           </div>
-          
+
           <div className="flex flex-col sm:flex-row gap-2 sm:items-center pt-2">
             <button
               onClick={() => updateSubscription.mutate(amount)}
               disabled={updateSubscription.isPending || atCurrentAmount || amount < minAmountDollars}
               className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {updateSubscription.isPending 
-                ? 'Processing…' 
-                : isSubscribed 
-                  ? (atCurrentAmount ? 'Current Price' : 'Update Price') 
+              {updateSubscription.isPending
+                ? 'Processing…'
+                : isSubscribed
+                  ? (atCurrentAmount ? 'Current Price' : 'Update Price')
                   : 'Subscribe'}
             </button>
             {amount < minAmountDollars && (
-                <span className="text-xs text-red-500">Minimum amount is ${minAmountDollars.toFixed(2)}</span>
+              <span className="text-xs text-red-500">Minimum amount is ${minAmountDollars.toFixed(2)}</span>
             )}
           </div>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm pt-4 border-t border-gray-100">
           <div className="text-gray-500 text-xs">
-             Payments are securely processed by Stripe. You can cancel anytime.
+            Payments are securely processed by Stripe. You can cancel anytime.
           </div>
           <button
             onClick={() => portalSession.mutate()}
