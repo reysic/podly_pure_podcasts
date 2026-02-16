@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/reysic/podly_pure_podcasts/compare/v1.0.2...v1.0.3) (2026-02-16)
+
+
+### Bug Fixes
+
+* cast Copilot response content to str in boundary_refiner ([ff694f9](https://github.com/reysic/podly_pure_podcasts/commit/ff694f9db82a5e934f1b80a04fdc174c3e17a78c))
+
 ## [1.0.2](https://github.com/reysic/podly_pure_podcasts/compare/v1.0.1...v1.0.2) (2026-02-16)
 
 
