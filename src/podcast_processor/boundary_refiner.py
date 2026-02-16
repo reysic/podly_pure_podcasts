@@ -137,7 +137,7 @@ Return JSON: {"refined_start": {{ad_start}}, "refined_end": {{ad_end}}, "start_r
                         timeout = getattr(self.config, 'openai_timeout', 300)
                         response = await session.send_and_wait({'prompt': prompt}, timeout=timeout)
                         if response and hasattr(response, 'data') and hasattr(response.data, 'content'):
-                            return response.data.content
+                            return str(response.data.content)
                         raise RuntimeError(f"No content in Copilot response")
                     finally:
                         await session.destroy()
