@@ -128,15 +128,15 @@ Return JSON: {"refined_start": {{ad_start}}, "refined_end": {{ad_end}}, "start_r
                 # Use Copilot SDK
                 import asyncio
                 
-                async def _call_copilot():
+                async def _call_copilot() -> str:
                     from copilot import CopilotClient
-                    client = CopilotClient(options={'github_token': github_pat})
+                    client = CopilotClient(options={'github_token': github_pat})  # type: ignore[arg-type]
                     await client.start()
                     session = await client.create_session({'model': self.config.llm_model})
                     try:
                         timeout = getattr(self.config, 'openai_timeout', 300)
                         response = await session.send_and_wait({'prompt': prompt}, timeout=timeout)
-                        if hasattr(response, 'data') and hasattr(response.data, 'content'):
+                        if response and hasattr(response, 'data') and hasattr(response.data, 'content'):
                             return response.data.content
                         raise RuntimeError(f"No content in Copilot response")
                     finally:

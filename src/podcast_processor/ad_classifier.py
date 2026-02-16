@@ -678,13 +678,13 @@ class AdClassifier:
         # The Copilot SDK session doesn't support separate system messages in the same way
         combined_prompt = f"{system_prompt}\n\n{model_call_obj.prompt}"
 
-        async def _perform_copilot_chat():
+        async def _perform_copilot_chat() -> str:
             """Perform Copilot chat within async context."""
             try:
                 from copilot import CopilotClient
                 
                 # Create client with PAT
-                client = CopilotClient(options={'github_token': pat})
+                client = CopilotClient(options={'github_token': pat})  # type: ignore[arg-type]
                 
                 # Start the client (initializes JSON-RPC connection)
                 await client.start()
@@ -698,10 +698,10 @@ class AdClassifier:
                     response = await session.send_and_wait({'prompt': combined_prompt}, timeout=timeout)
                     
                     # Extract content from the SessionEvent response
-                    if hasattr(response, 'data') and hasattr(response.data, 'content'):
+                    if response and hasattr(response, 'data') and hasattr(response.data, 'content'):
                         content = response.data.content
                         if content:
-                            return content
+                            return str(content)
                     
                     raise RuntimeError(f"Unable to extract content from Copilot response: {response}")
                     

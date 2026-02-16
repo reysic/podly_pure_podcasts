@@ -450,12 +450,12 @@ def api_test_llm() -> flask.Response:
         # Test GitHub Copilot connection
         import asyncio
         
-        async def _test_copilot():
+        async def _test_copilot() -> tuple[bool, str | None]:
             """Test Copilot connection by creating client and listing models"""
             try:
                 from copilot import CopilotClient
                 
-                client = CopilotClient(options={'github_token': github_pat})
+                client = CopilotClient(options={'github_token': github_pat})  # type: ignore[arg-type]
                 await client.start()
                 models = await client.list_models()
                 
@@ -539,13 +539,13 @@ def api_copilot_models() -> flask.Response:
     # Create and use Copilot client entirely within async context
     import asyncio
     
-    async def _create_and_list_models():
+    async def _create_and_list_models() -> list | None:  # type: ignore[type-arg]
         """Create Copilot client, start it, and list models - all in one async context"""
         try:
             from copilot import CopilotClient
             
             # Create client with the PAT
-            client = CopilotClient(options={'github_token': pat})
+            client = CopilotClient(options={'github_token': pat})  # type: ignore[arg-type]
             
             # Start the client (initializes JSON-RPC connection)
             await client.start()
