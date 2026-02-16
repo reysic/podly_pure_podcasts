@@ -123,25 +123,34 @@ Return JSON: {"refined_start": {{ad_start}}, "refined_end": {{ad_end}}, "start_r
             # Check if this is a GitHub Copilot model
             github_pat = getattr(self.config, "llm_github_pat", None)
             is_copilot_model = bool(github_pat) and "/" not in self.config.llm_model
-            
+
             if is_copilot_model:
                 # Use Copilot SDK
                 import asyncio
-                
+
                 async def _call_copilot() -> str:
                     from copilot import CopilotClient
-                    client = CopilotClient(options={'github_token': github_pat})  # type: ignore[arg-type]
+
+                    client = CopilotClient(options={"github_token": github_pat})  # type: ignore[arg-type]
                     await client.start()
-                    session = await client.create_session({'model': self.config.llm_model})
+                    session = await client.create_session(
+                        {"model": self.config.llm_model}
+                    )
                     try:
-                        timeout = getattr(self.config, 'openai_timeout', 300)
-                        response = await session.send_and_wait({'prompt': prompt}, timeout=timeout)
-                        if response and hasattr(response, 'data') and hasattr(response.data, 'content'):
+                        timeout = getattr(self.config, "openai_timeout", 300)
+                        response = await session.send_and_wait(
+                            {"prompt": prompt}, timeout=timeout
+                        )
+                        if (
+                            response
+                            and hasattr(response, "data")
+                            and hasattr(response.data, "content")
+                        ):
                             return str(response.data.content)
-                        raise RuntimeError(f"No content in Copilot response")
+                        raise RuntimeError("No content in Copilot response")
                     finally:
                         await session.destroy()
-                
+
                 raw_response = asyncio.run(_call_copilot())
                 content = raw_response
             else:

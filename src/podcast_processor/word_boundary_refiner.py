@@ -55,14 +55,12 @@ class WordBoundaryRefiner:
         )
         if path.exists():
             return Template(path.read_text())
-        return Template(
-            """Find start/end phrases for the ad break.
+        return Template("""Find start/end phrases for the ad break.
 Ad: {{ad_start}}s-{{ad_end}}s
 {% for seg in context_segments %}[seq={{seg.sequence_num}} start={{seg.start_time}} end={{seg.end_time}}] {{seg.text}}
 {% endfor %}
     Return JSON: {"refined_start_segment_seq": 0, "refined_start_phrase": "", "refined_end_segment_seq": 0, "refined_end_phrase": "", "start_adjustment_reason": "", "end_adjustment_reason": ""}
-"""
-        )
+""")
 
     def refine(
         self,
@@ -103,25 +101,34 @@ Ad: {{ad_start}}s-{{ad_end}}s
             # Check if this is a GitHub Copilot model
             github_pat = getattr(self.config, "llm_github_pat", None)
             is_copilot_model = bool(github_pat) and "/" not in self.config.llm_model
-            
+
             if is_copilot_model:
                 # Use Copilot SDK
                 import asyncio
-                
+
                 async def _call_copilot() -> str:
                     from copilot import CopilotClient
-                    client = CopilotClient(options={'github_token': github_pat})  # type: ignore[arg-type]
+
+                    client = CopilotClient(options={"github_token": github_pat})  # type: ignore[arg-type]
                     await client.start()
-                    session = await client.create_session({'model': self.config.llm_model})
+                    session = await client.create_session(
+                        {"model": self.config.llm_model}
+                    )
                     try:
-                        timeout = getattr(self.config, 'openai_timeout', 300)
-                        response = await session.send_and_wait({'prompt': prompt}, timeout=timeout)
-                        if response and hasattr(response, 'data') and hasattr(response.data, 'content'):
+                        timeout = getattr(self.config, "openai_timeout", 300)
+                        response = await session.send_and_wait(
+                            {"prompt": prompt}, timeout=timeout
+                        )
+                        if (
+                            response
+                            and hasattr(response, "data")
+                            and hasattr(response.data, "content")
+                        ):
                             return str(response.data.content)
-                        raise RuntimeError(f"No content in Copilot response")
+                        raise RuntimeError("No content in Copilot response")
                     finally:
                         await session.destroy()
-                
+
                 content = asyncio.run(_call_copilot())
                 raw_response = content
             else:

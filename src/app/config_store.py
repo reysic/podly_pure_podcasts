@@ -508,7 +508,7 @@ def _update_section_llm(data: Dict[str, Any]) -> None:
     # Backwards/alternative key for UI: accept `github_pat` as well
     if "github_pat" in data:
         new_val = data["github_pat"]
-        if not (_is_empty(new_val)):
+        if not _is_empty(new_val):
             row.llm_github_pat = new_val
     safe_commit(
         db.session,

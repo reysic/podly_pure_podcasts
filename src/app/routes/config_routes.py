@@ -13,7 +13,6 @@ from app.config_store import read_combined, to_pydantic_config
 from app.processor import ProcessorSingleton
 from app.runtime_config import config as runtime_config
 from app.writer.client import writer_client
-from shared.llm_utils import model_uses_max_completion_tokens
 
 logger = logging.getLogger("global_logger")
 
@@ -440,34 +439,37 @@ def api_test_llm() -> flask.Response:
         if isinstance(model_val, str)
         else getattr(runtime_config, "llm_model", "gpt-4o")
     )
-    
+
     # Check if this is a GitHub Copilot model
     # Copilot models don't have provider prefixes (no "/"), while litellm models do (e.g., "openai/gpt-4")
     github_pat: str | None = getattr(runtime_config, "llm_github_pat", None)
     is_copilot_model = bool(github_pat) and "/" not in model
-    
+
     if is_copilot_model:
         # Test GitHub Copilot connection
         import asyncio
-        
+
         async def _test_copilot() -> tuple[bool, str | None]:
             """Test Copilot connection by creating client and listing models"""
             try:
                 from copilot import CopilotClient
-                
-                client = CopilotClient(options={'github_token': github_pat})  # type: ignore[arg-type]
+
+                client = CopilotClient(options={"github_token": github_pat})  # type: ignore[arg-type]
                 await client.start()
                 models = await client.list_models()
-                
+
                 # Verify the configured model is available
-                model_ids = [getattr(m, 'id', str(m)) for m in models]
+                model_ids = [getattr(m, "id", str(m)) for m in models]
                 if model not in model_ids:
-                    return False, f"Configured model '{model}' not found in available Copilot models"
-                
+                    return (
+                        False,
+                        f"Configured model '{model}' not found in available Copilot models",
+                    )
+
                 return True, None
             except Exception as e:
                 return False, str(e)
-        
+
         try:
             success, error = asyncio.run(_test_copilot())
             if not success:
@@ -508,14 +510,11 @@ def api_test_llm() -> flask.Response:
                 {"role": "user", "content": "ping"},
             ]
 
-            try:
-                _ = litellm.completion(model=model, messages=messages, timeout=timeout)
-            except Exception as le:
-                raise
+            _ = litellm.completion(model=model, messages=messages, timeout=timeout)
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"LLM connection test failed: {e}")
             return flask.make_response(jsonify({"ok": False, "error": str(e)}), 400)
-    
+
     # Success
     return flask.make_response(jsonify({"ok": True}), 200)
 
@@ -531,32 +530,39 @@ def api_copilot_models() -> flask.Response:
 
     # PAT can be provided in body (POST) or read from runtime config
     payload = request.get_json(silent=True) or {}
-    pat = payload.get("github_pat") or getattr(runtime_config, "llm_github_pat", None) or getattr(runtime_config, "llm_api_key", None)
+    pat = (
+        payload.get("github_pat")
+        or getattr(runtime_config, "llm_github_pat", None)
+        or getattr(runtime_config, "llm_api_key", None)
+    )
 
     if not pat:
-        return _make_error_response("Missing GitHub PAT (github_pat) or configured llm_github_pat", 400)
+        return _make_error_response(
+            "Missing GitHub PAT (github_pat) or configured llm_github_pat", 400
+        )
 
     # Create and use Copilot client entirely within async context
     import asyncio
-    
+
     async def _create_and_list_models() -> list | None:  # type: ignore[type-arg]
         """Create Copilot client, start it, and list models - all in one async context"""
         try:
             from copilot import CopilotClient
-            
+
             # Create client with the PAT
-            client = CopilotClient(options={'github_token': pat})
-            
+            client = CopilotClient(options={"github_token": pat})
+
             # Start the client (initializes JSON-RPC connection)
             await client.start()
-            
+
             # List models
             models = await client.list_models()
             return models
-        except Exception as e:
+        except Exception:
             import sys
             import traceback
-            print(f"[DEBUG] Exception in _create_and_list_models:")
+
+            print("[DEBUG] Exception in _create_and_list_models:")
             traceback.print_exc()
             sys.stdout.flush()
             return None
@@ -586,7 +592,7 @@ def api_copilot_models() -> flask.Response:
                 # Try attributes - check for billing.multiplier pattern
                 mid = getattr(m, "id", None) or getattr(m, "name", None) or str(m)
                 display = getattr(m, "name", None) or mid
-                
+
                 # Try to extract cost multiplier from various possible locations
                 cost = None
                 if hasattr(m, "billing") and hasattr(m.billing, "multiplier"):
@@ -595,11 +601,11 @@ def api_copilot_models() -> flask.Response:
                     cost = m.cost_multiplier
                 elif hasattr(m, "multiplier"):
                     cost = m.multiplier
-            
+
             # Default to 1.0 if still None
             if cost is None:
                 cost = 1.0
-            
+
             normalized.append({"id": mid, "name": display, "cost_multiplier": cost})
         except Exception:
             continue
