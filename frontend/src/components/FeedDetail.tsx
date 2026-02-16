@@ -537,11 +537,11 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
 
               {/* Title aligned to bottom-left of image */}
               <div className="flex-1 min-w-0 pb-2">
-                <h1 className="text-2xl font-bold text-gray-900 mb-1">{currentFeed.title}</h1>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">{currentFeed.title}</h1>
                 {currentFeed.author && (
-                  <p className="text-lg text-gray-600">by {currentFeed.author}</p>
+                  <p className="text-lg text-gray-600 dark:text-gray-300">by {currentFeed.author}</p>
                 )}
-                <div className="mt-2 text-sm text-gray-500">
+                <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                   <span>{totalCount} episodes visible</span>
                 </div>
                 {requireAuth && isAdmin && (
@@ -742,19 +742,19 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
 
             {/* Feed Description */}
             {currentFeed.description && (
-              <div className="text-gray-700 leading-relaxed">
+              <div className="text-gray-700 dark:text-gray-300 leading-relaxed">
                 <p>{currentFeed.description.replace(/<[^>]*>/g, '')}</p>
               </div>
             )}
 
             {isAdmin && (
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4">
                 <div className="flex flex-col gap-2">
                   <div>
-                    <label className="text-sm font-medium text-gray-900">
+                    <label className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       Auto-whitelist new episodes
                     </label>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
                       Overrides the global setting. Global default: {autoWhitelistDefaultLabel}.
                     </p>
                   </div>
@@ -762,7 +762,7 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                     value={autoWhitelistSelectValue}
                     onChange={(e) => handleAutoWhitelistOverrideChange(e.target.value)}
                     disabled={updateFeedSettingsMutation.isPending}
-                    className={`text-sm border border-gray-300 rounded-md px-3 py-2 bg-white ${
+                    className={`text-sm border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
                       updateFeedSettingsMutation.isPending
                         ? 'opacity-60 cursor-not-allowed'
                         : ''
@@ -794,13 +794,13 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
         )}
 
         {/* Episodes Header with Sort Only */}
-        <div className="p-4 border-b bg-gray-50">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Episodes</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Episodes</h3>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="text-sm border border-gray-300 rounded-md px-3 py-1 bg-white"
+              className="text-sm border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
@@ -857,9 +857,9 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
               <p className="text-gray-500">No episodes found</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {sortedEpisodes.map((episode) => (
-                <div key={episode.id} className="p-4 hover:bg-gray-50">
+                <div key={episode.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
                   <div className={`flex flex-col ${episode.whitelisted ? 'gap-3' : 'gap-2'}`}>
                     {/* Top Section: Thumbnail and Title */}
                     <div className="flex items-start gap-3">
@@ -882,10 +882,10 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
 
                       {/* Title and Feed Name */}
                       <div className="flex-1 min-w-0 text-left">
-                        <h4 className="font-medium text-gray-900 mb-1 line-clamp-2 text-left">
+                        <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-1 line-clamp-2 text-left">
                           {episode.title}
                         </h4>
-                        <p className="text-sm text-gray-600 text-left">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 text-left">
                           {currentFeed.title}
                         </p>
                       </div>
@@ -894,14 +894,14 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                     {/* Episode Description */}
                     {episode.description && (
                       <div className="text-left">
-                        <p className="text-sm text-gray-500 line-clamp-3">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">
                           {episode.description.replace(/<[^>]*>/g, '').substring(0, 300)}...
                         </p>
                       </div>
                     )}
 
                     {/* Metadata: Status, Date and Duration */}
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                       {showWhitelistUi && (
                         <>
                           <button

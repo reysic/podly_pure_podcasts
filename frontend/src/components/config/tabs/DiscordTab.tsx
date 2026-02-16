@@ -218,10 +218,10 @@ function StatusIndicator({ enabled }: { enabled: boolean }) {
     <div className="flex items-center gap-3">
       <div
         className={`w-3 h-3 rounded-full ${
-          enabled ? 'bg-green-500' : 'bg-gray-300'
+          enabled ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
         }`}
       />
-      <span className="text-sm font-medium text-gray-900">
+      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
         {enabled ? 'Discord SSO is enabled' : 'Discord SSO is not configured'}
       </span>
     </div>
@@ -230,18 +230,18 @@ function StatusIndicator({ enabled }: { enabled: boolean }) {
 
 function SetupInstructions() {
   return (
-    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-4">
-      <h4 className="text-sm font-medium text-gray-900">
+    <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
+      <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
         Discord Developer Portal Setup
       </h4>
-      <ol className="text-sm text-gray-600 list-decimal list-inside space-y-2">
+      <ol className="text-sm text-gray-600 dark:text-gray-400 list-decimal list-inside space-y-2">
         <li>
           Go to{' '}
           <a
             href="https://discord.com/developers/applications"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-indigo-600 hover:text-indigo-800 underline"
+            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 underline"
           >
             Discord Developer Portal
           </a>
@@ -250,11 +250,11 @@ function SetupInstructions() {
         <li>Navigate to <strong>OAuth2 → General</strong></li>
         <li>Copy the <strong>Client ID</strong> and <strong>Client Secret</strong></li>
         <li>Add your redirect URI to the list of allowed redirects</li>
-        <li>The redirect URI should be: <code className="bg-gray-100 px-1 rounded text-xs">https://your-domain/api/auth/discord/callback</code></li>
+        <li>The redirect URI should be: <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded text-xs">https://your-domain/api/auth/discord/callback</code></li>
       </ol>
       
-      <div className="pt-2 border-t border-gray-200">
-        <p className="text-xs text-gray-500">
+      <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
           <strong>Note:</strong> Environment variables (DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, etc.) 
           take precedence over values configured here.
         </p>
