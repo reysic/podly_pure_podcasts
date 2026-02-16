@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/reysic/podly_pure_podcasts/compare/v1.0.3...v1.0.4) (2026-02-16)
+
+
+### Bug Fixes
+
+* resolve pylint warnings for Copilot integration ([1dad7c6](https://github.com/reysic/podly_pure_podcasts/commit/1dad7c6200dafaf34a7690162c1530aed9dcfd45))
+
 ## [1.0.3](https://github.com/reysic/podly_pure_podcasts/compare/v1.0.2...v1.0.3) (2026-02-16)
 
 
