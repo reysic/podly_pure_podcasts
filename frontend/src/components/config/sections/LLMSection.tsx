@@ -4,6 +4,7 @@ import { configApi } from '../../../services/api';
 import { useConfigContext } from '../ConfigContext';
 import { Section, Field, SaveButton, TestButton } from '../shared';
 import type { LLMConfig } from '../../../types';
+import { useEffect } from 'react';
 
 const LLM_MODEL_ALIASES: string[] = [
   'openai/gpt-4',
@@ -20,6 +21,9 @@ const LLM_MODEL_ALIASES: string[] = [
 export default function LLMSection() {
   const { pending, setField, getEnvHint, handleSave, isSaving } = useConfigContext();
   const [showBaseUrlInfo, setShowBaseUrlInfo] = useState(false);
+  const [githubPat, setGithubPat] = useState<string | null>(null);
+  const [models, setModels] = useState<Array<{ id: string; name: string; cost_multiplier?: number | null }>>([]);
+  const [loadingModels, setLoadingModels] = useState(false);
 
   if (!pending) return null;
 
@@ -40,6 +44,34 @@ export default function LLMSection() {
         );
       },
     });
+  };
+
+  useEffect(() => {
+    // initialize github PAT from pending config if present
+    if (pending?.llm?.github_pat) setGithubPat(pending.llm.github_pat as string);
+    if (pending?.llm?.llm_github_pat) setGithubPat(pending.llm.llm_github_pat as string);
+  }, [pending]);
+
+  const handleFetchModels = async () => {
+    setLoadingModels(true);
+    try {
+      const res = await configApi.getCopilotModels({ github_pat: githubPat ?? undefined });
+      if (res?.ok && Array.isArray(res.models)) {
+        setModels(res.models.map((m: any) => ({ id: m.id, name: m.name, cost_multiplier: m.cost_multiplier ?? null })));
+        toast.success('Fetched models');
+      } else {
+        toast.error(res?.error || 'Failed to fetch models');
+      }
+    } catch (e: any) {
+      toast.error(e?.response?.data?.error || e?.message || 'Failed to fetch models');
+    } finally {
+      setLoadingModels(false);
+    }
+  };
+
+  const handleSelectModel = (id?: string) => {
+    if (!id) return;
+    setField(['llm', 'llm_model'], id);
   };
 
   return (
@@ -97,6 +129,76 @@ export default function LLMSection() {
                 onChange={(e) => setField(['llm', 'llm_model'], e.target.value)}
                 placeholder="e.g. groq/openai/gpt-oss-120b"
               />
+              <div className="mt-3 p-3 bg-gray-50 rounded-md border border-gray-200">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  GitHub Copilot Integration
+                </label>
+                <p className="text-xs text-gray-500 mb-2">
+                  Enter your GitHub Personal Access Token to browse and select Copilot AI models
+                </p>
+                <div className="flex gap-2 items-center">
+                  <div className="flex-1">
+                    <input
+                      className="input w-full"
+                      type="password"
+                      placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                      value={githubPat ?? ''}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setGithubPat(v);
+                        setField(['llm', 'github_pat'], v);
+                        setField(['llm', 'llm_github_pat'], v);
+                      }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className={`btn rounded px-4 py-2 ${githubPat ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''}`}
+                    onClick={handleFetchModels}
+                    disabled={loadingModels || !githubPat}
+                  >
+                    {loadingModels ? (
+                      <span className="flex items-center gap-1">
+                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Loading...
+                      </span>
+                    ) : (
+                      'Fetch Models'
+                    )}
+                  </button>
+                </div>
+              </div>
+              {models.length > 0 && (
+                <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-sm font-medium text-green-800">
+                      ✓ Available Copilot Models ({models.length})
+                    </label>
+                  </div>
+                  <ul className="mt-1 space-y-1">{models.map((m) => {
+                    const isPremium = m.cost_multiplier != null && m.cost_multiplier === 0;
+                    return (
+                      <li key={m.id} className="flex items-center justify-between">
+                        <button
+                          type="button"
+                          className={`text-left text-sm ${isPremium ? 'text-orange-600 font-semibold' : 'text-blue-600'}`}
+                          onClick={() => handleSelectModel(m.id)}
+                        >
+                          {isPremium && '🔥 '}
+                          {m.name || m.id}
+                        </button>
+                        <span className={`text-xs ${isPremium ? 'text-orange-500 font-medium' : 'text-gray-500'}`}>
+                          {m.cost_multiplier != null ? `${m.cost_multiplier}x` : '—'}
+                        </span>
+                      </li>
+                    );
+                  })}
+                  </ul>
+                </div>
+              )}
             </div>
           </Field>
           <Field label="OpenAI Timeout (sec)">

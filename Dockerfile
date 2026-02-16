@@ -118,6 +118,12 @@ RUN set -e && \
     PIPENV_PIPFILE=Pipfile pipenv install --deploy --system; \
     fi
 
+# Ensure GitHub Copilot helper binary (if installed by the SDK) is executable.
+# Some copilot SDK versions install a bundled helper at site-packages/copilot/bin/copilot
+# which may lack execute permissions when installed inside the image. Make it executable
+# if present to allow the Copilot client to spawn it at runtime.
+RUN chmod +x /usr/local/lib/python3.11/site-packages/copilot/bin/copilot || true
+
 # Install PyTorch with CUDA support if using NVIDIA image (skip if LITE_BUILD)
 RUN if [ "${LITE_BUILD}" = "true" ]; then \
     echo "Skipping PyTorch installation in lite mode"; \

@@ -353,6 +353,8 @@ class LLMSettings(db.Model):  # type: ignore[name-defined, misc]
     id = db.Column(db.Integer, primary_key=True, default=1)
     llm_api_key = db.Column(db.Text, nullable=True)
     llm_model = db.Column(db.Text, nullable=False, default=DEFAULTS.LLM_DEFAULT_MODEL)
+    # Optional GitHub Personal Access Token for GitHub Copilot model usage
+    llm_github_pat = db.Column(db.Text, nullable=True)
     openai_base_url = db.Column(db.Text, nullable=True)
     openai_timeout = db.Column(
         db.Integer, nullable=False, default=DEFAULTS.OPENAI_DEFAULT_TIMEOUT_SEC

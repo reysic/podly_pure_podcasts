@@ -57,3 +57,34 @@ You have a few options to get started:
 ## Contributing
 
 See [contributing guide](docs/contributors.md) for local setup & contribution instructions.
+
+## LLM Provider Options
+
+Podly supports multiple LLM providers for ad-segment identification:
+
+### Standard LLM Providers (via litellm)
+
+Configure any litellm-supported provider using:
+- `LLM_API_KEY` - Your API key
+- `LLM_MODEL` - Model name with provider prefix (e.g., `openai/gpt-4`, `anthropic/claude-3.5-sonnet`)
+- `OPENAI_BASE_URL` - Optional custom API endpoint
+
+### GitHub Copilot Models
+
+Use GitHub Copilot models for ad identification:
+
+**Setup:**
+1. Provide a GitHub Personal Access Token:
+   - Via environment variable: `GITHUB_PAT=ghp_xxxxxxxxxxxx`
+   - Or via the web UI: Settings → LLM Configuration → GitHub PAT
+2. Select a Copilot model (without provider prefix):
+   - Examples: `gpt-4o`, `claude-sonnet-4.5`, `o1-mini`
+   - Model names should NOT include a `/` (e.g., use `gpt-4o` not `openai/gpt-4o`)
+
+**Features:**
+- The Copilot SDK is included in Docker images by default
+- Supports all three LLM operations: ad classification, boundary refinement, and word-level refinement
+- Free models available (look for 0x cost multiplier in the UI)
+- Test connection via Settings → LLM Configuration → "Test LLM" button
+
+**Note:** The application automatically detects Copilot models by checking if a GitHub PAT is configured and the model name doesn't contain a provider prefix (`/`).

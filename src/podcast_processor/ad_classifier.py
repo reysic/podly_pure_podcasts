@@ -660,6 +660,69 @@ class AdClassifier:
 
         return completion_args
 
+    def _call_copilot_model(self, model_call_obj: ModelCall, system_prompt: str) -> str:
+        """Call GitHub Copilot SDK using a user-provided PAT.
+
+        This method uses the Copilot SDK to perform a chat-style request.
+        The SDK requires async operations and uses sessions.
+        """
+        import asyncio
+        
+        pat = getattr(self.config, "llm_github_pat", None) or self.config.llm_api_key
+        if not pat:
+            raise RuntimeError(
+                "No GitHub PAT configured for Copilot model calls; set llm_github_pat in settings"
+            )
+
+        # Combine system prompt and user prompt into a single message
+        # The Copilot SDK session doesn't support separate system messages in the same way
+        combined_prompt = f"{system_prompt}\n\n{model_call_obj.prompt}"
+
+        async def _perform_copilot_chat():
+            """Perform Copilot chat within async context."""
+            try:
+                from copilot import CopilotClient
+                
+                # Create client with PAT
+                client = CopilotClient(options={'github_token': pat})
+                
+                # Start the client (initializes JSON-RPC connection)
+                await client.start()
+                
+                # Create a session with the specified model
+                session = await client.create_session({'model': model_call_obj.model_name})
+                
+                try:
+                    # Send the prompt and wait for response
+                    timeout = getattr(self.config, 'openai_timeout', 300)
+                    response = await session.send_and_wait({'prompt': combined_prompt}, timeout=timeout)
+                    
+                    # Extract content from the SessionEvent response
+                    if hasattr(response, 'data') and hasattr(response.data, 'content'):
+                        content = response.data.content
+                        if content:
+                            return content
+                    
+                    raise RuntimeError(f"Unable to extract content from Copilot response: {response}")
+                    
+                finally:
+                    # Clean up the session
+                    await session.destroy()
+                
+            except Exception as e:
+                raise RuntimeError(
+                    f"Failed to call GitHub Copilot SDK: {e}"
+                ) from e
+        
+        try:
+            content = asyncio.run(_perform_copilot_chat())
+            if not content:
+                raise RuntimeError("Empty response from Copilot SDK")
+            return content
+        except Exception as exc:
+            self.logger.error(f"Copilot SDK call failed: {exc}", exc_info=True)
+            raise
+
     def _generate_user_prompt(
         self,
         *,
@@ -1033,7 +1096,45 @@ class AdClassifier:
                 if completion_args is None:
                     return None  # Token limit exceeded
 
-                # Use concurrency limiter if available
+                # If the configured model appears to be a GitHub Copilot model,
+                # route the call through the Copilot SDK helper which uses a
+                # user-provided GitHub PAT. This keeps provider-specific code
+                # out of the main flow and allows graceful fallback if SDK
+                # isn't installed.
+                # Copilot models don't have provider prefixes (no "/"), while litellm models do (e.g., "openai/gpt-4")
+                github_pat = getattr(self.config, "llm_github_pat", None)
+                model_name_str = model_call_obj.model_name or ""
+                is_copilot_model = bool(github_pat) and "/" not in model_name_str
+                
+                if is_copilot_model:
+                    raw_response_content = self._call_copilot_model(
+                        model_call_obj, system_prompt
+                    )
+                    # Persist success via writer and return
+                    success_res = writer_client.update(
+                        "ModelCall",
+                        model_call_obj.id,
+                        {
+                            "response": raw_response_content,
+                            "status": "success",
+                            "error_message": None,
+                            "retry_attempts": retry_attempts_value,
+                        },
+                        wait=True,
+                    )
+                    if not success_res or not success_res.success:
+                        raise RuntimeError(
+                            getattr(success_res, "error", "Failed to update ModelCall")
+                        )
+                    model_call_obj.status = "success"
+                    model_call_obj.response = raw_response_content
+                    model_call_obj.error_message = None
+                    self.logger.info(
+                        f"Model call {model_call_obj.id} (copilot) successful on attempt {current_attempt_num}."
+                    )
+                    return raw_response_content
+
+                # Use concurrency limiter if available for litellm provider
                 if self.concurrency_limiter:
                     with ConcurrencyContext(self.concurrency_limiter, timeout=30.0):
                         response = litellm.completion(**completion_args)
