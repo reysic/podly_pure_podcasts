@@ -1,3 +1,22 @@
+# [1.1.0](https://github.com/reysic/podly_pure_podcasts/compare/v1.0.5...v1.1.0) (2026-02-16)
+
+
+### Bug Fixes
+
+* complete dark mode support for remaining UI elements ([f3ab87c](https://github.com/reysic/podly_pure_podcasts/commit/f3ab87c573f2c6d69e61ba75f240663c7827e268))
+* comprehensive dark mode improvements for visibility and consistency ([64adfbe](https://github.com/reysic/podly_pure_podcasts/commit/64adfbea0c1dd2927d975ecb2836016561da12e9))
+* correct TypeScript errors in ConfigTabs ([b557cca](https://github.com/reysic/podly_pure_podcasts/commit/b557cca7100436768ea848730ff3e7efc95916d1))
+* improve dark mode support for main UI components ([8cda522](https://github.com/reysic/podly_pure_podcasts/commit/8cda5220496e79b7a6b287989e3b6e5770d80f18))
+* improve dark mode visibility for podcast list and buttons ([3713030](https://github.com/reysic/podly_pure_podcasts/commit/37130309e0206b03d9308a2d53c8f3cb6fb87bbb))
+* use CSS property instead of Tailwind class for textarea resize ([e20b01b](https://github.com/reysic/podly_pure_podcasts/commit/e20b01be3f73396392279aef200b141930342a3a))
+* use type-only import for ReactNode ([75ee92c](https://github.com/reysic/podly_pure_podcasts/commit/75ee92ca2a2677b78b9a90b2a279642a848a6660))
+
+
+### Features
+
+* add dark mode support and version display ([754712e](https://github.com/reysic/podly_pure_podcasts/commit/754712ec9ff024f062f294bee84edf3d13650ab8))
+* add dark mode support to diagnostics modal ([014b762](https://github.com/reysic/podly_pure_podcasts/commit/014b7620bbb68034004110b88b648fb005860ce0))
+
 ## [1.0.5](https://github.com/reysic/podly_pure_podcasts/compare/v1.0.4...v1.0.5) (2026-02-16)
 
 
