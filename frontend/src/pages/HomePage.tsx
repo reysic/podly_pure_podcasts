@@ -113,7 +113,7 @@ export default function HomePage() {
         selectedFeed ? 'hidden lg:flex' : 'flex'
       }`}>
         <div className="flex justify-between items-center mb-6 gap-3">
-          <h2 className="text-2xl font-bold text-gray-900">Podcast Feeds</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Podcast Feeds</h2>
           <div className="flex items-center gap-2">
             {canRefreshAll && (
               <button
@@ -122,8 +122,8 @@ export default function HomePage() {
                 title="Refresh all feeds"
                 className={`flex items-center justify-center px-3 py-2 rounded-md border transition-colors ${
                   refreshAllMutation.isPending
-                    ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'border-gray-200 text-gray-600 hover:bg-gray-100'
+                    ? 'border-gray-200 dark:border-gray-600 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                    : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
               >
                 <img
@@ -135,7 +135,7 @@ export default function HomePage() {
             )}
             <button
               onClick={handleCopyAggregateLink}
-              className="flex items-center justify-center px-3 py-2 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors"
+              className="flex items-center justify-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               title="Copy your aggregate feed URL (last 3 episodes from each feed)"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

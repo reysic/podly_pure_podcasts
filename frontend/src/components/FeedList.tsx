@@ -90,12 +90,12 @@ export default function FeedList({ feeds, onFeedDeleted: _onFeedDeleted, onFeedS
 
                   {/* Feed Info */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900 line-clamp-2">{feed.title}</h3>
+                    <h3 className="font-medium text-gray-900 dark:text-gray-100 line-clamp-2">{feed.title}</h3>
                     {feed.author && (
-                      <p className="text-sm text-gray-600 mt-1">by {feed.author}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">by {feed.author}</p>
                     )}
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs text-gray-500">{feed.posts_count} episodes</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{feed.posts_count} episodes</span>
                       {showMembership && (
                         <div className="flex items-center gap-2">
                           <span
