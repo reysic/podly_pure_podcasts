@@ -667,7 +667,7 @@ class AdClassifier:
         The SDK requires async operations and uses sessions.
         """
         import asyncio
-
+        
         pat = getattr(self.config, "llm_github_pat", None) or self.config.llm_api_key
         if not pat:
             raise RuntimeError(
@@ -682,46 +682,38 @@ class AdClassifier:
             """Perform Copilot chat within async context."""
             try:
                 from copilot import CopilotClient
-
+                
                 # Create client with PAT
-                client = CopilotClient(options={"github_token": pat})
-
+                client = CopilotClient(options={'github_token': pat})
+                
                 # Start the client (initializes JSON-RPC connection)
                 await client.start()
-
+                
                 # Create a session with the specified model
-                session = await client.create_session(
-                    {"model": model_call_obj.model_name}
-                )
-
+                session = await client.create_session({'model': model_call_obj.model_name})
+                
                 try:
                     # Send the prompt and wait for response
-                    timeout = getattr(self.config, "openai_timeout", 300)
-                    response = await session.send_and_wait(
-                        {"prompt": combined_prompt}, timeout=timeout
-                    )
-
+                    timeout = getattr(self.config, 'openai_timeout', 300)
+                    response = await session.send_and_wait({'prompt': combined_prompt}, timeout=timeout)
+                    
                     # Extract content from the SessionEvent response
-                    if (
-                        response
-                        and hasattr(response, "data")
-                        and hasattr(response.data, "content")
-                    ):
+                    if response and hasattr(response, 'data') and hasattr(response.data, 'content'):
                         content = response.data.content
                         if content:
                             return str(content)
-
-                    raise RuntimeError(
-                        f"Unable to extract content from Copilot response: {response}"
-                    )
-
+                    
+                    raise RuntimeError(f"Unable to extract content from Copilot response: {response}")
+                    
                 finally:
                     # Clean up the session
                     await session.destroy()
-
+                
             except Exception as e:
-                raise RuntimeError(f"Failed to call GitHub Copilot SDK: {e}") from e
-
+                raise RuntimeError(
+                    f"Failed to call GitHub Copilot SDK: {e}"
+                ) from e
+        
         try:
             content = asyncio.run(_perform_copilot_chat())
             if not content:
@@ -1055,7 +1047,7 @@ class AdClassifier:
             or "rate limit" in error_str
         )
 
-    def _call_model(
+    def _call_model(  # pylint: disable=too-many-branches
         self,
         model_call_obj: ModelCall,
         system_prompt: str,
@@ -1113,7 +1105,7 @@ class AdClassifier:
                 github_pat = getattr(self.config, "llm_github_pat", None)
                 model_name_str = model_call_obj.model_name or ""
                 is_copilot_model = bool(github_pat) and "/" not in model_name_str
-
+                
                 if is_copilot_model:
                     raw_response_content = self._call_copilot_model(
                         model_call_obj, system_prompt
