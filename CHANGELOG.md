@@ -1,3 +1,10 @@
+## [1.0.5](https://github.com/reysic/podly_pure_podcasts/compare/v1.0.4...v1.0.5) (2026-02-16)
+
+
+### Bug Fixes
+
+* disable too-many-branches pylint warning for _call_model ([008f1b4](https://github.com/reysic/podly_pure_podcasts/commit/008f1b42c0bae09c95d06e55679745da8ad1f038))
+
 ## [1.0.4](https://github.com/reysic/podly_pure_podcasts/compare/v1.0.3...v1.0.4) (2026-02-16)
 
 
