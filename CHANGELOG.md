@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/reysic/podly_pure_podcasts/compare/v1.0.0...v1.0.1) (2026-02-16)
+
+
+### Bug Fixes
+
+* add type annotations for Copilot SDK functions ([4b54de0](https://github.com/reysic/podly_pure_podcasts/commit/4b54de09c4a037e14f7968a10067a37703461875))
+
 # 1.0.0 (2026-02-16)
 
 
