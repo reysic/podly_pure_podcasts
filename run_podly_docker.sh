@@ -275,7 +275,7 @@ else
         echo -e "${GREEN}Application: http://localhost:5001${NC}"
     else
         echo -e "${YELLOW}Starting Podly...${NC}"
-        echo -e "${GREEN}Application will be available at: http://localhost:5001${NC}"
+        echo -e "${GREEN}Application will be available at: http://localhost:5003${NC}"
         docker compose $COMPOSE_FILES up
     fi
 fi
