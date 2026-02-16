@@ -629,3 +629,10 @@ export const jobsApi = {
     return response.data;
   }
 };
+
+export const versionApi = {
+  getVersion: async (): Promise<{ version: string }> => {
+    const response = await api.get('/api/version');
+    return response.data;
+  }
+};
