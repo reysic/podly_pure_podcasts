@@ -48,9 +48,8 @@ export default function EpisodeProcessingStatus({
         {/* Progress bar */}
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
           <div
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              status.status === 'error' || status.status === 'failed' ? 'bg-red-500' : 'bg-blue-500'
-            }`}
+            className={`h-1.5 rounded-full transition-all duration-300 ${status.status === 'error' || status.status === 'failed' ? 'bg-red-500' : 'bg-blue-500'
+              }`}
             style={{ width: `${getProgressPercentage()}%` }}
           />
         </div>
@@ -60,11 +59,9 @@ export default function EpisodeProcessingStatus({
           {[1, 2, 3, 4].map((stepNumber) => (
             <div
               key={stepNumber}
-              className={`flex flex-col items-center ${
-                status.step === stepNumber ? 'text-blue-600 dark:text-blue-400 font-medium' : ''
-              } ${
-                status.step > stepNumber ? 'text-green-600 dark:text-green-400' : ''
-              }`}
+              className={`flex flex-col items-center ${status.step === stepNumber ? 'text-blue-600 dark:text-blue-400 font-medium' : ''
+                } ${status.step > stepNumber ? 'text-green-600 dark:text-green-400' : ''
+                }`}
             >
               <span className="text-xs">{getStepIcon(stepNumber)}</span>
               <span className="text-xs">{stepNumber}/4</span>

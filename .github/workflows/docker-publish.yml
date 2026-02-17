@@ -219,6 +219,7 @@ jobs:
             type=ref,event=pr,suffix=-${{ matrix.name }}-${{ env.ARCH }}
             type=semver,pattern={{version}},suffix=-${{ matrix.name }}-${{ env.ARCH }}
             type=raw,value=${{ matrix.name }}-${{ env.ARCH }},enable={{is_default_branch}}
+            type=raw,value=latest-${{ matrix.name }}-${{ env.ARCH }},enable=${{ github.event_name == 'release' }}
 
       - name: Get version
         id: version
@@ -360,6 +361,7 @@ jobs:
             type=ref,event=pr,suffix=-${{ matrix.variant }}
             type=semver,pattern={{version}},suffix=-${{ matrix.variant }}
             type=raw,value=${{ matrix.variant }},enable={{is_default_branch}}
+            type=raw,value=latest-${{ matrix.variant }},enable=${{ github.event_name == 'release' }}
 
       - name: Create and push manifest
         run: |
