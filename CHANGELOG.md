@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/reysic/podly_pure_podcasts/compare/v1.1.0...v1.1.1) (2026-02-17)
+
+
+### Bug Fixes
+
+* properly close Copilot client connections to prevent resource exhaustion ([2e073b8](https://github.com/reysic/podly_pure_podcasts/commit/2e073b8eddb702a462bad727893a9df28317a730))
+
 # [1.1.0](https://github.com/reysic/podly_pure_podcasts/compare/v1.0.5...v1.1.0) (2026-02-16)
 
 
