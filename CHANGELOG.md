@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.0.2...v2.1.0) (2026-02-17)
+
+
+### Features
+
+* add latest-lite tag that updates only on releases ([4272cd9](https://github.com/reysic/podly_pure_podcasts/commit/4272cd9aef1112f07bae6f1aa47388143819c24a))
+
 ## [2.0.2](https://github.com/reysic/podly_pure_podcasts/compare/v2.0.1...v2.0.2) (2026-02-17)
 
 
