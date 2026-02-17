@@ -30,7 +30,7 @@ export default function ConnectionStatusCard({
   return (
     <div className="flex items-start justify-between border rounded p-3">
       <div>
-        <div className="text-sm font-medium text-gray-900">{title}</div>
+        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{title}</div>
         <div className={`text-xs ${statusColor}`}>{displayMessage}</div>
       </div>
       <button
