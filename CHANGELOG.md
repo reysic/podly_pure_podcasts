@@ -1,3 +1,10 @@
+## [2.2.2](https://github.com/reysic/podly_pure_podcasts/compare/v2.2.1...v2.2.2) (2026-02-17)
+
+
+### Bug Fixes
+
+* use tag ref check instead of release event for latest tags ([dcf75d3](https://github.com/reysic/podly_pure_podcasts/commit/dcf75d3b211299ea7a53ad0eb51488d6016c23f5))
+
 ## [2.2.1](https://github.com/reysic/podly_pure_podcasts/compare/v2.2.0...v2.2.1) (2026-02-17)
 
 
