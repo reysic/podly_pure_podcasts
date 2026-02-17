@@ -333,7 +333,7 @@ jobs:
 
   manifest:
     needs: [changes, build-amd64]
-    if: ${{ needs.changes.outputs.skip == 'false' && github.event_name != 'pull_request' }}
+    if: ${{ needs.changes.outputs.skip == 'false' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
