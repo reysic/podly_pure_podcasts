@@ -46,7 +46,7 @@ export default function EpisodeProcessingStatus({
       {/* Progress indicator */}
       <div className="space-y-1">
         {/* Progress bar */}
-        <div className="w-full bg-gray-200 rounded-full h-1.5">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
           <div
             className={`h-1.5 rounded-full transition-all duration-300 ${
               status.status === 'error' || status.status === 'failed' ? 'bg-red-500' : 'bg-blue-500'
@@ -56,14 +56,14 @@ export default function EpisodeProcessingStatus({
         </div>
 
         {/* Step indicators */}
-        <div className="flex justify-between text-xs text-gray-600">
+        <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
           {[1, 2, 3, 4].map((stepNumber) => (
             <div
               key={stepNumber}
               className={`flex flex-col items-center ${
-                status.step === stepNumber ? 'text-blue-600 font-medium' : ''
+                status.step === stepNumber ? 'text-blue-600 dark:text-blue-400 font-medium' : ''
               } ${
-                status.step > stepNumber ? 'text-green-600' : ''
+                status.step > stepNumber ? 'text-green-600 dark:text-green-400' : ''
               }`}
             >
               <span className="text-xs">{getStepIcon(stepNumber)}</span>
@@ -73,14 +73,14 @@ export default function EpisodeProcessingStatus({
         </div>
 
         {/* Current step name */}
-        <div className="text-xs text-center text-gray-600">
+        <div className="text-xs text-center text-gray-600 dark:text-gray-300">
           {status.step_name}
         </div>
       </div>
 
       {/* Error message */}
       {(status.error || status.status === 'failed' || status.status === 'error') && (
-        <div className="text-xs text-red-600 text-center">
+        <div className="text-xs text-red-600 dark:text-red-400 text-center">
           {status.error || 'Processing failed'}
         </div>
       )}
