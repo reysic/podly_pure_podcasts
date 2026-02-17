@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/reysic/podly_pure_podcasts/compare/v2.0.0...v2.0.1) (2026-02-17)
+
+
+### Bug Fixes
+
+* improve dark mode visibility for episode processing status ([4f5af05](https://github.com/reysic/podly_pure_podcasts/commit/4f5af054ba6c05c132e73eff93ff2da4eed22bc7))
+
 # [2.0.0](https://github.com/reysic/podly_pure_podcasts/compare/v1.2.0...v2.0.0) (2026-02-17)
 
 
