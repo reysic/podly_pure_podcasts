@@ -1,3 +1,10 @@
+## [2.3.2](https://github.com/reysic/podly_pure_podcasts/compare/v2.3.1...v2.3.2) (2026-02-17)
+
+
+### Bug Fixes
+
+* never skip Docker builds for release commits with version tags ([c23e763](https://github.com/reysic/podly_pure_podcasts/commit/c23e76322537da85ddf865d1c29d5f8e0671fb5c))
+
 ## [2.3.1](https://github.com/reysic/podly_pure_podcasts/compare/v2.3.0...v2.3.1) (2026-02-17)
 
 
