@@ -220,6 +220,7 @@ jobs:
             type=semver,pattern={{version}},suffix=-${{ matrix.name }}-${{ env.ARCH }}
             type=raw,value=${{ matrix.name }}-${{ env.ARCH }},enable={{is_default_branch}}
             type=raw,value=latest-${{ matrix.name }}-${{ env.ARCH }},enable=${{ github.event_name == 'release' }}
+            type=raw,value=latest-${{ matrix.name }},enable=${{ github.event_name == 'release' }}
 
       - name: Get version
         id: version
