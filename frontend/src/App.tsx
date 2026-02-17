@@ -16,6 +16,7 @@ import AudioPlayer from './components/AudioPlayer';
 import { billingApi, versionApi } from './services/api';
 import { DiagnosticsProvider, useDiagnostics } from './contexts/DiagnosticsContext';
 import DiagnosticsModal from './components/DiagnosticsModal';
+import ChangelogModal from './components/ChangelogModal';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -35,6 +36,7 @@ function AppShell() {
   const { theme, toggleTheme } = useTheme();
   const { open: openDiagnostics } = useDiagnostics();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showChangelog, setShowChangelog] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const { data: billingSummary } = useQuery({
@@ -119,9 +121,16 @@ function AppShell() {
                   Podly
                 </h1>
                 {versionData && (
-                  <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setShowChangelog(true);
+                    }}
+                    className="ml-2 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors cursor-pointer"
+                    title="View changelog"
+                  >
                     {versionData.version}
-                  </span>
+                  </button>
                 )}
               </Link>
             </div>
@@ -326,6 +335,7 @@ function AppShell() {
 
       <AudioPlayer />
       <DiagnosticsModal />
+      <ChangelogModal isOpen={showChangelog} onClose={() => setShowChangelog(false)} />
       <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
     </div>
   );
