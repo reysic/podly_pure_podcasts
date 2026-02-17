@@ -333,7 +333,7 @@ jobs:
 
   manifest:
     needs: [changes, build-amd64]
-    if: ${{ needs.changes.outputs.skip == 'false' && github.event_name != 'workflow_dispatch' }}
+    if: ${{ needs.changes.outputs.skip == 'false' && github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -362,7 +362,7 @@ jobs:
             type=ref,event=pr,suffix=-${{ matrix.variant }}
             type=semver,pattern={{version}},suffix=-${{ matrix.variant }}
             type=raw,value=${{ matrix.variant }},enable={{is_default_branch}}
-            type=raw,value=latest-${{ matrix.variant }},enable=${{ github.event_name == 'release' }}
+            type=raw,value=latest-${{ matrix.variant }},enable=${{ startsWith(github.ref, 'refs/tags/v') }}
 
       - name: Create and push manifest
         run: |
