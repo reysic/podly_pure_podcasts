@@ -17,6 +17,27 @@ Podly uses Whisper and Chat GPT to remove ads from podcasts.
 
 <img width="100%" src="docs/images/screenshot.png" />
 
+## Docker Image Tags
+
+Choose the right image tag for your deployment:
+
+| Tag | Description | When to Use | Updates |
+|-----|-------------|-------------|---------|
+| `latest-lite` | Latest **release** (lite version) | **Recommended for production** | On each release |
+| `lite-amd64` | Latest **main branch** (lite version) | Testing latest features | On each commit to main |
+| `2.x.x-lite-amd64` | Specific version (lite version) | Pin to exact version | Never changes |
+| `latest` | Latest **release** (full version) | Full version with GPU support | On each release (when enabled) |
+| `latest-lite-amd64` | Latest **release** for amd64 only | Production on amd64 systems | On each release |
+
+**Lite vs Full:**
+- **Lite** (`-lite`): Smaller image, faster builds, CPU-only transcription (Recommended)
+- **Full** (no suffix): Includes GPU support for faster transcription (Coming soon)
+
+**Example:**
+```bash
+docker pull ghcr.io/reysic/podly-pure-podcasts:latest-lite
+```
+
 ## How To Run
 
 You have a few options to get started:
