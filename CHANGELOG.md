@@ -1,3 +1,10 @@
+## [2.2.3](https://github.com/reysic/podly_pure_podcasts/compare/v2.2.2...v2.2.3) (2026-02-17)
+
+
+### Bug Fixes
+
+* update manifest job to run on workflow_dispatch and use tag ref check ([5cf3bfc](https://github.com/reysic/podly_pure_podcasts/commit/5cf3bfc0fad17e8d5c6ef7a1aded14acac36a96c))
+
 ## [2.2.2](https://github.com/reysic/podly_pure_podcasts/compare/v2.2.1...v2.2.2) (2026-02-17)
 
 
