@@ -209,6 +209,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Check if commit is a release
+        id: is_release
+        run: |
+          # Check if current commit has a version tag
+          if git tag --points-at HEAD | grep -q '^v[0-9]'; then
+            echo "is_release=true" >> $GITHUB_OUTPUT
+            echo "Current commit is tagged as a release"
+          else
+            echo "is_release=false" >> $GITHUB_OUTPUT
+            echo "Current commit is not a release"
+          fi
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -219,8 +231,12 @@ jobs:
             type=ref,event=pr,suffix=-${{ matrix.name }}-${{ env.ARCH }}
             type=semver,pattern={{version}},suffix=-${{ matrix.name }}-${{ env.ARCH }}
             type=raw,value=${{ matrix.name }}-${{ env.ARCH }},enable={{is_default_branch}}
-            type=raw,value=latest-${{ matrix.name }}-${{ env.ARCH }},enable=${{ startsWith(github.ref, 'refs/tags/v') }}
-            type=raw,value=latest-${{ matrix.name }},enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=raw,value=latest-${{ matrix.name }}-${{ env.ARCH }},enable=${{ steps.is_release.outputs.is_release == 'true' }}
+            type=raw,value=latest-${{ matrix.name }},enable=${{ steps.is_release.outputs.is_release == 'true' }}
+            type=semver,pattern={{version}},suffix=-${{ env.ARCH }},enable=${{ matrix.name == 'full' }}
+            type=raw,value=${{ env.ARCH }},enable=${{ matrix.name == 'full' && is_default_branch }}
+            type=raw,value=latest-${{ env.ARCH }},enable=${{ matrix.name == 'full' && steps.is_release.outputs.is_release == 'true' }}
+            type=raw,value=latest,enable=${{ matrix.name == 'full' && steps.is_release.outputs.is_release == 'true' }}
 
       - name: Get version
         id: version
@@ -352,6 +368,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Check if commit is a release
+        id: is_release
+        run: |
+          # Check if current commit has a version tag
+          if git tag --points-at HEAD | grep -q '^v[0-9]'; then
+            echo "is_release=true" >> $GITHUB_OUTPUT
+            echo "Current commit is tagged as a release"
+          else
+            echo "is_release=false" >> $GITHUB_OUTPUT
+            echo "Current commit is not a release"
+          fi
+
       - name: Extract metadata (manifest)
         id: meta
         uses: docker/metadata-action@v5
@@ -362,7 +390,9 @@ jobs:
             type=ref,event=pr,suffix=-${{ matrix.variant }}
             type=semver,pattern={{version}},suffix=-${{ matrix.variant }}
             type=raw,value=${{ matrix.variant }},enable={{is_default_branch}}
-            type=raw,value=latest-${{ matrix.variant }},enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=raw,value=latest-${{ matrix.variant }},enable=${{ steps.is_release.outputs.is_release == 'true' }}
+            type=semver,pattern={{version}},enable=${{ matrix.variant == 'full' }}
+            type=raw,value=latest,enable=${{ matrix.variant == 'full' && steps.is_release.outputs.is_release == 'true' }}
 
       - name: Create and push manifest
         run: |
