@@ -169,37 +169,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        variant:
+        include:
           - name: "lite"
             base: "python:3.11-slim"
             gpu: "false"
             gpu_nvidia: "false"
             gpu_amd: "false"
             lite_build: "true"
-          - name: "latest"
-            base: "python:3.11-slim"
-            gpu: "false"
-            gpu_nvidia: "false"
-            gpu_amd: "false"
-            lite_build: "false"
-            enabled: ${{ github.event_name == 'workflow_dispatch' && inputs.build_mode == 'all-variants' }}
-          - name: "gpu-nvidia"
-            base: "nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04"
-            gpu: "true"
-            gpu_nvidia: "true"
-            gpu_amd: "false"
-            lite_build: "false"
-            enabled: ${{ github.event_name == 'workflow_dispatch' && inputs.build_mode == 'all-variants' }}
-          - name: "gpu-amd"
-            base: "rocm/dev-ubuntu-22.04:6.4-complete"
-            gpu: "false"
-            gpu_nvidia: "false"
-            gpu_amd: "true"
-            lite_build: "false"
-            enabled: ${{ github.event_name == 'workflow_dispatch' && inputs.build_mode == 'all-variants' }}
-        exclude:
-          - variant:
-              enabled: false
     env:
       ARCH: amd64
     steps:
@@ -209,7 +185,7 @@ jobs:
           fetch-depth: 0
 
       - name: Free up disk space
-        if: ${{ matrix.variant.gpu == 'true' || matrix.variant.gpu_nvidia == 'true' || matrix.variant.gpu_amd == 'true' }}
+        if: ${{ matrix.gpu == 'true' || matrix.gpu_nvidia == 'true' || matrix.gpu_amd == 'true' }}
         run: |
           echo "Available disk space before cleanup:"
           df -h
@@ -239,10 +215,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch,suffix=-${{ matrix.variant.name }}-${{ env.ARCH }}
-            type=ref,event=pr,suffix=-${{ matrix.variant.name }}-${{ env.ARCH }}
-            type=semver,pattern={{version}},suffix=-${{ matrix.variant.name }}-${{ env.ARCH }}
-            type=raw,value=${{ matrix.variant.name }}-${{ env.ARCH }},enable={{is_default_branch}}
+            type=ref,event=branch,suffix=-${{ matrix.name }}-${{ env.ARCH }}
+            type=ref,event=pr,suffix=-${{ matrix.name }}-${{ env.ARCH }}
+            type=semver,pattern={{version}},suffix=-${{ matrix.name }}-${{ env.ARCH }}
+            type=raw,value=${{ matrix.name }}-${{ env.ARCH }},enable={{is_default_branch}}
 
       - name: Get version
         id: version
@@ -265,11 +241,11 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             VERSION=${{ steps.version.outputs.version }}
-            BASE_IMAGE=${{ matrix.variant.base }}
-            USE_GPU=${{ matrix.variant.gpu }}
-            USE_GPU_NVIDIA=${{ matrix.variant.gpu_nvidia }}
-            USE_GPU_AMD=${{ matrix.variant.gpu_amd }}
-            LITE_BUILD=${{ matrix.variant.lite_build }}
+            BASE_IMAGE=${{ matrix.base }}
+            USE_GPU=${{ matrix.gpu }}
+            USE_GPU_NVIDIA=${{ matrix.gpu_nvidia }}
+            USE_GPU_AMD=${{ matrix.gpu_amd }}
+            LITE_BUILD=${{ matrix.lite_build }}
           # Temporarily disabled due to GitHub Actions Cache service outage
           # cache-from: type=gha
           # cache-to: type=gha,mode=max
@@ -280,15 +256,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        variant:
-          - {
-              name: "lite",
-              base: "python:3.11-slim",
-              gpu: "false",
-              gpu_nvidia: "false",
-              gpu_amd: "false",
-              lite_build: "true",
-            }
+        include:
+          - name: "lite"
+            base: "python:3.11-slim"
+            gpu: "false"
+            gpu_nvidia: "false"
+            gpu_amd: "false"
+            lite_build: "true"
     env:
       ARCH: arm64
     steps:
@@ -298,7 +272,7 @@ jobs:
           fetch-depth: 0
 
       - name: Free up disk space
-        if: ${{ matrix.variant.gpu == 'true' || matrix.variant.gpu_nvidia == 'true' || matrix.variant.gpu_amd == 'true' }}
+        if: ${{ matrix.gpu == 'true' || matrix.gpu_nvidia == 'true' || matrix.gpu_amd == 'true' }}
         run: |
           echo "Available disk space before cleanup:"
           df -h
@@ -331,10 +305,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch,suffix=-${{ matrix.variant.name }}-${{ env.ARCH }}
-            type=ref,event=pr,suffix=-${{ matrix.variant.name }}-${{ env.ARCH }}
-            type=semver,pattern={{version}},suffix=-${{ matrix.variant.name }}-${{ env.ARCH }}
-            type=raw,value=${{ matrix.variant.name }}-${{ env.ARCH }},enable={{is_default_branch}}
+            type=ref,event=branch,suffix=-${{ matrix.name }}-${{ env.ARCH }}
+            type=ref,event=pr,suffix=-${{ matrix.name }}-${{ env.ARCH }}
+            type=semver,pattern={{version}},suffix=-${{ matrix.name }}-${{ env.ARCH }}
+            type=raw,value=${{ matrix.name }}-${{ env.ARCH }},enable={{is_default_branch}}
 
       - name: Build and push
         uses: docker/build-push-action@v5
@@ -346,11 +320,11 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            BASE_IMAGE=${{ matrix.variant.base }}
-            USE_GPU=${{ matrix.variant.gpu }}
-            USE_GPU_NVIDIA=${{ matrix.variant.gpu_nvidia }}
-            USE_GPU_AMD=${{ matrix.variant.gpu_amd }}
-            LITE_BUILD=${{ matrix.variant.lite_build }}
+            BASE_IMAGE=${{ matrix.base }}
+            USE_GPU=${{ matrix.gpu }}
+            USE_GPU_NVIDIA=${{ matrix.gpu_nvidia }}
+            USE_GPU_AMD=${{ matrix.gpu_amd }}
+            LITE_BUILD=${{ matrix.lite_build }}
           # Temporarily disabled due to GitHub Actions Cache service outage
           # cache-from: type=gha
           # cache-to: type=gha,mode=max
