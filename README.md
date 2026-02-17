@@ -19,19 +19,17 @@ Podly uses Whisper and Chat GPT to remove ads from podcasts.
 
 ## Docker Image Tags
 
-Choose the right image tag for your deployment:
 
 | Tag | Description | When to Use | Updates |
 |-----|-------------|-------------|---------|
-| `latest-lite` | Latest **release** (lite version) | **Recommended for production** | On each release |
-| `lite-amd64` | Latest **main branch** (lite version) | Testing latest features | On each commit to main |
-| `2.x.x-lite-amd64` | Specific version (lite version) | Pin to exact version | Never changes |
-| `latest` | Latest **release** (full version) | Full version with GPU support | On each release (when enabled) |
-| `latest-lite-amd64` | Latest **release** for amd64 only | Production on amd64 systems | On each release |
+| `latest-lite` | Latest **release** (lite version) | Remote transcription | On each release |
+| `main-lite` | Latest **main branch** (lite version) | Remote transcription, latest change testing | On each commit to main |
+| `latest` | Latest **release** (full version) | Local Whisper transcription | On each release |
+| `main` | Latest **main branch** (full version) | Local Whisper transcription, latest change testing Production on amd64 systems | On each commit to main |
 
-**Lite vs Full:**
-- **Lite** (`-lite`): Smaller image, faster builds, CPU-only transcription (Recommended)
-- **Full** (no suffix): Includes GPU support for faster transcription (Coming soon)
+**Lite Suffix**
+- **Lite** (`-lite`): Smaller image, no local Whisper, faster builds
+- **Full** (no suffix): Local Whisper transcription, **not currently built**
 
 **Example:**
 ```bash
