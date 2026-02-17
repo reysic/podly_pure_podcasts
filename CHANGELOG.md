@@ -1,3 +1,11 @@
+# [2.4.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.3.2...v2.4.0) (2026-02-17)
+
+
+### Features
+
+* add clickable version display with changelog modal ([184a502](https://github.com/reysic/podly_pure_podcasts/commit/184a502d574f9c1c7c5040562451de00ac0d1e63))
+* improve dark mode visibility of LLM and Whisper connection status titles ([618a81f](https://github.com/reysic/podly_pure_podcasts/commit/618a81fa038d3863feefdfe490323f92c58382ac))
+
 ## [2.3.2](https://github.com/reysic/podly_pure_podcasts/compare/v2.3.1...v2.3.2) (2026-02-17)
 
 
