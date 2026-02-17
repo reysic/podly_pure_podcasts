@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.1.0...v2.2.0) (2026-02-17)
+
+
+### Features
+
+* add dark mode support to processing stats modal ([2745c19](https://github.com/reysic/podly_pure_podcasts/commit/2745c19773fa47fc6dc886eaca990584eb080a17))
+
 # [2.1.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.0.2...v2.1.0) (2026-02-17)
 
 
