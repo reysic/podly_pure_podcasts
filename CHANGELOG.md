@@ -1,3 +1,10 @@
+# [2.5.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.4.1...v2.5.0) (2026-02-17)
+
+
+### Features
+
+* add expand/collapse functionality for episode descriptions ([97ff636](https://github.com/reysic/podly_pure_podcasts/commit/97ff63681a5926146568dcfe9e6eb7d9e79f2a01))
+
 ## [2.4.1](https://github.com/reysic/podly_pure_podcasts/compare/v2.4.0...v2.4.1) (2026-02-17)
 
 
