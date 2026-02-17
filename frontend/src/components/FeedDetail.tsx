@@ -45,9 +45,24 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
   const [isEstimating, setIsEstimating] = useState(false);
   const [estimateError, setEstimateError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Set<number>>(new Set());
 
   const isAdmin = !requireAuth || user?.role === 'admin';
   const whitelistedOnly = requireAuth && !isAdmin;
+
+  const toggleDescriptionExpanded = (episodeId: number) => {
+    setExpandedDescriptions(prev => {
+      const next = new Set(prev);
+      if (next.has(episodeId)) {
+        next.delete(episodeId);
+      } else {
+        next.add(episodeId);
+      }
+      return next;
+    });
+  };
+
+  const isDescriptionExpanded = (episodeId: number) => expandedDescriptions.has(episodeId);
 
   const { data: configResponse } = useQuery<ConfigResponse>({
     queryKey: ['config'],
@@ -886,13 +901,30 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                     </div>
 
                     {/* Episode Description */}
-                    {episode.description && (
-                      <div className="text-left">
-                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">
-                          {episode.description.replace(/<[^>]*>/g, '').substring(0, 300)}...
-                        </p>
-                      </div>
-                    )}
+                    {episode.description && (() => {
+                      const cleanDescription = episode.description.replace(/<[^>]*>/g, '').trim();
+                      const isExpanded = isDescriptionExpanded(episode.id);
+                      const shouldShowExpand = cleanDescription.length > 200;
+                      const displayText = isExpanded || !shouldShowExpand 
+                        ? cleanDescription 
+                        : cleanDescription.substring(0, 200) + '...';
+                      
+                      return (
+                        <div className="text-left">
+                          <p className={`text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap ${isExpanded ? '' : 'line-clamp-3'}`}>
+                            {displayText}
+                          </p>
+                          {shouldShowExpand && (
+                            <button
+                              onClick={() => toggleDescriptionExpanded(episode.id)}
+                              className="mt-1 text-xs text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
+                            >
+                              {isExpanded ? 'Show less' : 'Show more'}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {/* Metadata: Status, Date and Duration */}
                     <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
