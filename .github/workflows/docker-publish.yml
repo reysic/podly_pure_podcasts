@@ -219,8 +219,8 @@ jobs:
             type=ref,event=pr,suffix=-${{ matrix.name }}-${{ env.ARCH }}
             type=semver,pattern={{version}},suffix=-${{ matrix.name }}-${{ env.ARCH }}
             type=raw,value=${{ matrix.name }}-${{ env.ARCH }},enable={{is_default_branch}}
-            type=raw,value=latest-${{ matrix.name }}-${{ env.ARCH }},enable=${{ github.event_name == 'release' }}
-            type=raw,value=latest-${{ matrix.name }},enable=${{ github.event_name == 'release' }}
+            type=raw,value=latest-${{ matrix.name }}-${{ env.ARCH }},enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=raw,value=latest-${{ matrix.name }},enable=${{ startsWith(github.ref, 'refs/tags/v') }}
 
       - name: Get version
         id: version
