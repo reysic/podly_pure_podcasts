@@ -665,6 +665,9 @@ class AdClassifier:
 
         This method uses the Copilot SDK to perform a chat-style request.
         The SDK requires async operations and uses sessions.
+
+        Handles Azure OpenAI content filtering errors by detecting them and
+        allowing the caller to retry with error classification.
         """
         import asyncio
 
@@ -720,6 +723,15 @@ class AdClassifier:
                     await session.destroy()
 
             except Exception as e:
+                error_msg = str(e)
+                # Detect Azure OpenAI content filtering errors
+                if (
+                    "content management policy" in error_msg.lower()
+                    or "response was filtered" in error_msg.lower()
+                ):
+                    raise RuntimeError(
+                        f"Content filtering error from Azure OpenAI. This may be due to sensitive content in the podcast transcript. Error: {e}"
+                    ) from e
                 raise RuntimeError(f"Failed to call GitHub Copilot SDK: {e}") from e
 
             finally:

@@ -8,6 +8,16 @@ on:
     branches: [main]
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      build_mode:
+        description: 'Build mode'
+        required: true
+        default: 'lite-only'
+        type: choice
+        options:
+          - lite-only
+          - all-variants
 
 permissions:
   contents: read
@@ -160,30 +170,36 @@ jobs:
     strategy:
       matrix:
         variant:
-          - name: "latest"
-            base: "python:3.11-slim"
-            gpu: "false"
-            gpu_nvidia: "false"
-            gpu_amd: "false"
-            lite_build: "false"
           - name: "lite"
             base: "python:3.11-slim"
             gpu: "false"
             gpu_nvidia: "false"
             gpu_amd: "false"
             lite_build: "true"
+          - name: "latest"
+            base: "python:3.11-slim"
+            gpu: "false"
+            gpu_nvidia: "false"
+            gpu_amd: "false"
+            lite_build: "false"
+            enabled: ${{ github.event_name == 'workflow_dispatch' && inputs.build_mode == 'all-variants' }}
           - name: "gpu-nvidia"
             base: "nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04"
             gpu: "true"
             gpu_nvidia: "true"
             gpu_amd: "false"
             lite_build: "false"
+            enabled: ${{ github.event_name == 'workflow_dispatch' && inputs.build_mode == 'all-variants' }}
           - name: "gpu-amd"
             base: "rocm/dev-ubuntu-22.04:6.4-complete"
             gpu: "false"
             gpu_nvidia: "false"
             gpu_amd: "true"
             lite_build: "false"
+            enabled: ${{ github.event_name == 'workflow_dispatch' && inputs.build_mode == 'all-variants' }}
+        exclude:
+          - variant:
+              enabled: false
     env:
       ARCH: amd64
     steps:
@@ -228,6 +244,16 @@ jobs:
             type=semver,pattern={{version}},suffix=-${{ matrix.variant.name }}-${{ env.ARCH }}
             type=raw,value=${{ matrix.variant.name }}-${{ env.ARCH }},enable={{is_default_branch}}
 
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "version=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "dev")
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
@@ -238,6 +264,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
+            VERSION=${{ steps.version.outputs.version }}
             BASE_IMAGE=${{ matrix.variant.base }}
             USE_GPU=${{ matrix.variant.gpu }}
             USE_GPU_NVIDIA=${{ matrix.variant.gpu_nvidia }}
@@ -249,19 +276,11 @@ jobs:
 
   build-arm64:
     needs: changes
-    if: ${{ needs.changes.outputs.skip == 'false' && github.event_name != 'pull_request' }}
+    if: ${{ needs.changes.outputs.skip == 'false' && github.event_name != 'pull_request' && github.event_name == 'workflow_dispatch' && inputs.build_mode == 'all-variants' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
         variant:
-          - {
-              name: "latest",
-              base: "python:3.11-slim",
-              gpu: "false",
-              gpu_nvidia: "false",
-              gpu_amd: "false",
-              lite_build: "false",
-            }
           - {
               name: "lite",
               base: "python:3.11-slim",
@@ -337,13 +356,12 @@ jobs:
           # cache-to: type=gha,mode=max
 
   manifest:
-    needs: [changes, build-amd64, build-arm64]
-    if: ${{ needs.changes.outputs.skip == 'false' }}
+    needs: [changes, build-amd64]
+    if: ${{ needs.changes.outputs.skip == 'false' && github.event_name != 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
         variant:
-          - "latest"
           - "lite"
     steps:
       - name: Checkout repository

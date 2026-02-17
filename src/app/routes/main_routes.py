@@ -166,21 +166,25 @@ def set_whitelist(p_guid: str, val: str) -> flask.Response:
 
 @main_bp.route("/api/version", methods=["GET"])
 def get_version() -> flask.Response:
-    """Get the application version from git tags."""
-    try:
-        # Try to get the latest git tag
-        result = subprocess.run(
-            ["git", "describe", "--tags", "--abbrev=0"],
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=5,
-        )
-        if result.returncode == 0:
-            version = result.stdout.strip()
-        else:
+    """Get the application version from environment or git tags."""
+    # First check if version was baked into the Docker image
+    version = os.environ.get("PODLY_VERSION")
+
+    if not version or version == "unknown":
+        try:
+            # Try to get the latest git tag
+            result = subprocess.run(
+                ["git", "describe", "--tags", "--abbrev=0"],
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=5,
+            )
+            if result.returncode == 0:
+                version = result.stdout.strip()
+            else:
+                version = "unknown"
+        except Exception:  # pylint: disable=broad-except
             version = "unknown"
-    except Exception:  # pylint: disable=broad-except
-        version = "unknown"
 
     return flask.make_response(flask.jsonify({"version": version}), 200)
