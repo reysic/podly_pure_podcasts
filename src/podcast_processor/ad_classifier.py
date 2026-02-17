@@ -680,12 +680,12 @@ class AdClassifier:
 
         async def _perform_copilot_chat() -> str:
             """Perform Copilot chat within async context."""
+            from copilot import CopilotClient
+
+            # Create client with PAT
+            client = CopilotClient(options={"github_token": pat})
+
             try:
-                from copilot import CopilotClient
-
-                # Create client with PAT
-                client = CopilotClient(options={"github_token": pat})
-
                 # Start the client (initializes JSON-RPC connection)
                 await client.start()
 
@@ -721,6 +721,13 @@ class AdClassifier:
 
             except Exception as e:
                 raise RuntimeError(f"Failed to call GitHub Copilot SDK: {e}") from e
+
+            finally:
+                # Clean up the client connection
+                try:
+                    await client.stop()
+                except Exception:
+                    pass  # Ignore cleanup errors
 
         try:
             content = asyncio.run(_perform_copilot_chat())
