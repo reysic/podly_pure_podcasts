@@ -1,3 +1,10 @@
+## [2.0.2](https://github.com/reysic/podly_pure_podcasts/compare/v2.0.1...v2.0.2) (2026-02-17)
+
+
+### Bug Fixes
+
+* correct Docker workflow matrix syntax ([17a4a8d](https://github.com/reysic/podly_pure_podcasts/commit/17a4a8dd695e6512d069bf89e753da46289b4958))
+
 ## [2.0.1](https://github.com/reysic/podly_pure_podcasts/compare/v2.0.0...v2.0.1) (2026-02-17)
 
 
