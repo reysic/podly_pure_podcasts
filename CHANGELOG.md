@@ -1,3 +1,23 @@
+# [2.0.0](https://github.com/reysic/podly_pure_podcasts/compare/v1.2.0...v2.0.0) (2026-02-17)
+
+
+### Features
+
+* optimize Docker builds and fix version display ([dc988d0](https://github.com/reysic/podly_pure_podcasts/commit/dc988d058affb5b87aa9e95bdb6eb8ae20127e8f))
+
+
+### BREAKING CHANGES
+
+* Docker workflow now builds only lite-amd64 by default for faster deployments. Use workflow_dispatch with 'all-variants' to build all platforms.
+
+- Only build lite-amd64 variant by default (significantly faster)
+- Add workflow_dispatch input to optionally build all variants
+- Skip arm64 builds unless explicitly requested
+- Add VERSION build arg to Docker image
+- Fix version endpoint to read PODLY_VERSION env var from Docker image
+- Improve content filtering error messages for Copilot SDK
+- Detect Azure OpenAI content filtering errors and provide clearer messages
+
 # [1.2.0](https://github.com/reysic/podly_pure_podcasts/compare/v1.1.1...v1.2.0) (2026-02-17)
 
 
