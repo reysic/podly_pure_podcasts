@@ -17,15 +17,15 @@ export default function ConnectionStatusCard({
     status === 'ok'
       ? 'text-green-700'
       : status === 'error'
-      ? 'text-red-700'
-      : 'text-gray-600';
+        ? 'text-red-700'
+        : 'text-gray-600';
 
   const displayMessage =
     status === 'loading'
       ? 'Testing...'
       : status === 'ok'
-      ? message || `${title} connection OK`
-      : error || `${title} connection failed`;
+        ? message || `${title} connection OK`
+        : error || `${title} connection failed`;
 
   return (
     <div className="flex items-start justify-between border rounded p-3">

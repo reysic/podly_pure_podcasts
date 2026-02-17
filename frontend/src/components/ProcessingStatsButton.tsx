@@ -91,11 +91,10 @@ export default function ProcessingStatsButton({
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as 'overview' | 'model-calls' | 'transcript' | 'identifications')}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                      activeTab === tab.id
+                    className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
                         ? 'border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400'
                         : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                    }`}
+                      }`}
                   >
                     {tab.label}
                     {stats && tab.id === 'model-calls' && stats.model_calls && ` (${stats.model_calls.length})`}
@@ -177,11 +176,10 @@ export default function ProcessingStatsButton({
                               {Object.entries(stats.processing_stats?.model_call_statuses || {}).map(([status, count]) => (
                                 <div key={status} className="flex justify-between items-center">
                                   <span className="text-sm text-gray-600 dark:text-gray-400 capitalize">{status}</span>
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    status === 'success' ? 'bg-green-100 text-green-800' :
-                                    status === 'failed' ? 'bg-red-100 text-red-800' :
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${status === 'success' ? 'bg-green-100 text-green-800' :
+                                      status === 'failed' ? 'bg-red-100 text-red-800' :
+                                        'bg-gray-100 text-gray-800'
+                                    }`}>
                                     {count}
                                   </span>
                                 </div>
@@ -234,11 +232,10 @@ export default function ProcessingStatsButton({
                                     <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{call.model_name}</td>
                                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{call.segment_range}</td>
                                     <td className="px-4 py-3">
-                                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                                        call.status === 'success' ? 'bg-green-100 text-green-800' :
-                                        call.status === 'failed' ? 'bg-red-100 text-red-800' :
-                                        'bg-yellow-100 text-yellow-800'
-                                      }`}>
+                                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${call.status === 'success' ? 'bg-green-100 text-green-800' :
+                                          call.status === 'failed' ? 'bg-red-100 text-red-800' :
+                                            'bg-yellow-100 text-yellow-800'
+                                        }`}>
                                         {call.status}
                                       </span>
                                     </td>
@@ -311,19 +308,17 @@ export default function ProcessingStatsButton({
                             </thead>
                             <tbody className="bg-white dark:bg-gray-750 divide-y divide-gray-200 dark:divide-gray-700">
                               {(stats.transcript_segments || []).map((segment) => (
-                                <tr key={segment.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800 ${
-                                  segment.primary_label === 'ad' ? 'bg-red-50 dark:bg-red-950' : ''
-                                }`}>
+                                <tr key={segment.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800 ${segment.primary_label === 'ad' ? 'bg-red-50 dark:bg-red-950' : ''
+                                  }`}>
                                   <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{segment.sequence_num}</td>
                                   <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
                                     {segment.start_time}s - {segment.end_time}s
                                   </td>
                                   <td className="px-4 py-3">
-                                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                                      segment.primary_label === 'ad'
+                                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${segment.primary_label === 'ad'
                                         ? 'bg-red-100 text-red-800'
                                         : 'bg-green-100 text-green-800'
-                                    }`}>
+                                      }`}>
                                       {segment.primary_label === 'ad'
                                         ? (segment.mixed ? 'Ad (mixed)' : 'Ad')
                                         : 'Content'}
@@ -363,20 +358,18 @@ export default function ProcessingStatsButton({
                             </thead>
                             <tbody className="bg-white dark:bg-gray-750 divide-y divide-gray-200 dark:divide-gray-700">
                               {(stats.identifications || []).map((identification) => (
-                                <tr key={identification.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800 ${
-                                  identification.label === 'ad' ? 'bg-red-50 dark:bg-red-950' : ''
-                                }`}>
+                                <tr key={identification.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800 ${identification.label === 'ad' ? 'bg-red-50 dark:bg-red-950' : ''
+                                  }`}>
                                   <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{identification.id}</td>
                                   <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{identification.transcript_segment_id}</td>
                                   <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
                                     {identification.segment_start_time}s - {identification.segment_end_time}s
                                   </td>
                                   <td className="px-4 py-3">
-                                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                                      identification.label === 'ad'
+                                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${identification.label === 'ad'
                                         ? 'bg-red-100 text-red-800'
                                         : 'bg-green-100 text-green-800'
-                                    }`}>
+                                      }`}>
                                       {identification.label === 'ad'
                                         ? (identification.mixed ? 'ad (mixed)' : 'ad')
                                         : identification.label}
