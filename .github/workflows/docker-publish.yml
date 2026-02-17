@@ -234,7 +234,7 @@ jobs:
             type=raw,value=latest-${{ matrix.name }}-${{ env.ARCH }},enable=${{ steps.is_release.outputs.is_release == 'true' }}
             type=raw,value=latest-${{ matrix.name }},enable=${{ steps.is_release.outputs.is_release == 'true' }}
             type=semver,pattern={{version}},suffix=-${{ env.ARCH }},enable=${{ matrix.name == 'full' }}
-            type=raw,value=${{ env.ARCH }},enable=${{ matrix.name == 'full' && is_default_branch }}
+            type=raw,value=${{ env.ARCH }},enable=${{ matrix.name == 'full' && github.ref == 'refs/heads/main' }}
             type=raw,value=latest-${{ env.ARCH }},enable=${{ matrix.name == 'full' && steps.is_release.outputs.is_release == 'true' }}
             type=raw,value=latest,enable=${{ matrix.name == 'full' && steps.is_release.outputs.is_release == 'true' }}
 
