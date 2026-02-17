@@ -1,3 +1,10 @@
+## [2.3.1](https://github.com/reysic/podly_pure_podcasts/compare/v2.3.0...v2.3.1) (2026-02-17)
+
+
+### Bug Fixes
+
+* correct GitHub Actions syntax in docker-publish workflow ([fd53242](https://github.com/reysic/podly_pure_podcasts/commit/fd53242e4c03c6fc1bdc649c70d52b2df840176a))
+
 # [2.3.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.2.4...v2.3.0) (2026-02-17)
 
 
