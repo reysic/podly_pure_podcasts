@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/reysic/podly_pure_podcasts/compare/v1.1.1...v1.2.0) (2026-02-17)
+
+
+### Features
+
+* add dark mode support to user management screen ([647c779](https://github.com/reysic/podly_pure_podcasts/commit/647c779d4f9642491dcf0a8cb3c62318b12cc5c2))
+
 ## [1.1.1](https://github.com/reysic/podly_pure_podcasts/compare/v1.1.0...v1.1.1) (2026-02-17)
 
 
