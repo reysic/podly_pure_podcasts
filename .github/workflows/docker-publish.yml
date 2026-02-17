@@ -74,7 +74,11 @@ jobs:
           # If no files are documentation, then we should continue
           non_doc_files=$(echo "$files_changed" | grep -v -E '(\.md$|^docs/|LICENCE)')
 
-          if [ "${{ github.event_name }}" = "release" ]; then
+          # Check if current commit has a version tag (is a release)
+          if git tag --points-at HEAD | grep -q '^v[0-9]'; then
+            echo "Release commit detected (has version tag). Always building."
+            echo "skip=false" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "release" ]; then
             echo "Release build detected. Skipping documentation-only shortcut."
             echo "skip=false" >> $GITHUB_OUTPUT
           elif [ -z "$non_doc_files" ]; then
