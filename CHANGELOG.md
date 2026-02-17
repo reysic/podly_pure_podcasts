@@ -1,3 +1,10 @@
+## [2.4.1](https://github.com/reysic/podly_pure_podcasts/compare/v2.4.0...v2.4.1) (2026-02-17)
+
+
+### Bug Fixes
+
+* use PAT for semantic-release to trigger Docker workflow ([79b1ed2](https://github.com/reysic/podly_pure_podcasts/commit/79b1ed259771c5aa6b0c5bdfb5d84ef481ea92f9))
+
 # [2.4.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.3.2...v2.4.0) (2026-02-17)
 
 
