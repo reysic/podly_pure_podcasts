@@ -1,3 +1,10 @@
+## [2.2.4](https://github.com/reysic/podly_pure_podcasts/compare/v2.2.3...v2.2.4) (2026-02-17)
+
+
+### Bug Fixes
+
+* only run manifest job on main branch pushes ([ec9e4e2](https://github.com/reysic/podly_pure_podcasts/commit/ec9e4e2462a0af6dbc36323cfe3be51e15c82897))
+
 ## [2.2.3](https://github.com/reysic/podly_pure_podcasts/compare/v2.2.2...v2.2.3) (2026-02-17)
 
 
