@@ -1,3 +1,10 @@
+## [2.2.1](https://github.com/reysic/podly_pure_podcasts/compare/v2.2.0...v2.2.1) (2026-02-17)
+
+
+### Bug Fixes
+
+* add latest-lite tag without arch suffix for easier deployment ([d275761](https://github.com/reysic/podly_pure_podcasts/commit/d2757617dfe9ad3e223ee20c9a413cebfdc7c59e))
+
 # [2.2.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.1.0...v2.2.0) (2026-02-17)
 
 
