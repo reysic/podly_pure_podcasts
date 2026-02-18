@@ -13,37 +13,38 @@
 
 ## Overview
 
-Podly uses Whisper and Chat GPT to remove ads from podcasts.
+Podly uses Whisper and an LLM to remove ads from podcasts.
 
 <img width="100%" src="docs/images/screenshot.png" />
 
 ## Fork Differences
 
-This is a fork of [podly-pure-podcasts/podly_pure_podcasts](https://github.com/podly-pure-podcasts/podly_pure_podcasts) with enhanced UI/UX features:
+This is a fork of [podly-pure-podcasts/podly_pure_podcasts](https://github.com/podly-pure-podcasts/podly_pure_podcasts) with various feature enhancements:
 
-### 🎨 User Interface Enhancements
+### 🎨 User Interface
+
+<p align="center">
+<img width="75%" src="docs/images/dark_mode.png" />
+</p>
+
 - **Dark Mode Support**: Full dark mode theme across all pages and components with automatic system preference detection
 - **Version Display with Changelog**: Click the version number in the header to view the full changelog in a modal
 - **Expandable Episode Descriptions**: Click "Show more" to read full episode descriptions in the feed view
-- **Improved Visibility**: Better contrast for LLM/Whisper connection status headings in dark mode
-- **Processing Stats Modal**: View detailed processing statistics, model calls, and transcripts with dark mode support
+- **Responsive Mobile Support**: Improved support for UI display and interaction on mobile devices
+- **Configurable Prompts**: Edit system and user prompts directly in the UI (Config > Advanced > Prompts) to customize LLM ad detection behavior
 
-### 🐳 Docker & Deployment Improvements
+### 🐳 Docker & Deployment
 - **Automated Docker Tags**: `latest-lite` tag automatically created on each release via semantic-release
-- **Streamlined CI/CD**: Release commits trigger Docker builds automatically using GitHub Actions
-- **Clear Tag Strategy**: Documented image tag conventions for production and testing use cases
 
-### 🤖 LLM Provider Support
-- **GitHub Copilot Models**: First-class support for GitHub Copilot models (gpt-4o, claude-sonnet-4.5, o1-mini, etc.)
+### 🤖 GitHub Copilot Support
+
+<p align="center">
+<img width="75%" src="docs/images/copilot_integration.png" />
+</p>
+
+- **GitHub Copilot Models**: Support for GitHub Copilot models (gpt-4o, claude-sonnet-4.5, o1-mini, etc.) for ad segment identification with valid GitHub PAT
 - **Free Model Options**: Access to free Copilot models (indicated by 0x cost multiplier in UI)
 - **Copilot SDK Included**: Pre-installed in Docker images, no additional setup needed
-
-### 📚 Documentation
-- **Setup Guides**: Added comprehensive documentation for SEMANTIC_RELEASE_TOKEN configuration
-- **Docker Tag Reference**: Clear table explaining available image tags and when to use them
-- **Fork Differences**: This section documenting enhancements over the upstream project
-
-**Upstream Repository**: [github.com/podly-pure-podcasts/podly_pure_podcasts](https://github.com/podly-pure-podcasts/podly_pure_podcasts)
 
 ## How To Run
 
@@ -84,10 +85,10 @@ You have a few options to get started:
 
 | Tag | Description | When to Use | Updates |
 |-----|-------------|-------------|---------|
-| `latest-lite` | Latest **release** (lite version) | Remote transcription | On each release |
-| `main-lite` | Latest **main branch** (lite version) | Remote transcription, latest change testing | On each commit to main |
+| `latest-lite` | Latest **release** (lite version) | Remote transcription only | On each release |
+| `main-lite` | Latest **main branch** (lite version) | Remote transcription only, latest change testing | On each commit to main |
 | `latest` | Latest **release** (full version) | Local Whisper transcription | On each release |
-| `main` | Latest **main branch** (full version) | Local Whisper transcription, latest change testing Production on amd64 systems | On each commit to main |
+| `main` | Latest **main branch** (full version) | Local Whisper transcription, latest change testing | On each commit to main |
 
 **Lite Suffix**
 - **Lite** (`-lite`): Smaller image, no local Whisper, faster builds
@@ -114,12 +115,18 @@ Configure any litellm-supported provider using:
 Use GitHub Copilot models for ad identification:
 
 **Setup:**
-1. Provide a GitHub Personal Access Token:
-   - Via environment variable: `GITHUB_PAT=ghp_xxxxxxxxxxxx`
-   - Or via the web UI: Settings → LLM Configuration → GitHub PAT
+1. Provide a GitHub Personal Access Token (PAT):
+   - To get token:
+     -  Visit [GitHub Token Settings](https://github.com/settings/tokens?type=beta).
+     - Create Fine-grained token, granting Account permissions -> Copilot Requests access.
+   - To use token:
+     - Via environment variable: `GITHUB_PAT=ghp_xxxxxxxxxxxx`
+     - Or via the web UI: Settings → LLM Configuration → GitHub PAT
+
 2. Select a Copilot model (without provider prefix):
    - Examples: `gpt-4o`, `claude-sonnet-4.5`, `o1-mini`
    - Model names should NOT include a `/` (e.g., use `gpt-4o` not `openai/gpt-4o`)
+   - Can use 'Fetch Models' button in UI after PAT entry
 
 **Features:**
 - The Copilot SDK is included in Docker images by default
