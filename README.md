@@ -132,4 +132,3 @@ Use GitHub Copilot models for ad identification:
 ## Contributing
 
 See [contributing guide](docs/contributors.md) for local setup & contribution instructions.
-
