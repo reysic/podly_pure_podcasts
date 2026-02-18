@@ -106,8 +106,8 @@ export default function ConfigTabs() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
-          <nav className="flex space-x-8 min-w-max" aria-label="Config tabs">
+        <div className="border-b border-gray-200 dark:border-gray-700 overflow-x-auto scrollbar-thin">
+          <nav className="flex space-x-8 min-w-max px-1" aria-label="Config tabs">
             {visibleTabs.map((tab) => (
               <button
                 key={tab.id}
