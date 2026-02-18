@@ -68,6 +68,7 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
     queryKey: ['config'],
     queryFn: configApi.getConfig,
     enabled: isAdmin,
+    staleTime: 60000, // Cache for 60 seconds
   });
 
   const {
@@ -84,6 +85,7 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
         whitelistedOnly,
       }),
     placeholderData: (previousData) => previousData,
+    staleTime: 30000, // Cache for 30 seconds
   });
 
   const whitelistMutation = useMutation({

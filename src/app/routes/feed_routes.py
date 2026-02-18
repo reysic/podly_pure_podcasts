@@ -647,6 +647,19 @@ def api_feeds() -> ResponseReturnValue:
         feeds = Feed.query.all()
         current_user = getattr(g, "current_user", None)
 
+    # Pre-load posts counts for all feeds in a single query
+    from sqlalchemy import func
+    posts_counts = dict(
+        db.session.query(Post.feed_id, func.count(Post.id))
+        .filter(Post.feed_id.in_([f.id for f in feeds]))
+        .group_by(Post.feed_id)
+        .all()
+    )
+    
+    # Attach posts_count to each feed object to avoid N+1 queries
+    for feed in feeds:
+        feed.posts_count = posts_counts.get(feed.id, 0)
+
     feeds_data = [_serialize_feed(feed, current_user=current_user) for feed in feeds]
     return jsonify(feeds_data)
 
@@ -927,6 +940,11 @@ def _serialize_feed(
         elif not auth_enabled:
             is_active_subscription = True
 
+    # Use pre-loaded posts_count if available, otherwise query
+    posts_count = getattr(feed, "posts_count", None)
+    if posts_count is None:
+        posts_count = Post.query.filter_by(feed_id=feed.id).count()
+
     feed_payload = {
         "id": feed.id,
         "title": feed.title,
@@ -937,7 +955,7 @@ def _serialize_feed(
         "auto_whitelist_new_episodes_override": getattr(
             feed, "auto_whitelist_new_episodes_override", None
         ),
-        "posts_count": len(feed.posts),
+        "posts_count": posts_count,
         "member_count": len(member_ids),
         "is_member": is_member,
         "is_active_subscription": is_active_subscription,

@@ -156,8 +156,15 @@ def api_feed_posts(feed_id: int) -> flask.Response:
         Post.release_date.desc().nullslast(), Post.id.desc()
     )
 
-    total_posts = ordered_query.count()
-    whitelisted_total = Post.query.filter_by(feed_id=feed.id, whitelisted=True).count()
+    # Optimize: Do both counts in a single query using conditional aggregation
+    from sqlalchemy import func, case
+    counts = db.session.query(
+        func.count(Post.id).label('total'),
+        func.sum(case((Post.whitelisted == True, 1), else_=0)).label('whitelisted')
+    ).filter(Post.feed_id == feed.id).one()
+    
+    total_posts = counts.total if not whitelisted_only else counts.whitelisted
+    whitelisted_total = counts.whitelisted
 
     db_posts = ordered_query.offset((page - 1) * page_size).limit(page_size).all()
 
