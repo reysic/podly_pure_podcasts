@@ -61,4 +61,3 @@ frontend-build.log
 .claude-notes/
 CLAUDE_NOTES.md
 .venv/
-frontend/package-lock.json
