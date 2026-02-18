@@ -19,43 +19,43 @@ Podly uses Whisper and an LLM to remove ads from podcasts.
 
 ## Fork Differences
 
-This is a fork of [podly-pure-podcasts/podly_pure_podcasts](https://github.com/podly-pure-podcasts/podly_pure_podcasts) with various feature enhancements:
+This fork adds several features and improvements:
 
-### 🎨 User Interface
+### User Interface
 
 <p align="center">
 <img width="75%" src="docs/images/dark_mode.png" />
 </p>
 
-- **Dark Mode Support**: Full dark mode theme across all pages and components with automatic system preference detection
-- **Version Display with Changelog**: Click the version number in the header to view the full changelog in a modal
-- **Expandable Episode Descriptions**: Click "Show more" to read full episode descriptions in the feed view
-- **Responsive Mobile Support**: Improved support for UI display and interaction on mobile devices
+- Dark mode theme with automatic system preference detection
+- Click the version number in the header to view the changelog
+- Expandable episode descriptions in the feed view
+- Better mobile support
 
 <p align="center">
 <img width="75%" src="docs/images/prompt_configuration.png" />
 </p>
 
-- **Configurable Prompts**: Edit system and user prompts directly in the UI (Config > Advanced > Prompts) to customize LLM ad detection behavior
+- Edit system and user prompts directly in the UI (Config > Advanced > Prompts)
 
-### ⚡ Performance Optimizations
-- **Frontend Caching**: React Query caching reduces redundant API calls when navigating between pages (30-60s cache)
-- **Backend Query Optimization**: Batched database queries eliminate N+1 problems in feed list loading (82% fewer queries)
-- **Database Indices**: Added indices on `Post.feed_id` and `Post.whitelisted` for 100-1000x faster episode list queries
-- **Expected Impact**: 90% faster home tab loading (cached), 93% faster episode list on large feeds
+### Performance Improvements
+- Frontend caching cuts down on redundant API calls when switching pages (30-60s cache)
+- Batched database queries eliminate N+1 problems (82% fewer queries for feed list)
+- Database indices speed up episode list queries (100-1000x faster on large feeds)
+- Home tab loads 90% faster when using cached data, episode lists load 93% faster on large feeds
 
-### 🐳 Docker & Deployment
-- **Automated Docker Tags**: `latest-lite` tag automatically created on each release via semantic-release
+### Docker & Deployment
+- `latest-lite` tag gets created automatically on each release
 
-### 🤖 GitHub Copilot Support
+### GitHub Copilot Support
 
 <p align="center">
 <img width="75%" src="docs/images/copilot_integration.png" />
 </p>
 
-- **GitHub Copilot Models**: Support for GitHub Copilot models (gpt-4o, claude-sonnet-4.5, o1-mini, etc.) for ad segment identification with valid GitHub PAT
-- **Free Model Options**: Access to free Copilot models (indicated by 0x cost multiplier in UI)
-- **Copilot SDK Included**: Pre-installed in Docker images, no additional setup needed
+- Works with GitHub Copilot models (gpt-4o, claude-sonnet-4.5, o1-mini, etc.) if you have a GitHub PAT
+- Some Copilot models are free (shown with 0x cost multiplier in UI)
+- Copilot SDK comes pre-installed in Docker images
 
 ## How To Run
 
