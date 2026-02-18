@@ -23,9 +23,15 @@ module.exports = {
     "@semantic-release/release-notes-generator",
     ["@semantic-release/changelog", { changelogFile: "CHANGELOG.md" }],
     [
+      "@semantic-release/exec",
+      {
+        prepareCmd: "cp CHANGELOG.md frontend/public/CHANGELOG.md",
+      },
+    ],
+    [
       "@semantic-release/git",
       {
-        assets: ["CHANGELOG.md"],
+        assets: ["CHANGELOG.md", "frontend/public/CHANGELOG.md"],
         message:
           "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}",
       },

@@ -1,3 +1,25 @@
+# [2.5.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.4.1...v2.5.0) (2026-02-17)
+
+
+### Features
+
+* add expand/collapse functionality for episode descriptions ([97ff636](https://github.com/reysic/podly_pure_podcasts/commit/97ff63681a5926146568dcfe9e6eb7d9e79f2a01))
+
+## [2.4.1](https://github.com/reysic/podly_pure_podcasts/compare/v2.4.0...v2.4.1) (2026-02-17)
+
+
+### Bug Fixes
+
+* use PAT for semantic-release to trigger Docker workflow ([79b1ed2](https://github.com/reysic/podly_pure_podcasts/commit/79b1ed259771c5aa6b0c5bdfb5d84ef481ea92f9))
+
+# [2.4.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.3.2...v2.4.0) (2026-02-17)
+
+
+### Features
+
+* add clickable version display with changelog modal ([184a502](https://github.com/reysic/podly_pure_podcasts/commit/184a502d574f9c1c7c5040562451de00ac0d1e63))
+* improve dark mode visibility of LLM and Whisper connection status titles ([618a81f](https://github.com/reysic/podly_pure_podcasts/commit/618a81fa038d3863feefdfe490323f92c58382ac))
+
 ## [2.3.2](https://github.com/reysic/podly_pure_podcasts/compare/v2.3.1...v2.3.2) (2026-02-17)
 
 

@@ -17,7 +17,8 @@ export default function ChangelogModal({ isOpen, onClose }: ChangelogModalProps)
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch('/CHANGELOG.md');
+                // Add timestamp to prevent caching
+                const response = await fetch(`/CHANGELOG.md?t=${Date.now()}`);
                 if (!response.ok) {
                     throw new Error('Failed to load changelog');
                 }
