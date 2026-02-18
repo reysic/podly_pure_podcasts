@@ -1,3 +1,10 @@
+## [2.5.1](https://github.com/reysic/podly_pure_podcasts/compare/v2.5.0...v2.5.1) (2026-02-18)
+
+
+### Bug Fixes
+
+* add cache-busting to changelog fetch and sync changelog to frontend ([4a2c358](https://github.com/reysic/podly_pure_podcasts/commit/4a2c3586418d9278fbfe333894e0b2bb98dbe18b))
+
 # [2.5.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.4.1...v2.5.0) (2026-02-17)
 
 
