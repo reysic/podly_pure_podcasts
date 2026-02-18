@@ -130,6 +130,33 @@ export default function AudioPlayer() {
     }
   };
 
+  // Touch event handlers for mobile
+  const handleProgressTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!progressBarRef.current || !duration) return;
+    setIsDragging(true);
+    
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const touchX = e.touches[0].clientX - rect.left;
+    const newTime = (touchX / rect.width) * duration;
+    seekTo(newTime);
+  };
+
+  const handleProgressTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!isDragging || !progressBarRef.current || !duration) return;
+
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const touchX = e.touches[0].clientX - rect.left;
+    const newTime = Math.max(0, Math.min((touchX / rect.width) * duration, duration));
+    setDragTime(newTime);
+  };
+
+  const handleProgressTouchEnd = () => {
+    if (isDragging) {
+      seekTo(dragTime);
+      setIsDragging(false);
+    }
+  };
+
   const handleVolumeChange = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!volumeSliderRef.current) return;
 
@@ -153,13 +180,13 @@ export default function AudioPlayer() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg z-50">
-      <div className="max-w-7xl mx-auto px-4 py-3">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
         {shouldShowError && (
-          <div className="mb-2 p-2 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded text-red-700 dark:text-red-300 text-sm flex items-center justify-between">
-            <span>{error}</span>
+          <div className="mb-2 p-2 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded text-red-700 dark:text-red-300 text-xs sm:text-sm flex items-center justify-between">
+            <span className="flex-1 min-w-0 truncate">{error}</span>
             <button
               onClick={dismissError}
-              className="ml-2 p-1 hover:bg-red-200 dark:hover:bg-red-800/50 rounded transition-colors"
+              className="ml-2 p-1 hover:bg-red-200 dark:hover:bg-red-800/50 rounded transition-colors flex-shrink-0"
               aria-label="Dismiss error"
             >
               <XMarkIcon className="w-4 h-4" />
@@ -167,26 +194,38 @@ export default function AudioPlayer() {
           </div>
         )}
 
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
           {/* Episode Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0 flex items-center justify-center">
-                <span className="text-gray-500 text-xs">🎵</span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <h4 className="text-sm font-medium text-gray-900 truncate">
-                  {currentEpisode.title}
-                </h4>
-                <p className="text-xs text-gray-500 truncate">
-                  Episode • {formatTime(duration)}
-                </p>
-              </div>
+          <div className="flex items-center gap-2 sm:gap-3 w-full sm:flex-1 min-w-0">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 dark:bg-gray-700 rounded flex-shrink-0 flex items-center justify-center">
+              <span className="text-gray-500 dark:text-gray-400 text-xs">🎵</span>
             </div>
+            <div className="min-w-0 flex-1">
+              <h4 className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                {currentEpisode.title}
+              </h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                Episode • {formatTime(duration)}
+              </p>
+            </div>
+            {/* Mobile Play/Pause Button */}
+            <button
+              onClick={togglePlayPause}
+              disabled={isLoading}
+              className="sm:hidden p-2 bg-gray-900 dark:bg-gray-700 text-white rounded-full hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+            >
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : isPlaying ? (
+                <PauseIcon className="w-5 h-5" />
+              ) : (
+                <PlayIcon className="w-5 h-5" />
+              )}
+            </button>
           </div>
 
-          {/* Player Controls */}
-          <div className="flex-1 max-w-2xl">
+          {/* Player Controls - Hidden on mobile, shown on larger screens */}
+          <div className="hidden sm:flex flex-1 max-w-2xl flex-col">
             {/* Control Buttons */}
             <div
               className="flex items-center justify-center space-x-4 mb-2 relative"
@@ -196,7 +235,7 @@ export default function AudioPlayer() {
               <button
                 onClick={togglePlayPause}
                 disabled={isLoading}
-                className="p-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 bg-gray-900 dark:bg-gray-700 text-white rounded-full hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -209,23 +248,23 @@ export default function AudioPlayer() {
 
               {/* Keyboard Shortcuts Tooltip */}
               {showKeyboardShortcuts && (
-                <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded py-2 px-3 whitespace-nowrap z-10">
+                <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded py-2 px-3 whitespace-nowrap z-10">
                   <div className="space-y-1">
                     <div>Space: Play/Pause</div>
                     <div>← →: Seek ±10s</div>
                     <div>↑ ↓: Volume ±10%</div>
                   </div>
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700"></div>
                 </div>
               )}
             </div>
 
             {/* Progress Bar */}
-            <div className="flex items-center space-x-2 text-xs text-gray-500">
+            <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
               <span className="w-10 text-right">{formatTime(displayTime)}</span>
               <div
                 ref={progressBarRef}
-                className="flex-1 h-1 bg-gray-200 rounded-full cursor-pointer relative group audio-player-progress"
+                className="flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full cursor-pointer relative group audio-player-progress"
                 onMouseDown={handleProgressMouseDown}
                 onMouseMove={handleProgressMouseMove}
                 onMouseUp={handleProgressMouseUp}
@@ -233,22 +272,43 @@ export default function AudioPlayer() {
                 onClick={handleProgressClick}
               >
                 <div
-                  className="h-full bg-gray-900 rounded-full relative"
+                  className="h-full bg-gray-900 dark:bg-gray-600 rounded-full relative"
                   style={{ width: `${progressPercentage}%` }}
                 >
-                  <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-gray-900 rounded-full audio-player-progress-thumb" />
+                  <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-gray-900 dark:bg-gray-600 rounded-full audio-player-progress-thumb" />
                 </div>
               </div>
               <span className="w-10">{formatTime(duration)}</span>
             </div>
           </div>
 
-          {/* Volume Control */}
-          <div className="flex items-center space-x-2 relative">
+          {/* Mobile Progress Bar - Full width below episode info */}
+          <div className="sm:hidden w-full flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-xs">{formatTime(displayTime)}</span>
+            <div
+              ref={progressBarRef}
+              className="flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full cursor-pointer relative audio-player-progress"
+              onTouchStart={handleProgressTouchStart}
+              onTouchMove={handleProgressTouchMove}
+              onTouchEnd={handleProgressTouchEnd}
+              onClick={handleProgressClick}
+            >
+              <div
+                className="h-full bg-gray-900 dark:bg-gray-600 rounded-full relative"
+                style={{ width: `${progressPercentage}%` }}
+              >
+                <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-gray-900 dark:bg-gray-600 rounded-full" />
+              </div>
+            </div>
+            <span className="text-xs">{formatTime(duration)}</span>
+          </div>
+
+          {/* Volume Control - Hidden on small screens */}
+          <div className="hidden lg:flex items-center space-x-2 relative flex-shrink-0">
             <button
               onClick={toggleMute}
               onMouseEnter={() => setShowVolumeSlider(true)}
-              className="p-1 text-gray-600 hover:text-gray-900 transition-colors"
+              className="p-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
             >
               {volume === 0 ? (
                 <SpeakerXMarkIcon className="w-5 h-5" />
@@ -260,18 +320,18 @@ export default function AudioPlayer() {
             {showVolumeSlider && (
               <div
                 ref={volumeSliderRef}
-                className="absolute bottom-full right-0 mb-2 p-2 bg-white border border-gray-200 rounded shadow-lg audio-player-volume-slider"
+                className="absolute bottom-full right-0 mb-2 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg audio-player-volume-slider"
                 onMouseEnter={() => setShowVolumeSlider(true)}
               >
                 <div
-                  className="w-20 h-1 bg-gray-200 rounded-full cursor-pointer relative group"
+                  className="w-20 h-1 bg-gray-200 dark:bg-gray-700 rounded-full cursor-pointer relative group"
                   onClick={handleVolumeChange}
                 >
                   <div
-                    className="h-full bg-gray-900 rounded-full relative"
+                    className="h-full bg-gray-900 dark:bg-gray-600 rounded-full relative"
                     style={{ width: `${volume * 100}%` }}
                   >
-                    <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-gray-900 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-gray-900 dark:bg-gray-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 </div>
               </div>

@@ -320,41 +320,41 @@ export default function AddFeedForm({ onSuccess, onUpgradePlan, planLimitReached
                 </div>
               </div>
 
-              <ul className="space-y-3 max-h-[45vh] sm:max-h-80 overflow-y-auto pr-2">
+              <ul className="space-y-3 max-h-[50vh] sm:max-h-[55vh] overflow-y-auto pr-1 sm:pr-2">
                 {displayedResults.map((result) => (
                   <li
                     key={result.feedUrl}
-                    className="flex gap-3 p-3 border border-gray-200 rounded-md bg-gray-50"
+                    className="flex gap-2 sm:gap-3 p-2 sm:p-3 border border-gray-200 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700/30"
                   >
                     {result.artworkUrl ? (
                       <img
                         src={result.artworkUrl}
                         alt={result.title}
-                        className="w-16 h-16 rounded-md object-cover"
+                        className="w-12 h-12 sm:w-16 sm:h-16 rounded-md object-cover flex-shrink-0"
                       />
                     ) : (
-                      <div className="w-16 h-16 rounded-md bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-md bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 text-xs flex-shrink-0">
                         No Image
                       </div>
                     )}
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">{result.title}</h4>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm sm:text-base">{result.title}</h4>
                       {result.author && (
-                        <p className="text-sm text-gray-600">{result.author}</p>
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{result.author}</p>
                       )}
                       {result.genres.length > 0 && (
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           {result.genres.join(' · ')}
                         </p>
                       )}
-                      <p className="text-xs text-gray-500 break-all mt-2">{result.feedUrl}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 break-all mt-2 hidden sm:block">{result.feedUrl}</p>
                     </div>
-                    <div className="flex items-center">
+                    <div className="flex items-center flex-shrink-0">
                       <button
                         type="button"
                         onClick={() => handleAddFromSearch(result)}
                         disabled={planLimitReached || (isSubmitting && addingFeedUrl === result.feedUrl)}
-                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-3 py-2 rounded-md text-sm transition-colors"
+                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm transition-colors"
                       >
                         {isSubmitting && addingFeedUrl === result.feedUrl ? 'Adding...' : 'Add'}
                       </button>

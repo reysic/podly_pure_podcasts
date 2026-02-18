@@ -199,32 +199,32 @@ export default function HomePage() {
 
       {showAddForm && (
         <div
-          className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-6"
+          className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4 md:p-6"
           onClick={() => setShowAddForm(false)}
         >
           <div
-            className="w-full max-w-3xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col max-h-[90vh]"
+            className="w-full max-w-3xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col max-h-[98vh] sm:max-h-[95vh] mt-2 sm:mt-0"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-4">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100">Add a Podcast Feed</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-3 sm:px-4 md:px-6 py-3 sm:py-4 flex-shrink-0">
+              <div className="min-w-0 flex-1 pr-2">
+                <h2 className="text-base sm:text-xl md:text-2xl font-semibold text-gray-900 dark:text-gray-100">Add a Podcast Feed</h2>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
                   Paste an RSS URL or search the catalog to find shows to follow.
                 </p>
               </div>
               <button
                 onClick={() => setShowAddForm(false)}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
                 aria-label="Close add feed modal"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div className="overflow-y-auto px-4 sm:px-6 py-4">
+            <div className="overflow-y-auto px-3 sm:px-4 md:px-6 py-3 sm:py-4 flex-1 min-h-0">
               <AddFeedForm
                 onSuccess={() => {
                   setShowAddForm(false);
