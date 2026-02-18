@@ -31,6 +31,11 @@ This is a fork of [podly-pure-podcasts/podly_pure_podcasts](https://github.com/p
 - **Version Display with Changelog**: Click the version number in the header to view the full changelog in a modal
 - **Expandable Episode Descriptions**: Click "Show more" to read full episode descriptions in the feed view
 - **Responsive Mobile Support**: Improved support for UI display and interaction on mobile devices
+
+<p align="center">
+<img width="75%" src="docs/images/prompt_configuration.png" />
+</p>
+
 - **Configurable Prompts**: Edit system and user prompts directly in the UI (Config > Advanced > Prompts) to customize LLM ad detection behavior
 
 ### 🐳 Docker & Deployment

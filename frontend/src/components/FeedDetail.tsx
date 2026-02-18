@@ -562,8 +562,8 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                   <div className="mt-2 flex items-center gap-2 flex-wrap text-sm">
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium border ${isMember
-                          ? 'bg-green-50 text-green-700 border-green-200'
-                          : 'bg-gray-100 text-gray-600 border-gray-200'
+                        ? 'bg-green-50 text-green-700 border-green-200'
+                        : 'bg-gray-100 text-gray-600 border-gray-200'
                         }`}
                     >
                       {isMember ? 'Joined' : 'Not joined'}
@@ -606,8 +606,8 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                   onClick={() => joinFeedMutation.mutate()}
                   disabled={joinFeedMutation.isPending}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${joinFeedMutation.isPending
-                      ? 'bg-blue-100 text-blue-300 cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-blue-100 text-blue-300 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
                     }`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -623,8 +623,8 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                   disabled={refreshFeedMutation.isPending}
                   title="Refresh feed from source"
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${refreshFeedMutation.isPending
-                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                 >
                   <img
@@ -773,8 +773,8 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                     onChange={(e) => handleAutoWhitelistOverrideChange(e.target.value)}
                     disabled={updateFeedSettingsMutation.isPending}
                     className={`text-sm border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${updateFeedSettingsMutation.isPending
-                        ? 'opacity-60 cursor-not-allowed'
-                        : ''
+                      ? 'opacity-60 cursor-not-allowed'
+                      : ''
                       }`}
                   >
                     <option value="inherit">Use global setting ({autoWhitelistDefaultLabel})</option>
@@ -905,10 +905,10 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                       const cleanDescription = episode.description.replace(/<[^>]*>/g, '').trim();
                       const isExpanded = isDescriptionExpanded(episode.id);
                       const shouldShowExpand = cleanDescription.length > 200;
-                      const displayText = isExpanded || !shouldShowExpand 
-                        ? cleanDescription 
+                      const displayText = isExpanded || !shouldShowExpand
+                        ? cleanDescription
                         : cleanDescription.substring(0, 200) + '...';
-                      
+
                       return (
                         <div className="text-left">
                           <p className={`text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap ${isExpanded ? '' : 'line-clamp-3'}`}>
@@ -934,8 +934,8 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                             onClick={() => handleWhitelistToggle(episode)}
                             disabled={whitelistMutation.isPending}
                             className={`px-2 py-1 text-xs font-medium rounded-full transition-colors flex items-center justify-center gap-1 ${episode.whitelisted
-                                ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                              ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                               } ${whitelistMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             {whitelistMutation.isPending ? (
@@ -1030,8 +1030,8 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                 onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                 disabled={page === 1 || isLoading || isFetching}
                 className={`px-3 py-1 text-sm rounded-md border transition-colors ${page === 1 || isLoading || isFetching
-                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                   }`}
               >
                 Previous
@@ -1043,8 +1043,8 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                 onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
                 disabled={page >= totalPages || isLoading || isFetching}
                 className={`px-3 py-1 text-sm rounded-md border transition-colors ${page >= totalPages || isLoading || isFetching
-                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                   }`}
               >
                 Next
@@ -1094,8 +1094,8 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
                   !processingEstimate?.can_process
                 }
                 className={`px-4 py-2 rounded-lg text-sm font-medium ${whitelistMutation.isPending || isEstimating || !processingEstimate?.can_process
-                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
                   }`}
               >
                 {whitelistMutation.isPending ? 'Starting…' : 'Confirm & process'}
