@@ -1,3 +1,10 @@
+## [2.6.1](https://github.com/reysic/podly_pure_podcasts/compare/v2.6.0...v2.6.1) (2026-02-18)
+
+
+### Performance Improvements
+
+* optimize home tab and episode list loading ([b6847da](https://github.com/reysic/podly_pure_podcasts/commit/b6847da6419ee29df7f1141cc835ecf7aac1be86))
+
 # [2.6.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.5.2...v2.6.0) (2026-02-18)
 
 
