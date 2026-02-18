@@ -1,3 +1,10 @@
+## [2.5.2](https://github.com/reysic/podly_pure_podcasts/compare/v2.5.1...v2.5.2) (2026-02-18)
+
+
+### Bug Fixes
+
+* add package-lock.json and remove from .gitignore to fix npm ci build error ([2870c2c](https://github.com/reysic/podly_pure_podcasts/commit/2870c2c314e62c89e17c7d30cfeb24177991ac27))
+
 ## [2.5.1](https://github.com/reysic/podly_pure_podcasts/compare/v2.5.0...v2.5.1) (2026-02-18)
 
 
