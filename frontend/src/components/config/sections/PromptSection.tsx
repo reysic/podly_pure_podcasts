@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { configApi } from '../../../services/api';
-import { Section, SaveButton } from '../shared';
+import { Section } from '../shared';
 
 export default function PromptSection() {
   const [systemPrompt, setSystemPrompt] = useState('');
@@ -107,9 +107,14 @@ export default function PromptSection() {
 
           {/* Action Buttons */}
           <div className="flex gap-3">
-            <SaveButton onClick={handleSave} isSaving={saving} disabled={!hasChanges || saving}>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={!hasChanges || saving}
+              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               {saving ? 'Saving...' : 'Save Prompts'}
-            </SaveButton>
+            </button>
             <button
               type="button"
               onClick={handleReset}
