@@ -1,3 +1,17 @@
+# [2.6.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.5.2...v2.6.0) (2026-02-18)
+
+
+### Bug Fixes
+
+* add prompts to activeSubtab validation array ([743e5ee](https://github.com/reysic/podly_pure_podcasts/commit/743e5eef36ff08161c713f8929dfa3d5a42733a7))
+* add prompts to activeSubtab validation array in ConfigTabs ([46aaecc](https://github.com/reysic/podly_pure_podcasts/commit/46aaeccf147c950d9110d1263d058a3d262abb7b))
+* remove unsupported SaveButton children prop ([4876eee](https://github.com/reysic/podly_pure_podcasts/commit/4876eee54dce5667981d618ab7c0c742bf863260))
+
+
+### Features
+
+* add prompt configuration UI in Advanced settings ([a563393](https://github.com/reysic/podly_pure_podcasts/commit/a5633931edbe3980c466d8dfd6d55fb3c9666245))
+
 ## [2.5.2](https://github.com/reysic/podly_pure_podcasts/compare/v2.5.1...v2.5.2) (2026-02-18)
 
 
