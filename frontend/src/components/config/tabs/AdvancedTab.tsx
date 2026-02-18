@@ -5,6 +5,7 @@ import {
   ProcessingSection,
   OutputSection,
   AppSection,
+  PromptSection,
 } from '../sections';
 
 const SUBTABS: { id: AdvancedSubtab; label: string }[] = [
@@ -13,6 +14,7 @@ const SUBTABS: { id: AdvancedSubtab; label: string }[] = [
   { id: 'processing', label: 'Processing' },
   { id: 'output', label: 'Output' },
   { id: 'app', label: 'App' },
+  { id: 'prompts', label: 'Prompts' },
 ];
 
 export default function AdvancedTab() {
@@ -44,6 +46,7 @@ export default function AdvancedTab() {
         {activeSubtab === 'processing' && <ProcessingSection />}
         {activeSubtab === 'output' && <OutputSection />}
         {activeSubtab === 'app' && <AppSection />}
+        {activeSubtab === 'prompts' && <PromptSection />}
       </div>
     </div>
   );

@@ -808,3 +808,74 @@ def api_configured_check() -> flask.Response:
         logger.error(f"Failed to check API configuration: {e}")
         # Be conservative: report not configured on error
         return flask.jsonify({"configured": False})
+
+
+@config_bp.route("/api/config/prompts", methods=["GET"])
+def api_get_prompts() -> flask.Response:
+    """Return the current system prompt and user prompt template contents."""
+    _, error_response = require_admin()
+    if error_response:
+        return error_response
+
+    try:
+        # Read system prompt
+        system_prompt_path = "src/system_prompt.txt"
+        with open(system_prompt_path, "r", encoding="utf-8") as f:
+            system_prompt = f.read()
+
+        # Read user prompt template
+        user_prompt_path = "src/user_prompt.jinja"
+        with open(user_prompt_path, "r", encoding="utf-8") as f:
+            user_prompt = f.read()
+
+        return flask.jsonify(
+            {
+                "system_prompt": system_prompt,
+                "user_prompt_template": user_prompt,
+            }
+        )
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Failed to read prompts: {e}")
+        return flask.make_response(jsonify({"error": f"Failed to read prompts: {e}"}), 500)
+
+
+@config_bp.route("/api/config/prompts", methods=["PUT"])
+def api_update_prompts() -> flask.Response:
+    """Update the system prompt and/or user prompt template files."""
+    _, error_response = require_admin()
+    if error_response:
+        return error_response
+
+    try:
+        data = request.get_json()
+        if not data:
+            return flask.make_response(jsonify({"error": "No data provided"}), 400)
+
+        system_prompt = data.get("system_prompt")
+        user_prompt_template = data.get("user_prompt_template")
+
+        if system_prompt is None and user_prompt_template is None:
+            return flask.make_response(
+                jsonify({"error": "No prompts provided to update"}), 400
+            )
+
+        # Update system prompt if provided
+        if system_prompt is not None:
+            system_prompt_path = "src/system_prompt.txt"
+            with open(system_prompt_path, "w", encoding="utf-8") as f:
+                f.write(system_prompt)
+            logger.info("Updated system prompt")
+
+        # Update user prompt template if provided
+        if user_prompt_template is not None:
+            user_prompt_path = "src/user_prompt.jinja"
+            with open(user_prompt_path, "w", encoding="utf-8") as f:
+                f.write(user_prompt_template)
+            logger.info("Updated user prompt template")
+
+        return flask.jsonify({"success": True, "message": "Prompts updated successfully"})
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Failed to update prompts: {e}")
+        return flask.make_response(
+            jsonify({"error": f"Failed to update prompts: {e}"}), 500
+        )

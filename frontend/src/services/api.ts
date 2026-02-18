@@ -574,6 +574,17 @@ export const configApi = {
     const local_available = !!response.data?.local_available;
     return { local_available };
   },
+  getPrompts: async (): Promise<{ system_prompt: string; user_prompt_template: string }> => {
+    const response = await api.get('/api/config/prompts');
+    return response.data;
+  },
+  updatePrompts: async (payload: {
+    system_prompt?: string;
+    user_prompt_template?: string;
+  }): Promise<{ success: boolean; message: string }> => {
+    const response = await api.put('/api/config/prompts', payload);
+    return response.data;
+  },
 };
 
 export const billingApi = {
