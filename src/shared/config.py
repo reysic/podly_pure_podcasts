@@ -39,7 +39,7 @@ class OutputConfig(BaseModel):
         self.min_ad_segement_separation_seconds = value
 
 
-WhisperConfigTypes = Literal["remote", "local", "test", "groq"]
+WhisperConfigTypes = Literal["remote", "test", "groq"]
 
 
 class TestWhisperConfig(BaseModel):
