@@ -21,6 +21,10 @@ Podly uses Whisper and an LLM to remove ads from podcasts.
 
 This fork adds several features and improvements:
 
+### Removed Features
+
+- **No local transcription or ad identification**: This fork does not support local Whisper transcription (requires GPU/CUDA) or local LLM-based ad identification. Only remote transcription providers (OpenAI-compatible API, Groq) and remote LLM providers are supported. Use the `latest-lite` Docker image.
+
 ### User Interface
 
 <p align="center">
@@ -85,8 +89,7 @@ You have a few options to get started:
 
 | Cost    | Hosting  | Transcription | LLM    |
 |---------|----------|---------------|--------|
-| **free**| local    | local         | local  |
-| **$2**  | local    | local         | remote |
+| **$2**  | local    | remote (Groq) | remote (Groq) |
 | **$5**  | local    | remote        | remote |
 | **$10** | public (railway)  | remote        | remote |
 | **Pay What You Want** | [preview server](https://podly.up.railway.app/)    | n/a         | n/a  |
@@ -94,16 +97,10 @@ You have a few options to get started:
 
 ## Docker Image Tags
 
-| Tag | Description | When to Use | Updates |
-|-----|-------------|-------------|---------|
-| `latest-lite` | Latest **release** (lite version) | Remote transcription only | On each release |
-| `main-lite` | Latest **main branch** (lite version) | Remote transcription only, latest change testing | On each commit to main |
-| `latest` | Latest **release** (full version) | Local Whisper transcription | On each release |
-| `main` | Latest **main branch** (full version) | Local Whisper transcription, latest change testing | On each commit to main |
-
-**Lite Suffix**
-- **Lite** (`-lite`): Smaller image, no local Whisper, faster builds
-- **Full** (no suffix): Local Whisper transcription, **not currently built**
+| Tag | Description | Updates |
+|-----|-------------|---------|
+| `latest-lite` | Latest **release** | On each release |
+| `main-lite` | Latest **main branch** | On each commit to main |
 
 **Example:**
 ```bash

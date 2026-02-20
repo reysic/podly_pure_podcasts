@@ -27,19 +27,6 @@ def test_remote_transcribe() -> None:
 
 
 @pytest.mark.skip
-def test_local_transcribe() -> None:
-    # import here instead of the toplevel because torch is not installed properly in CI.
-    from podcast_processor.transcribe import (  # pylint: disable=import-outside-toplevel
-        LocalWhisperTranscriber,
-    )
-
-    logger = logging.getLogger("global_logger")
-    transcriber = LocalWhisperTranscriber(logger, "base.en")
-    transcription = transcriber.transcribe("src/tests/file.mp3")
-    assert transcription == []
-
-
-@pytest.mark.skip
 def test_groq_transcribe(mocker: Any) -> None:
     # import here instead of the toplevel because dependencies aren't installed properly in CI.
     from podcast_processor.transcribe import (  # pylint: disable=import-outside-toplevel

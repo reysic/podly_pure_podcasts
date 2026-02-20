@@ -12,7 +12,6 @@ export default function WhisperSection() {
     getEnvHint,
     handleSave,
     isSaving,
-    localWhisperAvailable,
     handleWhisperTypeChange,
     getWhisperApiKey,
     envOverrides,
@@ -57,7 +56,7 @@ export default function WhisperSection() {
     });
   };
 
-  const whisperType = pending?.whisper?.whisper_type ?? (localWhisperAvailable === false ? 'remote' : 'local');
+  const whisperType = pending?.whisper?.whisper_type ?? 'remote';
 
   return (
     <div className="space-y-6">
@@ -66,28 +65,12 @@ export default function WhisperSection() {
           <select
             className="input"
             value={whisperType}
-            onChange={(e) => handleWhisperTypeChange(e.target.value as 'local' | 'remote' | 'groq')}
+            onChange={(e) => handleWhisperTypeChange(e.target.value as 'remote' | 'groq')}
           >
-            {localWhisperAvailable !== false && <option value="local">local</option>}
             <option value="remote">remote</option>
             <option value="groq">groq</option>
           </select>
         </Field>
-
-        {/* Local Whisper Options */}
-        {pending?.whisper?.whisper_type === 'local' && (
-          <Field
-            label="Local Model"
-            envMeta={getEnvHint('whisper.model', { env_var: 'WHISPER_LOCAL_MODEL' })}
-          >
-            <input
-              className="input"
-              type="text"
-              value={(pending?.whisper as { model?: string })?.model || 'base'}
-              onChange={(e) => setField(['whisper', 'model'], e.target.value)}
-            />
-          </Field>
-        )}
 
         {/* Remote Whisper Options */}
         {pending?.whisper?.whisper_type === 'remote' && (

@@ -392,11 +392,12 @@ class WhisperSettings(db.Model):  # type: ignore[name-defined, misc]
     id = db.Column(db.Integer, primary_key=True, default=1)
     whisper_type = db.Column(
         db.Text, nullable=False, default=DEFAULTS.WHISPER_DEFAULT_TYPE
-    )  # local|remote|groq|test
+    )  # remote|groq|test
 
-    # Local
+    # Local (kept for DB migration compatibility; can be dropped once all
+    # existing deployments have run a migration removing this column)
     local_model = db.Column(
-        db.Text, nullable=False, default=DEFAULTS.WHISPER_LOCAL_MODEL
+        db.Text, nullable=False, default="base.en"
     )
 
     # Remote

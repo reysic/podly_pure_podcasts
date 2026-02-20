@@ -9,15 +9,6 @@ on:
   release:
     types: [published]
   workflow_dispatch:
-    inputs:
-      build_mode:
-        description: 'Build mode'
-        required: true
-        default: 'lite-only'
-        type: choice
-        options:
-          - lite-only
-          - all-variants
 
 permissions:
   contents: read
@@ -91,19 +82,10 @@ jobs:
         shell: bash
 
   ## test if build is successful, but don't run every permutation on PRs
-  build-amd64-pr-lite:
+  build-amd64-pr:
     needs: changes
     if: ${{ needs.changes.outputs.skip == 'false' && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        variant:
-          - name: "lite"
-            base: "python:3.11-slim"
-            gpu: "false"
-            gpu_nvidia: "false"
-            gpu_amd: "false"
-            lite_build: "true"
     env:
       ARCH: amd64
     steps:
@@ -111,18 +93,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Free up disk space
-        if: ${{ matrix.variant.gpu == 'true' || matrix.variant.gpu_nvidia == 'true' || matrix.variant.gpu_amd == 'true' }}
-        run: |
-          echo "Available disk space before cleanup:"
-          df -h
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost
-          sudo rm -rf /opt/microsoft/msedge /opt/microsoft/powershell /opt/pipx /usr/lib/mono
-          sudo rm -rf /usr/local/.ghcup /usr/share/swift
-          docker system prune -af
-          echo "Available disk space after cleanup:"
-          df -h
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -143,10 +113,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch,suffix=-${{ matrix.variant.name }}-${{ env.ARCH }}
-            type=ref,event=pr,suffix=-${{ matrix.variant.name }}-${{ env.ARCH }}
-            type=semver,pattern={{version}},suffix=-${{ matrix.variant.name }}-${{ env.ARCH }}
-            type=raw,value=${{ matrix.variant.name }}-${{ env.ARCH }},enable={{is_default_branch}}
+            type=ref,event=pr,suffix=-${{ env.ARCH }}
 
       - name: Build and push
         uses: docker/build-push-action@v5
@@ -157,29 +124,11 @@ jobs:
           platforms: linux/${{ env.ARCH }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            BASE_IMAGE=${{ matrix.variant.base }}
-            USE_GPU=${{ matrix.variant.gpu }}
-            USE_GPU_NVIDIA=${{ matrix.variant.gpu_nvidia }}
-            USE_GPU_AMD=${{ matrix.variant.gpu_amd }}
-            LITE_BUILD=${{ matrix.variant.lite_build }}
-          # Temporarily disabled due to GitHub Actions Cache service outage
-          # cache-from: type=gha
-          # cache-to: type=gha,mode=max
 
   build-amd64:
     needs: changes
     if: ${{ needs.changes.outputs.skip == 'false' && github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - name: "lite"
-            base: "python:3.11-slim"
-            gpu: "false"
-            gpu_nvidia: "false"
-            gpu_amd: "false"
-            lite_build: "true"
     env:
       ARCH: amd64
     steps:
@@ -187,18 +136,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Free up disk space
-        if: ${{ matrix.gpu == 'true' || matrix.gpu_nvidia == 'true' || matrix.gpu_amd == 'true' }}
-        run: |
-          echo "Available disk space before cleanup:"
-          df -h
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost
-          sudo rm -rf /opt/microsoft/msedge /opt/microsoft/powershell /opt/pipx /usr/lib/mono
-          sudo rm -rf /usr/local/.ghcup /usr/share/swift
-          docker system prune -af
-          echo "Available disk space after cleanup:"
-          df -h
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -231,16 +168,11 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch,suffix=-${{ matrix.name }}-${{ env.ARCH }}
-            type=ref,event=pr,suffix=-${{ matrix.name }}-${{ env.ARCH }}
-            type=semver,pattern={{version}},suffix=-${{ matrix.name }}-${{ env.ARCH }}
-            type=raw,value=${{ matrix.name }}-${{ env.ARCH }},enable={{is_default_branch}}
-            type=raw,value=latest-${{ matrix.name }}-${{ env.ARCH }},enable=${{ steps.is_release.outputs.is_release == 'true' }}
-            type=raw,value=latest-${{ matrix.name }},enable=${{ steps.is_release.outputs.is_release == 'true' }}
-            type=semver,pattern={{version}},suffix=-${{ env.ARCH }},enable=${{ matrix.name == 'full' }}
-            type=raw,value=${{ env.ARCH }},enable=${{ matrix.name == 'full' && github.ref == 'refs/heads/main' }}
-            type=raw,value=latest-${{ env.ARCH }},enable=${{ matrix.name == 'full' && steps.is_release.outputs.is_release == 'true' }}
-            type=raw,value=latest,enable=${{ matrix.name == 'full' && steps.is_release.outputs.is_release == 'true' }}
+            type=ref,event=branch,suffix=-lite-${{ env.ARCH }}
+            type=semver,pattern={{version}},suffix=-lite-${{ env.ARCH }}
+            type=raw,value=lite-${{ env.ARCH }},enable={{is_default_branch}}
+            type=raw,value=latest-lite-${{ env.ARCH }},enable=${{ steps.is_release.outputs.is_release == 'true' }}
+            type=raw,value=latest-lite,enable=${{ steps.is_release.outputs.is_release == 'true' }}
 
       - name: Get version
         id: version
@@ -263,102 +195,11 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             VERSION=${{ steps.version.outputs.version }}
-            BASE_IMAGE=${{ matrix.base }}
-            USE_GPU=${{ matrix.gpu }}
-            USE_GPU_NVIDIA=${{ matrix.gpu_nvidia }}
-            USE_GPU_AMD=${{ matrix.gpu_amd }}
-            LITE_BUILD=${{ matrix.lite_build }}
-          # Temporarily disabled due to GitHub Actions Cache service outage
-          # cache-from: type=gha
-          # cache-to: type=gha,mode=max
-
-  build-arm64:
-    needs: changes
-    if: ${{ needs.changes.outputs.skip == 'false' && github.event_name != 'pull_request' && github.event_name == 'workflow_dispatch' && inputs.build_mode == 'all-variants' }}
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - name: "lite"
-            base: "python:3.11-slim"
-            gpu: "false"
-            gpu_nvidia: "false"
-            gpu_amd: "false"
-            lite_build: "true"
-    env:
-      ARCH: arm64
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Free up disk space
-        if: ${{ matrix.gpu == 'true' || matrix.gpu_nvidia == 'true' || matrix.gpu_amd == 'true' }}
-        run: |
-          echo "Available disk space before cleanup:"
-          df -h
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost
-          sudo rm -rf /opt/microsoft/msedge /opt/microsoft/powershell /opt/pipx /usr/lib/mono
-          sudo rm -rf /usr/local/.ghcup /usr/share/swift
-          docker system prune -af
-          echo "Available disk space after cleanup:"
-          df -h
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: |
-            image=moby/buildkit:v0.12.0
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch,suffix=-${{ matrix.name }}-${{ env.ARCH }}
-            type=ref,event=pr,suffix=-${{ matrix.name }}-${{ env.ARCH }}
-            type=semver,pattern={{version}},suffix=-${{ matrix.name }}-${{ env.ARCH }}
-            type=raw,value=${{ matrix.name }}-${{ env.ARCH }},enable={{is_default_branch}}
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          platforms: linux/${{ env.ARCH }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            BASE_IMAGE=${{ matrix.base }}
-            USE_GPU=${{ matrix.gpu }}
-            USE_GPU_NVIDIA=${{ matrix.gpu_nvidia }}
-            USE_GPU_AMD=${{ matrix.gpu_amd }}
-            LITE_BUILD=${{ matrix.lite_build }}
-          # Temporarily disabled due to GitHub Actions Cache service outage
-          # cache-from: type=gha
-          # cache-to: type=gha,mode=max
 
   manifest:
     needs: [changes, build-amd64]
     if: ${{ needs.changes.outputs.skip == 'false' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        variant:
-          - "lite"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -372,41 +213,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check if commit is a release
-        id: is_release
+      - name: Re-tag lite-amd64 as lite and main-lite (main branch)
         run: |
-          # Check if current commit has a version tag
-          if git tag --points-at HEAD | grep -q '^v[0-9]'; then
-            echo "is_release=true" >> $GITHUB_OUTPUT
-            echo "Current commit is tagged as a release"
-          else
-            echo "is_release=false" >> $GITHUB_OUTPUT
-            echo "Current commit is not a release"
-          fi
-
-      - name: Extract metadata (manifest)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch,suffix=-${{ matrix.variant }}
-            type=ref,event=pr,suffix=-${{ matrix.variant }}
-            type=semver,pattern={{version}},suffix=-${{ matrix.variant }}
-            type=raw,value=${{ matrix.variant }},enable={{is_default_branch}}
-            type=raw,value=latest-${{ matrix.variant }},enable=${{ steps.is_release.outputs.is_release == 'true' }}
-            type=semver,pattern={{version}},enable=${{ matrix.variant == 'full' }}
-            type=raw,value=latest,enable=${{ matrix.variant == 'full' && steps.is_release.outputs.is_release == 'true' }}
-
-      - name: Create and push manifest
-        run: |
-          set -euo pipefail
-          tags="${{ steps.meta.outputs.tags }}"
-          while IFS= read -r tag; do
-            [ -z "$tag" ] && continue
-            echo "Creating manifest for ${tag}"
-            docker buildx imagetools create \
-              -t "${tag}" \
-              "${tag}-amd64" \
-              "${tag}-arm64"
-          done <<< "$tags"
+          docker buildx imagetools create \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:lite \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:lite-amd64
+          docker buildx imagetools create \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-lite \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:lite-amd64
