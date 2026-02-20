@@ -45,24 +45,177 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
   const [isEstimating, setIsEstimating] = useState(false);
   const [estimateError, setEstimateError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [expandedDescriptions, setExpandedDescriptions] = useState<Set<number>>(new Set());
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
 
   const isAdmin = !requireAuth || user?.role === 'admin';
   const whitelistedOnly = requireAuth && !isAdmin;
 
-  const toggleDescriptionExpanded = (episodeId: number) => {
+  type DescriptionToken =
+    | { type: 'text'; value: string }
+    | { type: 'link'; href: string; text: string }
+    | { type: 'newline' };
+
+  const tokenizeDescription = (rawDescription: string): DescriptionToken[] => {
+    if (typeof document === 'undefined') {
+      return [{ type: 'text', value: rawDescription }];
+    }
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(rawDescription, 'text/html');
+    const tokens: DescriptionToken[] = [];
+    const blockTags = new Set(['p', 'div', 'li', 'ul', 'ol']);
+
+    const pushText = (text: string) => {
+      if (!text) {
+        return;
+      }
+      const parts = text.split(/\r?\n/);
+      parts.forEach((part, index) => {
+        if (part) {
+          tokens.push({ type: 'text', value: part });
+        }
+        if (index < parts.length - 1) {
+          tokens.push({ type: 'newline' });
+        }
+      });
+    };
+
+    const visitNode = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        pushText(node.textContent ?? '');
+        return;
+      }
+
+      if (node.nodeType !== Node.ELEMENT_NODE) {
+        return;
+      }
+
+      const element = node as HTMLElement;
+      const tag = element.tagName.toLowerCase();
+
+      if (tag === 'br') {
+        tokens.push({ type: 'newline' });
+        return;
+      }
+
+      if (tag === 'a') {
+        const href = element.getAttribute('href');
+        const text = element.textContent ?? '';
+        if (href) {
+          tokens.push({ type: 'link', href, text: text || href });
+        } else {
+          pushText(text);
+        }
+        return;
+      }
+
+      if (blockTags.has(tag)) {
+        tokens.push({ type: 'newline' });
+        element.childNodes.forEach(visitNode);
+        tokens.push({ type: 'newline' });
+        return;
+      }
+
+      element.childNodes.forEach(visitNode);
+    };
+
+    doc.body.childNodes.forEach(visitNode);
+
+    const normalized: DescriptionToken[] = [];
+    for (const token of tokens) {
+      const last = normalized[normalized.length - 1];
+      if (token.type === 'text') {
+        const cleaned = token.value.replace(/[ \t]+/g, ' ');
+        if (!cleaned) {
+          continue;
+        }
+        if (last?.type === 'text') {
+          last.value += cleaned;
+        } else {
+          normalized.push({ type: 'text', value: cleaned });
+        }
+        continue;
+      }
+
+      if (token.type === 'newline') {
+        if (last?.type !== 'newline') {
+          normalized.push(token);
+        }
+        continue;
+      }
+
+      normalized.push(token);
+    }
+
+    while (normalized[0]?.type === 'newline') {
+      normalized.shift();
+    }
+    while (normalized[normalized.length - 1]?.type === 'newline') {
+      normalized.pop();
+    }
+
+    return normalized;
+  };
+
+  const renderDescriptionTokens = (tokens: DescriptionToken[]) =>
+    tokens.map((token, index) => {
+      if (token.type === 'newline') {
+        return (
+          <span key={`newline-${index}`}>
+            {'\n'}
+          </span>
+        );
+      }
+
+      if (token.type === 'link') {
+        return (
+          <a
+            key={`link-${index}`}
+            href={token.href}
+            target="_blank"
+            rel="noreferrer"
+            className="text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            {token.text}
+          </a>
+        );
+      }
+
+      return (
+        <span key={`text-${index}`}>
+          {token.value}
+        </span>
+      );
+    });
+
+  const tokensToPlainText = (tokens: DescriptionToken[]) =>
+    tokens
+      .map((token) => {
+        if (token.type === 'text') {
+          return token.value;
+        }
+        if (token.type === 'link') {
+          return token.text;
+        }
+        return ' ';
+      })
+      .join('')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const toggleDescriptionExpanded = (episodeGuid: string) => {
     setExpandedDescriptions(prev => {
       const next = new Set(prev);
-      if (next.has(episodeId)) {
-        next.delete(episodeId);
+      if (next.has(episodeGuid)) {
+        next.delete(episodeGuid);
       } else {
-        next.add(episodeId);
+        next.add(episodeGuid);
       }
       return next;
     });
   };
 
-  const isDescriptionExpanded = (episodeId: number) => expandedDescriptions.has(episodeId);
+  const isDescriptionExpanded = (episodeGuid: string) => expandedDescriptions.has(episodeGuid);
 
   const { data: configResponse } = useQuery<ConfigResponse>({
     queryKey: ['config'],
@@ -904,21 +1057,21 @@ export default function FeedDetail({ feed, onClose, onFeedDeleted }: FeedDetailP
 
                     {/* Episode Description */}
                     {episode.description && (() => {
-                      const cleanDescription = episode.description.replace(/<[^>]*>/g, '').trim();
-                      const isExpanded = isDescriptionExpanded(episode.id);
-                      const shouldShowExpand = cleanDescription.length > 200;
-                      const displayText = isExpanded || !shouldShowExpand
-                        ? cleanDescription
-                        : cleanDescription.substring(0, 200) + '...';
+                      const tokens = tokenizeDescription(episode.description);
+                      const plainText = tokensToPlainText(tokens);
+                      const isExpanded = isDescriptionExpanded(episode.guid);
+                      const shouldShowExpand = plainText.length > 200;
 
                       return (
                         <div className="text-left">
                           <p className={`text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap ${isExpanded ? '' : 'line-clamp-3'}`}>
-                            {displayText}
+                            {isExpanded || !shouldShowExpand
+                              ? renderDescriptionTokens(tokens)
+                              : plainText.substring(0, 200) + '...'}
                           </p>
                           {shouldShowExpand && (
                             <button
-                              onClick={() => toggleDescriptionExpanded(episode.id)}
+                              onClick={() => toggleDescriptionExpanded(episode.guid)}
                               className="mt-1 text-xs text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
                             >
                               {isExpanded ? 'Show less' : 'Show more'}

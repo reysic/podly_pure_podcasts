@@ -260,6 +260,7 @@ export const feedsApi = {
       whitelisted: boolean;
       has_processed_audio: boolean;
     };
+    ad_detection_strategy: 'llm' | 'chapter';
     processing_stats: {
       total_segments: number;
       total_model_calls: number;
@@ -268,6 +269,10 @@ export const feedsApi = {
       ad_segments_count: number;
       ad_percentage: number;
       estimated_ad_time_seconds: number;
+      ad_blocks?: Array<{
+        start_time: number;
+        end_time: number;
+      }>;
       model_call_statuses: Record<string, number>;
       model_types: Record<string, number>;
     };
@@ -311,6 +316,19 @@ export const feedsApi = {
       segment_text: string;
       mixed: boolean;
     }>;
+    chapters: {
+      total_chapters: number;
+      chapters_kept: number;
+      chapters_removed: number;
+      filter_strings: string[];
+      chapters: Array<{
+        title: string;
+        start_time: number;
+        end_time: number;
+        label: 'content' | 'ad';
+      }>;
+      note?: string;
+    } | null;
   }> => {
     const response = await api.get(`/api/posts/${guid}/stats`);
     return response.data;
