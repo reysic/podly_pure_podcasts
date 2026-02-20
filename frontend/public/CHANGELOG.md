@@ -1,3 +1,10 @@
+# [2.7.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.6.1...v2.7.0) (2026-02-20)
+
+
+### Features
+
+* Incorporate fork enhancements - cleanup preservation, stats improvements, UI features ([c2cdebc](https://github.com/reysic/podly_pure_podcasts/commit/c2cdebca27d338e28948165847a6dc60bf0b75c5))
+
 ## [2.6.1](https://github.com/reysic/podly_pure_podcasts/compare/v2.6.0...v2.6.1) (2026-02-18)
 
 
