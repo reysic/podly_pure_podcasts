@@ -1,3 +1,10 @@
+# [2.9.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.8.0...v2.9.0) (2026-02-20)
+
+
+### Features
+
+* stats page, configuration docs, reprocess with transcript preservation, llm_github_model, CI improvements ([05b0686](https://github.com/reysic/podly_pure_podcasts/commit/05b0686bc4699647ae2957661aa8e9a44a5e2059)), closes [kevinriste/PR#8](https://github.com/kevinriste/PR/issues/8)
+
 # [2.8.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.7.0...v2.8.0) (2026-02-20)
 
 
