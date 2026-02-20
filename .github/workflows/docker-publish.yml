@@ -46,7 +46,7 @@ jobs:
           echo "Files changed:"
           echo "$files_changed"
 
-          non_doc_files=$(echo "$files_changed" | grep -v -E '(\.md$|^docs/|LICENSE)')
+          non_doc_files=$(echo "$files_changed" | grep -v -E '(\.md$|^docs/|LICENSE)' || true)
 
           if git tag --points-at HEAD | grep -q '^v[0-9]'; then
             echo "Release commit detected (has version tag). Always building."
