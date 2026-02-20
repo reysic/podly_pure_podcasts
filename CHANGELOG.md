@@ -1,3 +1,10 @@
+## [2.9.1](https://github.com/reysic/podly_pure_podcasts/compare/v2.9.0...v2.9.1) (2026-02-20)
+
+
+### Bug Fixes
+
+* remove chapter_data from snapshot payload and test (field doesn't exist on Post) ([7a9df90](https://github.com/reysic/podly_pure_podcasts/commit/7a9df90b78dfea14049521d23469caf2e224ca60))
+
 # [2.9.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.8.0...v2.9.0) (2026-02-20)
 
 
