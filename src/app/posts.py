@@ -378,7 +378,6 @@ def _build_post_processing_snapshot(
             "feed_title": feed_title,
             "whitelisted": post.whitelisted,
             "duration": post.duration,
-            "chapter_data": post.chapter_data,
             "refined_ad_boundaries": post.refined_ad_boundaries,
             "refined_ad_boundaries_updated_at": _iso_datetime(
                 post.refined_ad_boundaries_updated_at

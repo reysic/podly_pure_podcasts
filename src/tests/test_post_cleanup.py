@@ -515,7 +515,6 @@ def test_snapshot_post_processing_data_exports_existing_state(
             title="Snapshot Episode",
             processed_audio_path=str(processed_audio),
             unprocessed_audio_path=str(unprocessed_audio),
-            chapter_data='{"chapters":[]}',
             whitelisted=True,
         )
         db.session.add(post)
