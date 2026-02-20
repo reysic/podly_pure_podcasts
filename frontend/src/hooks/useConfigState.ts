@@ -66,7 +66,6 @@ export interface UseConfigStateReturn {
   llmStatus: ConnectionStatus;
   whisperStatus: ConnectionStatus;
   hasEdits: boolean;
-  localWhisperAvailable: boolean | null;
   isSaving: boolean;
 
   // Actions
@@ -84,10 +83,6 @@ export interface UseConfigStateReturn {
   getEnvHint: (path: string, fallback?: EnvOverrideEntry) => EnvOverrideEntry | undefined;
   getWhisperApiKey: (w: WhisperConfig | undefined) => string;
 
-  // Recommended defaults
-  groqRecommendedModel: string;
-  groqRecommendedWhisper: string;
-
   // Env warning modal
   envWarningPaths: string[];
   showEnvWarning: boolean;
@@ -95,11 +90,7 @@ export interface UseConfigStateReturn {
   handleDismissEnvWarning: () => void;
 
   // Whisper type change handler
-  handleWhisperTypeChange: (nextType: 'local' | 'remote' | 'groq') => void;
-
-  // Groq quick setup mutation
-  applyGroqKey: (key: string) => Promise<void>;
-  isApplyingGroqKey: boolean;
+  handleWhisperTypeChange: (nextType: 'remote' | 'groq') => void;
 }
 
 export function useConfigState(): UseConfigStateReturn {
@@ -122,7 +113,6 @@ export function useConfigState(): UseConfigStateReturn {
 
   const [pending, setPending] = useState<CombinedConfig | null>(null);
   const [hasEdits, setHasEdits] = useState(false);
-  const [localWhisperAvailable, setLocalWhisperAvailable] = useState<boolean | null>(null);
 
   // Connection statuses
   const [llmStatus, setLlmStatus] = useState<ConnectionStatus>({
@@ -141,8 +131,6 @@ export function useConfigState(): UseConfigStateReturn {
   const [showEnvWarning, setShowEnvWarning] = useState(false);
 
   const initialProbeDone = useRef(false);
-  const groqRecommendedModel = useMemo(() => 'groq/openai/gpt-oss-120b', []);
-  const groqRecommendedWhisper = useMemo(() => 'whisper-large-v3-turbo', []);
 
   const getWhisperApiKey = (w: WhisperConfig | undefined): string => {
     if (!w) return '';
@@ -301,31 +289,6 @@ export function useConfigState(): UseConfigStateReturn {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pending]);
 
-  // Probe whisper capabilities
-  useEffect(() => {
-    let cancelled = false;
-    configApi
-      .getWhisperCapabilities()
-      .then((res) => {
-        if (!cancelled) setLocalWhisperAvailable(!!res.local_available);
-      })
-      .catch(() => {
-        if (!cancelled) setLocalWhisperAvailable(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // If local is unavailable but selected, switch to safe default
-  useEffect(() => {
-    if (!pending || localWhisperAvailable !== false) return;
-    const currentType = pending.whisper.whisper_type;
-    if (currentType === 'local') {
-      setField(['whisper', 'whisper_type'], 'remote');
-    }
-  }, [localWhisperAvailable, pending, setField]);
-
   // Save mutation
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -397,7 +360,7 @@ export function useConfigState(): UseConfigStateReturn {
   };
 
   // Whisper type change handler
-  const handleWhisperTypeChange = (nextType: 'local' | 'remote' | 'groq') => {
+  const handleWhisperTypeChange = (nextType: 'remote' | 'groq') => {
     updatePending((prevConfig) => {
       const prevWhisper = {
         ...(prevConfig.whisper as unknown as Record<string, unknown>),
@@ -419,10 +382,6 @@ export function useConfigState(): UseConfigStateReturn {
         if (!nextModel || prevModel === 'base' || prevModel === 'base.en') {
           nextModel = 'whisper-1';
         }
-      } else if (nextType === 'local') {
-        if (!nextModel || prevModel === 'whisper-1' || prevModel.startsWith('whisper-large')) {
-          nextModel = 'base.en';
-        }
       }
 
       const nextWhisper: Record<string, unknown> = {
@@ -439,79 +398,12 @@ export function useConfigState(): UseConfigStateReturn {
       } else if (nextType === 'remote') {
         nextWhisper.model = nextModel ?? 'whisper-1';
         nextWhisper.language = (prevWhisper.language as string | undefined) || 'en';
-      } else if (nextType === 'local') {
-        nextWhisper.model = nextModel ?? 'base.en';
-        delete nextWhisper.api_key;
-      } else if (nextType === 'test') {
-        delete nextWhisper.model;
-        delete nextWhisper.api_key;
       }
 
       return {
         ...prevConfig,
         whisper: nextWhisper as unknown as WhisperConfig,
       } as CombinedConfig;
-    });
-  };
-
-  // Groq key mutation
-  const applyGroqKeyMutation = useMutation({
-    mutationFn: async (key: string) => {
-      const next = {
-        llm: {
-          ...(pending?.llm as LLMConfig),
-          llm_api_key: key,
-          llm_model: groqRecommendedModel,
-        },
-        whisper: {
-          whisper_type: 'groq',
-          api_key: key,
-          model: groqRecommendedWhisper,
-          language: 'en',
-          max_retries: 3,
-        },
-      } as Partial<CombinedConfig>;
-
-      updatePending((prevConfig) => ({
-        ...prevConfig,
-        llm: next.llm as LLMConfig,
-        whisper: next.whisper as WhisperConfig,
-      }));
-
-      const [llmRes, whisperRes] = await Promise.all([
-        configApi.testLLM({ llm: next.llm as LLMConfig }),
-        configApi.testWhisper({ whisper: next.whisper as WhisperConfig }),
-      ]);
-      if (!llmRes?.ok) throw new Error(llmRes?.error || 'LLM test failed');
-      if (!whisperRes?.ok) throw new Error(whisperRes?.error || 'Whisper test failed');
-
-      return await configApi.updateConfig(next);
-    },
-    onSuccess: () => {
-      setHasEdits(false);
-      refetch();
-      toast.success('Groq key verified and saved. Defaults applied.');
-      setLlmStatus({ status: 'ok', message: 'LLM connection OK', error: '' });
-      setWhisperStatus({ status: 'ok', message: 'Whisper connection OK', error: '' });
-    },
-  });
-
-  const applyGroqKey = async (key: string) => {
-    await toast.promise(applyGroqKeyMutation.mutateAsync(key), {
-      loading: 'Verifying Groq key and applying defaults...',
-      success: 'Groq configured successfully',
-      error: (err: unknown) => {
-        const e = err as {
-          response?: { data?: { error?: string; message?: string } };
-          message?: string;
-        };
-        return (
-          e?.response?.data?.error ||
-          e?.response?.data?.message ||
-          e?.message ||
-          'Failed to configure Groq'
-        );
-      },
     });
   };
 
@@ -526,7 +418,6 @@ export function useConfigState(): UseConfigStateReturn {
     llmStatus,
     whisperStatus,
     hasEdits,
-    localWhisperAvailable,
     isSaving: saveMutation.isPending,
 
     // Actions
@@ -541,10 +432,6 @@ export function useConfigState(): UseConfigStateReturn {
     getEnvHint,
     getWhisperApiKey,
 
-    // Recommended defaults
-    groqRecommendedModel,
-    groqRecommendedWhisper,
-
     // Env warning modal
     envWarningPaths,
     showEnvWarning,
@@ -553,10 +440,6 @@ export function useConfigState(): UseConfigStateReturn {
 
     // Whisper type change
     handleWhisperTypeChange,
-
-    // Groq quick setup
-    applyGroqKey,
-    isApplyingGroqKey: applyGroqKeyMutation.isPending,
   };
 }
 

@@ -21,7 +21,6 @@ from shared import defaults as DEFAULTS
 from shared.config import Config as PydanticConfig
 from shared.config import (
     GroqWhisperConfig,
-    LocalWhisperConfig,
     RemoteWhisperConfig,
     TestWhisperConfig,
 )
@@ -122,7 +121,7 @@ def ensure_defaults() -> None:
         WhisperSettings,
         {
             "whisper_type": DEFAULTS.WHISPER_DEFAULT_TYPE,
-            "local_model": DEFAULTS.WHISPER_LOCAL_MODEL,
+            "local_model": "base.en",
             "remote_model": DEFAULTS.WHISPER_REMOTE_MODEL,
             "remote_base_url": DEFAULTS.WHISPER_REMOTE_BASE_URL,
             "remote_language": DEFAULTS.WHISPER_REMOTE_LANGUAGE,
@@ -280,7 +279,7 @@ def _apply_whisper_env_overrides_to_db(whisper: Any) -> bool:
     env_whisper_type = os.environ.get("WHISPER_TYPE")
     if env_whisper_type and isinstance(env_whisper_type, str):
         env_whisper_type_norm = env_whisper_type.strip().lower()
-        if env_whisper_type_norm in {"local", "remote", "groq"}:
+        if env_whisper_type_norm in {"remote", "groq"}:
             changed = (
                 _set_if_default(
                     whisper,
@@ -366,15 +365,6 @@ def _apply_whisper_env_overrides_to_db(whisper: Any) -> bool:
             or changed
         )
 
-    elif whisper.whisper_type == "local":
-        local_model_env = os.environ.get("WHISPER_LOCAL_MODEL")
-        changed = (
-            _set_if_default(
-                whisper, "local_model", local_model_env, DEFAULTS.WHISPER_LOCAL_MODEL
-            )
-            or changed
-        )
-
     return changed
 
 
@@ -419,9 +409,7 @@ def read_combined() -> Dict[str, Any]:
     assert llm and whisper and processing and output and app_s
 
     whisper_payload: Dict[str, Any] = {"whisper_type": whisper.whisper_type}
-    if whisper.whisper_type == "local":
-        whisper_payload.update({"model": whisper.local_model})
-    elif whisper.whisper_type == "remote":
+    if whisper.whisper_type == "remote":
         whisper_payload.update(
             {
                 "model": whisper.remote_model,
@@ -522,16 +510,12 @@ def _update_section_whisper(data: Dict[str, Any]) -> None:
     row = WhisperSettings.query.get(1)
     assert row is not None
     if "whisper_type" in data and data["whisper_type"] in {
-        "local",
         "remote",
         "groq",
         "test",
     }:
         row.whisper_type = data["whisper_type"]
-    if row.whisper_type == "local":
-        if "model" in data:
-            row.local_model = data["model"]
-    elif row.whisper_type == "remote":
+    if row.whisper_type == "remote":
         for key_map in [
             ("model", "remote_model"),
             ("api_key", "remote_api_key"),
@@ -701,13 +685,11 @@ def to_pydantic_config() -> PydanticConfig:
     data = read_combined()
     # Map whisper section to discriminated union config
     whisper_obj: Optional[
-        LocalWhisperConfig | RemoteWhisperConfig | TestWhisperConfig | GroqWhisperConfig
+        RemoteWhisperConfig | TestWhisperConfig | GroqWhisperConfig
     ] = None
     w = data["whisper"]
     wtype = w.get("whisper_type")
-    if wtype == "local":
-        whisper_obj = LocalWhisperConfig(model=w.get("model", "base.en"))
-    elif wtype == "remote":
+    if wtype == "remote":
         whisper_obj = RemoteWhisperConfig(
             model=w.get("model", "whisper-1"),
             # Allow boot without a remote API key so the UI can be used to set it
@@ -889,43 +871,12 @@ def _apply_whisper_env_overrides(cfg: PydanticConfig) -> None:
                 cfg.whisper.api_key = groq_key
             if groq_model:
                 cfg.whisper.model = groq_model
-    elif wtype == "local":
-        loc_model = os.environ.get("WHISPER_LOCAL_MODEL")
-        if isinstance(cfg.whisper, LocalWhisperConfig) and loc_model:
-            cfg.whisper.model = loc_model
 
 
 def _apply_llm_model_override(cfg: PydanticConfig) -> None:
     env_llm_model = os.environ.get("LLM_MODEL")
     if env_llm_model:
         cfg.llm_model = env_llm_model
-
-
-def _configure_local_whisper(cfg: PydanticConfig) -> None:
-    """Configure local whisper type."""
-    # Validate that local whisper is available
-    try:
-        import whisper as _  # type: ignore[import-untyped]  # noqa: F401
-    except ImportError as e:
-        error_msg = (
-            f"WHISPER_TYPE is set to 'local' but whisper library is not available. "
-            f"Either install whisper with 'pip install openai-whisper' or set WHISPER_TYPE to 'remote' or 'groq'. "
-            f"Import error: {e}"
-        )
-        logger.error(error_msg)
-        raise RuntimeError(error_msg) from e
-
-    existing_model_any = getattr(cfg.whisper, "model", "base.en")
-    existing_model = (
-        existing_model_any if isinstance(existing_model_any, str) else "base.en"
-    )
-    loc_model_env = os.environ.get("WHISPER_LOCAL_MODEL")
-    loc_model: str = (
-        loc_model_env
-        if isinstance(loc_model_env, str) and loc_model_env
-        else existing_model
-    )
-    cfg.whisper = LocalWhisperConfig(model=loc_model)
 
 
 def _configure_remote_whisper(cfg: PydanticConfig) -> None:
@@ -1054,9 +1005,7 @@ def _apply_whisper_type_override(cfg: PydanticConfig) -> None:
         return
 
     wtype = env_whisper_type.strip().lower()
-    if wtype == "local":
-        _configure_local_whisper(cfg)
-    elif wtype == "remote":
+    if wtype == "remote":
         _configure_remote_whisper(cfg)
     elif wtype == "groq":
         _configure_groq_whisper(cfg)
@@ -1116,7 +1065,6 @@ def _calculate_env_hash() -> str:
         "LLM_MAX_INPUT_TOKENS_PER_MINUTE",
         # Whisper
         "WHISPER_TYPE",
-        "WHISPER_LOCAL_MODEL",
         "WHISPER_REMOTE_API_KEY",
         "WHISPER_REMOTE_BASE_URL",
         "WHISPER_REMOTE_MODEL",
@@ -1308,7 +1256,7 @@ def _apply_whisper_env_overrides_force(whisper: WhisperSettings) -> bool:
     env_whisper_type = os.environ.get("WHISPER_TYPE")
     if env_whisper_type:
         wtype = env_whisper_type.strip().lower()
-        if wtype in {"local", "remote", "groq"}:
+        if wtype in {"remote", "groq"}:
             whisper.whisper_type = wtype
             changed = True
 
@@ -1324,12 +1272,6 @@ def _apply_whisper_env_overrides_force(whisper: WhisperSettings) -> bool:
 
     elif whisper.whisper_type == "groq":
         if _apply_whisper_groq_overrides(whisper):
-            changed = True
-
-    elif whisper.whisper_type == "local":
-        local_model_env = os.environ.get("WHISPER_LOCAL_MODEL")
-        if local_model_env:
-            whisper.local_model = local_model_env
             changed = True
 
     return changed

@@ -64,11 +64,6 @@ class GroqWhisperConfig(BaseModel):
     max_retries: int = DEFAULTS.WHISPER_GROQ_MAX_RETRIES
 
 
-class LocalWhisperConfig(BaseModel):
-    whisper_type: Literal["local"] = "local"
-    model: str = DEFAULTS.WHISPER_LOCAL_MODEL
-
-
 class Config(BaseModel):
     llm_api_key: Optional[str] = Field(default=None)
     llm_github_pat: Optional[str] = Field(default=None)
@@ -126,18 +121,13 @@ class Config(BaseModel):
     )
     # removed job_timeout
     whisper: Optional[
-        LocalWhisperConfig | RemoteWhisperConfig | TestWhisperConfig | GroqWhisperConfig
+        RemoteWhisperConfig | TestWhisperConfig | GroqWhisperConfig
     ] = Field(
         default=None,
         discriminator="whisper_type",
     )
     remote_whisper: Optional[bool] = Field(
         default=False,
-        deprecated=True,
-        description="deprecated in favor of [Remote|Local]WhisperConfig",
-    )
-    whisper_model: Optional[str] = Field(
-        default=DEFAULTS.WHISPER_LOCAL_MODEL,
         deprecated=True,
         description="deprecated in favor of [Remote|Local]WhisperConfig",
     )
@@ -165,7 +155,6 @@ class Config(BaseModel):
         new_style = self.whisper is not None
 
         if new_style:
-            self.whisper_model = None
             self.remote_whisper = None
             return self
 
@@ -179,12 +168,8 @@ class Config(BaseModel):
                 base_url=self.openai_base_url or "https://api.openai.com/v1",
             )
         else:
-            assert (
-                self.whisper_model is not None
-            ), "must supply whisper model to use local whisper"
-            self.whisper = LocalWhisperConfig(model=self.whisper_model)
+            self.whisper = GroqWhisperConfig(api_key="")
 
-        self.whisper_model = None
         self.remote_whisper = None
 
         return self

@@ -337,7 +337,7 @@ function BaseUrlInfoBox() {
             Unprefixed models like <code className="bg-white px-1 rounded">gpt-4o</code>
           </li>
           <li>Self-hosted OpenAI-compatible endpoints</li>
-          <li>LiteLLM proxy servers or local LLMs</li>
+          <li>LiteLLM proxy servers</li>
         </ul>
       </div>
       <p className="italic text-gray-600">For the default Groq setup, you don't need to set this.</p>
