@@ -62,7 +62,7 @@ def api_cancel_job(job_id: str) -> ResponseReturnValue:
                 {
                     "status": "error",
                     "error_code": "CANCEL_FAILED",
-                    "message": f"Failed to cancel job: {str(e)}",
+                    "message": f"Failed to cancel job: {e!s}",
                 }
             ),
             500,

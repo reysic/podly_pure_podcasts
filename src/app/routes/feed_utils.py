@@ -17,7 +17,9 @@ def whitelist_latest_for_first_member(
     Respects global/per-feed whitelist settings; skips if auto-whitelist is disabled.
     """
     # Respect global/per-feed whitelist settings; skip if auto-whitelist is disabled.
-    from app.feeds import _should_auto_whitelist_new_posts  # pylint: disable=import-outside-toplevel
+    from app.feeds import (  # pylint: disable=import-outside-toplevel
+        _should_auto_whitelist_new_posts,
+    )
 
     if not _should_auto_whitelist_new_posts(feed):
         return

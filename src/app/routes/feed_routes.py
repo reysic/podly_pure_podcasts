@@ -3,7 +3,7 @@ import re
 import secrets
 from pathlib import Path
 from threading import Thread
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 # pylint: disable=chained-comparison
 from urllib.parse import urlencode, urlparse, urlunparse
@@ -68,7 +68,7 @@ def _user_feed_count(user_id: int) -> int:
 
 def _get_latest_post(feed: Feed) -> Post | None:
     return cast(
-        Optional[Post],
+        Post | None,
         Post.query.filter_by(feed_id=feed.id)
         .order_by(Post.release_date.desc().nullslast(), Post.id.desc())
         .first(),
@@ -93,14 +93,16 @@ def _whitelist_latest_for_first_member(
     feed: Feed, requested_by_user_id: int | None
 ) -> None:
     """When a feed goes from 0→1 members, whitelist and process the latest post."""
-    from app.routes.feed_utils import whitelist_latest_for_first_member  # pylint: disable=import-outside-toplevel
+    from app.routes.feed_utils import (  # pylint: disable=import-outside-toplevel
+        whitelist_latest_for_first_member,
+    )
 
     whitelist_latest_for_first_member(feed, requested_by_user_id)
 
 
-def _handle_developer_mode_feed(url: str, user: Optional[User]) -> ResponseReturnValue:
+def _handle_developer_mode_feed(url: str, user: User | None) -> ResponseReturnValue:
     try:
-        feed_id_str = url.split("/")[-1]
+        feed_id_str = url.rsplit("/", maxsplit=1)[-1]
         feed_num = int(feed_id_str)
 
         result = writer_client.action(
@@ -136,7 +138,7 @@ def _handle_developer_mode_feed(url: str, user: Optional[User]) -> ResponseRetur
         return make_response((f"Error adding test feed: {e}", 500))
 
 
-def _check_feed_allowance(user: User, url: str) -> Optional[ResponseReturnValue]:
+def _check_feed_allowance(user: User, url: str) -> ResponseReturnValue | None:
     if user.role == "admin":
         return None
 
@@ -629,13 +631,14 @@ def api_feeds() -> ResponseReturnValue:
 
     # Pre-load posts counts for all feeds in a single query
     from sqlalchemy import func
+
     posts_counts = dict(
         db.session.query(Post.feed_id, func.count(Post.id))
         .filter(Post.feed_id.in_([f.id for f in feeds]))
         .group_by(Post.feed_id)
         .all()
     )
-    
+
     # Attach posts_count to each feed object to avoid N+1 queries
     for feed in feeds:
         feed.posts_count = posts_counts.get(feed.id, 0)
@@ -899,7 +902,7 @@ def _require_user_or_error(
 def _serialize_feed(
     feed: Feed,
     *,
-    current_user: Optional[User] = None,
+    current_user: User | None = None,
 ) -> dict[str, Any]:
     auth_enabled = is_auth_enabled()
     member_ids = [membership.user_id for membership in getattr(feed, "user_feeds", [])]

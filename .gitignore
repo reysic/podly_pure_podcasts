@@ -45,7 +45,7 @@ in/**/*.mp3
 srv/**/*.mp3
 *.pickle
 .env
-.env.local
+.env.local  # backwards compat: old name before rename to .env
 config/config.yml
 *.db
 *.sqlite
@@ -60,4 +60,9 @@ frontend-build.log
 # Claude Code local notes (not committed)
 .claude-notes/
 CLAUDE_NOTES.md
+
+# Virtual environment (uv creates .venv/ by default)
 .venv/
+
+# Linter / type checker caches
+.ruff_cache/

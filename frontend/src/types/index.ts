@@ -98,6 +98,8 @@ export interface LLMConfig {
   // Optional GitHub PAT for Copilot models
   llm_github_pat?: string | null;
   github_pat?: string | null;
+  // GitHub Copilot model — separate from llm_model which is for OpenAI-compat providers
+  llm_github_model?: string | null;
   llm_model: string;
   openai_base_url?: string | null;
   openai_timeout: number;
@@ -111,26 +113,16 @@ export interface LLMConfig {
   enable_word_level_boundary_refinder?: boolean;
 }
 
-export type WhisperConfig =
-  | {
-    whisper_type: 'remote';
-    model: string;
-    api_key?: string | null;
-    api_key_preview?: string | null;
-    base_url?: string;
-    language: string;
-    timeout_sec: number;
-    chunksize_mb: number;
-  }
-  | {
-    whisper_type: 'groq';
-    api_key?: string | null;
-    api_key_preview?: string | null;
-    model: string;
-    language: string;
-    max_retries: number;
-  }
-  | { whisper_type: 'test' };
+export interface WhisperConfig {
+  whisper_type: 'remote';
+  model: string;
+  api_key?: string | null;
+  api_key_preview?: string | null;
+  base_url?: string;
+  language: string;
+  timeout_sec: number;
+  chunksize_mb: number;
+}
 
 export interface ProcessingConfigUI {
   num_segments_to_input_to_prompt: number;

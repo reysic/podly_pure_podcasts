@@ -2,18 +2,26 @@ import { useMemo, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import useConfigState from '../../hooks/useConfigState';
-import { ConfigContext, type ConfigTabId, type AdvancedSubtab } from './ConfigContext';
-import { EnvOverrideWarningModal } from './shared';
-import DefaultTab from './tabs/DefaultTab';
-import AdvancedTab from './tabs/AdvancedTab';
+import { ConfigContext, type ConfigTabId } from './ConfigContext';
+import { EnvOverrideWarningModal, ConnectionStatusCard } from './shared';
+import {
+  LLMSection,
+  WhisperSection,
+  ProcessingSection,
+  OutputSection,
+  AppSection,
+  PromptSection,
+} from './sections';
 import UserManagementTab from './tabs/UserManagementTab';
-import DiscordTab from './tabs/DiscordTab';
 
 const TABS: { id: ConfigTabId; label: string; adminOnly?: boolean }[] = [
-  { id: 'default', label: 'Default' },
-  { id: 'advanced', label: 'Advanced' },
+  { id: 'whisper', label: 'Whisper' },
+  { id: 'llm', label: 'LLM' },
+  { id: 'processing', label: 'Processing' },
+  { id: 'output', label: 'Output' },
+  { id: 'app', label: 'App' },
+  { id: 'prompts', label: 'Prompts' },
   { id: 'users', label: 'User Management', adminOnly: true },
-  { id: 'discord', label: 'Discord', adminOnly: true },
 ];
 
 export default function ConfigTabs() {
@@ -28,42 +36,22 @@ export default function ConfigTabs() {
   const activeTab = useMemo<ConfigTabId>(() => {
     const urlTab = searchParams.get('tab') as ConfigTabId | null;
     if (urlTab && TABS.some((t) => t.id === urlTab)) {
-      // Check admin-only tabs
       const tab = TABS.find((t) => t.id === urlTab);
       if (tab?.adminOnly && !isAdmin) {
-        return 'default';
+        return 'whisper';
       }
       if (urlTab === 'users' && !requireAuth) {
-        return 'default';
+        return 'whisper';
       }
       return urlTab;
     }
-    return 'default';
+    return 'whisper';
   }, [searchParams, isAdmin, requireAuth]);
-
-  const activeSubtab = useMemo<AdvancedSubtab>(() => {
-    const urlSubtab = searchParams.get('section') as AdvancedSubtab | null;
-    if (urlSubtab && ['llm', 'whisper', 'processing', 'output', 'app', 'prompts'].includes(urlSubtab)) {
-      return urlSubtab;
-    }
-    return 'llm';
-  }, [searchParams]);
 
   const setActiveTab = useCallback((tab: ConfigTabId) => {
     setSearchParams((prev) => {
       const newParams = new URLSearchParams(prev);
       newParams.set('tab', tab);
-      if (tab !== 'advanced') {
-        newParams.delete('section');
-      }
-      return newParams;
-    }, { replace: true });
-  }, [setSearchParams]);
-
-  const setActiveSubtab = useCallback((subtab: AdvancedSubtab) => {
-    setSearchParams((prev) => {
-      const newParams = new URLSearchParams(prev);
-      newParams.set('section', subtab);
       return newParams;
     }, { replace: true });
   }, [setSearchParams]);
@@ -72,7 +60,7 @@ export default function ConfigTabs() {
   useEffect(() => {
     const tab = TABS.find((t) => t.id === activeTab);
     if (tab?.adminOnly && !isAdmin) {
-      setActiveTab('default');
+      setActiveTab('whisper');
     }
   }, [isAdmin, activeTab, setActiveTab]);
 
@@ -81,12 +69,10 @@ export default function ConfigTabs() {
       ...configState,
       activeTab,
       setActiveTab,
-      activeSubtab,
-      setActiveSubtab,
       isAdmin,
       showSecurityControls,
     }),
-    [configState, activeTab, setActiveTab, activeSubtab, setActiveSubtab, isAdmin, showSecurityControls]
+    [configState, activeTab, setActiveTab, isAdmin, showSecurityControls]
   );
 
   const visibleTabs = TABS.filter((tab) => {
@@ -103,6 +89,26 @@ export default function ConfigTabs() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Configuration</h2>
+        </div>
+
+        {/* Connection status — always visible regardless of active tab */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <ConnectionStatusCard
+            title="Whisper"
+            subtitle="· Transcription"
+            status={configState.whisperStatus.status}
+            message={configState.whisperStatus.message}
+            error={configState.whisperStatus.error}
+            onRetry={() => void configState.probeConnections()}
+          />
+          <ConnectionStatusCard
+            title="LLM"
+            subtitle="· Ad Identification"
+            status={configState.llmStatus.status}
+            message={configState.llmStatus.message}
+            error={configState.llmStatus.error}
+            onRetry={() => void configState.probeConnections()}
+          />
         </div>
 
         {/* Tab Navigation */}
@@ -125,10 +131,13 @@ export default function ConfigTabs() {
 
         {/* Tab Content */}
         <div className="mt-4">
-          {activeTab === 'default' && <DefaultTab />}
-          {activeTab === 'advanced' && <AdvancedTab />}
+          {activeTab === 'llm' && <LLMSection />}
+          {activeTab === 'whisper' && <WhisperSection />}
+          {activeTab === 'processing' && <ProcessingSection />}
+          {activeTab === 'output' && <OutputSection />}
+          {activeTab === 'app' && <AppSection />}
+          {activeTab === 'prompts' && <PromptSection />}
           {activeTab === 'users' && isAdmin && <UserManagementTab />}
-          {activeTab === 'discord' && isAdmin && <DiscordTab />}
         </div>
 
         {/* Env Warning Modal */}

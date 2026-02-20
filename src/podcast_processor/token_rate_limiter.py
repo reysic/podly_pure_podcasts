@@ -10,7 +10,6 @@ import threading
 import time
 from collections import deque
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple, Union
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +32,7 @@ class TokenRateLimiter:
         """
         self.tokens_per_minute = tokens_per_minute
         self.window_seconds = window_minutes * 60
-        self.token_usage: deque[Tuple[float, int]] = (
+        self.token_usage: deque[tuple[float, int]] = (
             deque()
         )  # [(timestamp, token_count), ...]
         self.lock = threading.Lock()
@@ -42,7 +41,7 @@ class TokenRateLimiter:
             f"Initialized TokenRateLimiter: {tokens_per_minute} tokens/{window_minutes}min"
         )
 
-    def count_tokens(self, messages: List[Dict[str, str]], model: str) -> int:
+    def count_tokens(self, messages: list[dict[str, str]], model: str) -> int:
         """
         Count tokens in messages using litellm's token counting.
 
@@ -76,8 +75,8 @@ class TokenRateLimiter:
         return sum(count for _, count in self.token_usage)
 
     def check_rate_limit(
-        self, messages: List[Dict[str, str]], model: str
-    ) -> Tuple[bool, float]:
+        self, messages: list[dict[str, str]], model: str
+    ) -> tuple[bool, float]:
         """
         Check if we can make an API call without hitting rate limits.
 
@@ -117,7 +116,7 @@ class TokenRateLimiter:
 
             return False, wait_seconds
 
-    def record_usage(self, messages: List[Dict[str, str]], model: str) -> None:
+    def record_usage(self, messages: list[dict[str, str]], model: str) -> None:
         """
         Record token usage for a successful API call.
 
@@ -134,7 +133,7 @@ class TokenRateLimiter:
                 f"Recorded {token_count} tokens at {datetime.fromtimestamp(current_time)}"
             )
 
-    def wait_if_needed(self, messages: List[Dict[str, str]], model: str) -> None:
+    def wait_if_needed(self, messages: list[dict[str, str]], model: str) -> None:
         """
         Wait if necessary to avoid hitting rate limits, then record usage.
 
@@ -153,7 +152,7 @@ class TokenRateLimiter:
         # Record the usage immediately before making the call
         self.record_usage(messages, model)
 
-    def get_usage_stats(self) -> Dict[str, Union[int, float]]:
+    def get_usage_stats(self) -> dict[str, int | float]:
         """Get current usage statistics."""
         current_time = time.time()
         with self.lock:
@@ -170,7 +169,7 @@ class TokenRateLimiter:
 
 
 # Global rate limiter instance
-_RATE_LIMITER: Optional[TokenRateLimiter] = None  # pylint: disable=invalid-name
+_RATE_LIMITER: TokenRateLimiter | None = None  # pylint: disable=invalid-name
 
 
 def get_rate_limiter(tokens_per_minute: int = 30000) -> TokenRateLimiter:

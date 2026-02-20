@@ -12,6 +12,7 @@ import ConfigPage from './pages/ConfigPage';
 import LoginPage from './pages/LoginPage';
 import LandingPage from './pages/LandingPage';
 import BillingPage from './pages/BillingPage';
+import StatsPage from './pages/StatsPage';
 import AudioPlayer from './components/AudioPlayer';
 import { billingApi, versionApi } from './services/api';
 import { DiagnosticsProvider, useDiagnostics } from './contexts/DiagnosticsContext';
@@ -103,6 +104,7 @@ function AppShell() {
   const isAdmin = !requireAuth || user?.role === 'admin';
   const showConfigLink = !requireAuth || isAdmin;
   const showJobsLink = !requireAuth || isAdmin;
+  const showStatsLink = !requireAuth || isAdmin;
   const showBillingLink = requireAuth && !isAdmin;
 
   return (
@@ -148,6 +150,11 @@ function AppShell() {
               {showJobsLink && (
                 <Link to="/jobs" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">
                   Jobs
+                </Link>
+              )}
+              {showStatsLink && (
+                <Link to="/stats" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">
+                  Stats
                 </Link>
               )}
               {showConfigLink && (
@@ -270,6 +277,14 @@ function AppShell() {
                         Jobs
                       </Link>
                     )}
+                    {showStatsLink && (
+                      <Link
+                        to="/stats"
+                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        Stats
+                      </Link>
+                    )}
                     {showConfigLink && (
                       <Link
                         to="/config"
@@ -329,6 +344,7 @@ function AppShell() {
           <Route path="/feeds/:feedId" element={<HomePage />} />
           {showBillingLink && <Route path="/billing" element={<BillingPage />} />}
           {showJobsLink && <Route path="/jobs" element={<JobsPage />} />}
+          {showStatsLink && <Route path="/stats" element={<StatsPage />} />}
           {showConfigLink && <Route path="/config" element={<ConfigPage />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

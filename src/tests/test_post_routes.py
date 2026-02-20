@@ -1,4 +1,5 @@
 import datetime
+from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
@@ -335,3 +336,56 @@ def test_feed_posts_pagination_and_filtering(app):
         assert filtered["total"] == 15
         assert filtered["whitelisted_total"] == 15
         assert all(item["whitelisted"] for item in filtered["items"])
+
+
+def test_reprocess_returns_snapshot_path_when_created(app):
+    """Reprocess should include snapshot path when prior data snapshot succeeds."""
+    app.testing = True
+    app.register_blueprint(post_bp)
+
+    with app.app_context():
+        feed = Feed(title="Reprocess Feed", rss_url="https://example.com/feed.xml")
+        db.session.add(feed)
+        db.session.commit()
+
+        post = Post(
+            feed_id=feed.id,
+            guid="reprocess-guid",
+            download_url="https://example.com/audio.mp3",
+            title="Reprocess Episode",
+            whitelisted=True,
+        )
+        db.session.add(post)
+        db.session.commit()
+        post_guid = post.guid
+
+    client = app.test_client()
+
+    with (
+        mock.patch(
+            "app.routes.post_routes.snapshot_post_processing_data"
+        ) as mock_snapshot,
+        mock.patch("app.routes.post_routes.clear_post_identifications_only"),
+        mock.patch("app.routes.post_routes.get_jobs_manager") as mock_mgr,
+    ):
+        mock_snapshot.return_value = Path(
+            "/tmp/reprocess-snapshots/reprocess-guid.json"
+        )
+        mock_mgr.return_value.start_post_processing.return_value = {
+            "status": "started",
+            "job_id": "job-reprocess-1",
+            "message": "Job queued for processing",
+        }
+        mock_mgr.return_value.cancel_post_jobs.return_value = {
+            "status": "cancelled",
+            "post_guid": post_guid,
+            "job_ids": [],
+            "message": "Cancelled 0 jobs",
+        }
+
+        response = client.post(f"/api/posts/{post_guid}/reprocess")
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data["status"] == "started"
+        assert "transcript preserved" in data["message"].lower()
+        assert data["snapshot_path"] == "/tmp/reprocess-snapshots/reprocess-guid.json"

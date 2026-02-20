@@ -1,37 +1,51 @@
 #!/bin/bash
 
-# format
-echo '============================================================='
-echo "Running 'pipenv run black .'"
-echo '============================================================='
-pipenv run black .
-echo '============================================================='
-echo "Running 'pipenv run isort .'"
-echo '============================================================='
-pipenv run isort .
+RUN_INTEGRATION=false
+RUN_TESTS=false
+for arg in "$@"; do
+  case $arg in
+    --int) RUN_INTEGRATION=true ;;
+    --tests) RUN_TESTS=true ;;
+  esac
+done
 
-# lint and type check
+# ensure uv is on PATH (installed to ~/.local/bin by the official installer)
+# shellcheck disable=SC1091
+[ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
+
+# ensure dependencies are installed and are always up to date
 echo '============================================================='
-echo "Running 'pipenv run mypy . --install-types --non-interactive'"
+echo "Running 'uv sync --extra dev'"
 echo '============================================================='
-pipenv run mypy . \
-    --install-types \
-    --non-interactive \
-    --explicit-package-bases \
-    --exclude 'migrations' \
-    --exclude 'build' \
-    --exclude 'scripts' \
-    --exclude 'src/tests' \
-    --exclude 'src/tests/test_routes.py' \
-    --exclude 'src/app/routes.py'
+uv sync --extra dev
 
 echo '============================================================='
-echo "Running 'pipenv run pylint src/ --ignore=migrations,tests'"
+echo "Running 'uv run ruff format .'"
 echo '============================================================='
-pipenv run pylint src/ --ignore=migrations,tests
+uv run ruff format .
+echo '============================================================='
+echo "Running 'uv run ruff check --fix .'"
+echo '============================================================='
+uv run ruff check --fix .
 
-# run tests
+# type check
 echo '============================================================='
-echo "Running 'pipenv run pytest --disable-warnings'"
+echo "Running 'uv run ty check'"
 echo '============================================================='
-pipenv run pytest --disable-warnings
+uv run ty check
+
+# run tests (only when --tests is passed)
+if [ "$RUN_TESTS" = true ]; then
+  echo '============================================================='
+  echo "Running 'uv run pytest --disable-warnings'"
+  echo '============================================================='
+  uv run pytest --disable-warnings
+fi
+
+# Run integration tests only if --int flag is provided
+if [ "$RUN_INTEGRATION" = true ]; then
+  echo '============================================================='
+  echo "Running integration workflow checks..."
+  echo '============================================================='
+  uv run python scripts/check_integration_workflow.py
+fi

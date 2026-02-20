@@ -12,17 +12,15 @@ import type {
 } from '../types';
 
 const DEFAULT_ENV_HINTS: Record<string, EnvOverrideEntry> = {
-  'groq.api_key': { env_var: 'GROQ_API_KEY' },
   'llm.llm_api_key': { env_var: 'LLM_API_KEY' },
   'llm.llm_model': { env_var: 'LLM_MODEL' },
+  'llm.llm_github_model': { env_var: 'GITHUB_MODEL' },
   'llm.openai_base_url': { env_var: 'OPENAI_BASE_URL' },
-  'whisper.whisper_type': { env_var: 'WHISPER_TYPE' },
-  'whisper.api_key': { env_var: 'WHISPER_REMOTE_API_KEY' },
-  'whisper.base_url': { env_var: 'WHISPER_REMOTE_BASE_URL' },
-  'whisper.model': { env_var: 'WHISPER_REMOTE_MODEL' },
-  'whisper.timeout_sec': { env_var: 'WHISPER_REMOTE_TIMEOUT_SEC' },
-  'whisper.chunksize_mb': { env_var: 'WHISPER_REMOTE_CHUNKSIZE_MB' },
-  'whisper.max_retries': { env_var: 'GROQ_MAX_RETRIES' },
+  'whisper.api_key': { env_var: 'WHISPER_API_KEY' },
+  'whisper.base_url': { env_var: 'WHISPER_BASE_URL' },
+  'whisper.model': { env_var: 'WHISPER_MODEL' },
+  'whisper.timeout_sec': { env_var: 'WHISPER_TIMEOUT_SEC' },
+  'whisper.chunksize_mb': { env_var: 'WHISPER_CHUNKSIZE_MB' },
 };
 
 const getValueAtPath = (obj: unknown, path: string): unknown => {
@@ -88,9 +86,6 @@ export interface UseConfigStateReturn {
   showEnvWarning: boolean;
   handleConfirmEnvWarning: () => void;
   handleDismissEnvWarning: () => void;
-
-  // Whisper type change handler
-  handleWhisperTypeChange: (nextType: 'remote' | 'groq') => void;
 }
 
 export function useConfigState(): UseConfigStateReturn {
@@ -134,9 +129,7 @@ export function useConfigState(): UseConfigStateReturn {
 
   const getWhisperApiKey = (w: WhisperConfig | undefined): string => {
     if (!w) return '';
-    if (w.whisper_type === 'remote') return w.api_key ?? '';
-    if (w.whisper_type === 'groq') return w.api_key ?? '';
-    return '';
+    return w.api_key ?? '';
   };
 
   const updatePending = useCallback(
@@ -359,54 +352,6 @@ export function useConfigState(): UseConfigStateReturn {
     setEnvWarningPaths([]);
   };
 
-  // Whisper type change handler
-  const handleWhisperTypeChange = (nextType: 'remote' | 'groq') => {
-    updatePending((prevConfig) => {
-      const prevWhisper = {
-        ...(prevConfig.whisper as unknown as Record<string, unknown>),
-      };
-      const prevModelRaw = (prevWhisper?.model as string | undefined) ?? '';
-      const prevModel = String(prevModelRaw).toLowerCase();
-
-      const isNonGroqDefault =
-        prevModel === 'base' || prevModel === 'base.en' || prevModel === 'whisper-1';
-      const isDeprecatedGroq = prevModel === 'distil-whisper-large-v3-en';
-
-      let nextModel: string | undefined = prevWhisper?.model as string | undefined;
-
-      if (nextType === 'groq') {
-        if (!nextModel || isNonGroqDefault || isDeprecatedGroq) {
-          nextModel = 'whisper-large-v3-turbo';
-        }
-      } else if (nextType === 'remote') {
-        if (!nextModel || prevModel === 'base' || prevModel === 'base.en') {
-          nextModel = 'whisper-1';
-        }
-      }
-
-      const nextWhisper: Record<string, unknown> = {
-        ...prevWhisper,
-        whisper_type: nextType,
-      };
-
-      if (nextType === 'groq') {
-        nextWhisper.model = nextModel ?? 'whisper-large-v3-turbo';
-        nextWhisper.language = (prevWhisper.language as string | undefined) || 'en';
-        delete nextWhisper.base_url;
-        delete nextWhisper.timeout_sec;
-        delete nextWhisper.chunksize_mb;
-      } else if (nextType === 'remote') {
-        nextWhisper.model = nextModel ?? 'whisper-1';
-        nextWhisper.language = (prevWhisper.language as string | undefined) || 'en';
-      }
-
-      return {
-        ...prevConfig,
-        whisper: nextWhisper as unknown as WhisperConfig,
-      } as CombinedConfig;
-    });
-  };
-
   return {
     // Data
     pending,
@@ -437,9 +382,6 @@ export function useConfigState(): UseConfigStateReturn {
     showEnvWarning,
     handleConfirmEnvWarning,
     handleDismissEnvWarning,
-
-    // Whisper type change
-    handleWhisperTypeChange,
   };
 }
 

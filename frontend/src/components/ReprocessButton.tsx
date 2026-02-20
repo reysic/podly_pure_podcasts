@@ -22,6 +22,7 @@ export default function ReprocessButton({
   const [isReprocessing, setIsReprocessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [regenerateTranscript, setRegenerateTranscript] = useState(false);
   const queryClient = useQueryClient();
 
   const handleReprocessClick = async () => {
@@ -30,6 +31,7 @@ export default function ReprocessButton({
       return;
     }
 
+    setRegenerateTranscript(false);
     setShowModal(true);
   };
 
@@ -39,7 +41,9 @@ export default function ReprocessButton({
     setError(null);
 
     try {
-      const response = await feedsApi.reprocessPost(episodeGuid);
+      const response = await feedsApi.reprocessPost(episodeGuid, {
+        force_retranscribe: regenerateTranscript,
+      });
 
       if (response.status === 'started') {
         // Notify parent component that reprocessing started
@@ -73,11 +77,10 @@ export default function ReprocessButton({
       <button
         onClick={handleReprocessClick}
         disabled={isReprocessing}
-        className={`px-3 py-1 text-xs rounded font-medium transition-colors border ${
-          isReprocessing
+        className={`px-3 py-1 text-xs rounded font-medium transition-colors border ${isReprocessing
             ? 'bg-gray-500 text-white cursor-wait border-gray-500'
             : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-900'
-        }`}
+          }`}
         title={
           isReprocessing
             ? 'Clearing data and reprocessing...'
@@ -116,9 +119,23 @@ export default function ReprocessButton({
 
             {/* Content */}
             <div className="p-6">
-              <p className="text-gray-700 mb-6">
+              <p className="text-gray-700 mb-4">
                 Are you sure you want to reprocess this episode? This will delete the existing processed data and start fresh processing.
               </p>
+              <label className="flex items-start gap-2 mb-6 text-sm text-gray-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={regenerateTranscript}
+                  onChange={(e) => setRegenerateTranscript(e.target.checked)}
+                />
+                <span>
+                  Also regenerate transcript
+                  <span className="block text-xs text-gray-500">
+                    Disabled by default. Enable to force a full re-transcription (slower, uses Whisper credits).
+                  </span>
+                </span>
+              </label>
 
               {/* Action Buttons */}
               <div className="flex gap-3 justify-end">

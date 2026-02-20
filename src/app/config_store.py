@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import hashlib
 import logging
 import os
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 from flask import current_app
 
@@ -20,7 +19,6 @@ from app.runtime_config import config as runtime_config
 from shared import defaults as DEFAULTS
 from shared.config import Config as PydanticConfig
 from shared.config import (
-    GroqWhisperConfig,
     RemoteWhisperConfig,
     TestWhisperConfig,
 )
@@ -35,14 +33,14 @@ def _is_empty(value: Any) -> bool:
     return value is None or value == ""
 
 
-def _parse_int(val: Any) -> Optional[int]:
+def _parse_int(val: Any) -> int | None:
     try:
         return int(val) if val is not None else None
     except Exception:
         return None
 
 
-def _parse_bool(val: Any) -> Optional[bool]:
+def _parse_bool(val: Any) -> bool | None:
     if val is None:
         return None
     s = str(val).strip().lower()
@@ -53,25 +51,7 @@ def _parse_bool(val: Any) -> Optional[bool]:
     return None
 
 
-def _set_if_empty(obj: Any, attr: str, new_val: Any) -> bool:
-    if _is_empty(new_val):
-        return False
-    if _is_empty(getattr(obj, attr)):
-        setattr(obj, attr, new_val)
-        return True
-    return False
-
-
-def _set_if_default(obj: Any, attr: str, new_val: Any, default_val: Any) -> bool:
-    if new_val is None:
-        return False
-    if getattr(obj, attr) == default_val:
-        setattr(obj, attr, new_val)
-        return True
-    return False
-
-
-def _ensure_row(model: type, defaults: Dict[str, Any]) -> Any:
+def _ensure_row(model: type, defaults: dict[str, Any]) -> Any:
     row = db.session.get(model, 1)
     if row is None:
         role = None
@@ -107,6 +87,7 @@ def ensure_defaults() -> None:
         {
             "llm_model": DEFAULTS.LLM_DEFAULT_MODEL,
             "llm_github_pat": None,
+            "llm_github_model": None,
             "openai_timeout": DEFAULTS.OPENAI_DEFAULT_TIMEOUT_SEC,
             "openai_max_tokens": DEFAULTS.OPENAI_DEFAULT_MAX_TOKENS,
             "llm_max_concurrent_calls": DEFAULTS.LLM_DEFAULT_MAX_CONCURRENT_CALLS,
@@ -127,9 +108,6 @@ def ensure_defaults() -> None:
             "remote_language": DEFAULTS.WHISPER_REMOTE_LANGUAGE,
             "remote_timeout_sec": DEFAULTS.WHISPER_REMOTE_TIMEOUT_SEC,
             "remote_chunksize_mb": DEFAULTS.WHISPER_REMOTE_CHUNKSIZE_MB,
-            "groq_model": DEFAULTS.WHISPER_GROQ_MODEL,
-            "groq_language": DEFAULTS.WHISPER_GROQ_LANGUAGE,
-            "groq_max_retries": DEFAULTS.WHISPER_GROQ_MAX_RETRIES,
         },
     )
 
@@ -164,240 +142,111 @@ def ensure_defaults() -> None:
     )
 
 
-def _apply_llm_env_overrides_to_db(llm: Any) -> bool:
-    """Apply LLM-related environment variable overrides to database settings.
+def _apply_llm_env_overlay(llm_data: dict[str, Any]) -> None:
+    """Overlay environment variables onto the LLM config dict (no DB writes)."""
+    env_llm_key = os.environ.get("LLM_API_KEY") or os.environ.get("OPENAI_API_KEY")
+    if env_llm_key:
+        llm_data["llm_api_key"] = env_llm_key
 
-    Returns True if any settings were changed.
-    """
-    changed = False
-
-    env_llm_key = (
-        os.environ.get("LLM_API_KEY")
-        or os.environ.get("OPENAI_API_KEY")
-        or os.environ.get("GROQ_API_KEY")
-    )
-    changed = _set_if_empty(llm, "llm_api_key", env_llm_key) or changed
-
-    # Allow a dedicated GitHub PAT for Copilot usage
     env_github_pat = os.environ.get("GITHUB_PAT")
-    changed = _set_if_empty(llm, "llm_github_pat", env_github_pat) or changed
+    if env_github_pat:
+        llm_data["llm_github_pat"] = env_github_pat
+        llm_data["github_pat"] = env_github_pat
+
+    env_github_model = os.environ.get("GITHUB_MODEL")
+    if env_github_model:
+        llm_data["llm_github_model"] = env_github_model
 
     env_llm_model = os.environ.get("LLM_MODEL")
-    changed = (
-        _set_if_default(llm, "llm_model", env_llm_model, DEFAULTS.LLM_DEFAULT_MODEL)
-        or changed
-    )
+    if env_llm_model:
+        llm_data["llm_model"] = env_llm_model
 
     env_openai_base_url = os.environ.get("OPENAI_BASE_URL")
-    changed = _set_if_empty(llm, "openai_base_url", env_openai_base_url) or changed
+    if env_openai_base_url:
+        llm_data["openai_base_url"] = env_openai_base_url
 
     env_openai_timeout = _parse_int(os.environ.get("OPENAI_TIMEOUT"))
-    changed = (
-        _set_if_default(
-            llm,
-            "openai_timeout",
-            env_openai_timeout,
-            DEFAULTS.OPENAI_DEFAULT_TIMEOUT_SEC,
-        )
-        or changed
-    )
+    if env_openai_timeout is not None:
+        llm_data["openai_timeout"] = env_openai_timeout
 
     env_openai_max_tokens = _parse_int(os.environ.get("OPENAI_MAX_TOKENS"))
-    changed = (
-        _set_if_default(
-            llm,
-            "openai_max_tokens",
-            env_openai_max_tokens,
-            DEFAULTS.OPENAI_DEFAULT_MAX_TOKENS,
-        )
-        or changed
-    )
+    if env_openai_max_tokens is not None:
+        llm_data["openai_max_tokens"] = env_openai_max_tokens
 
     env_llm_max_concurrent = _parse_int(os.environ.get("LLM_MAX_CONCURRENT_CALLS"))
-    changed = (
-        _set_if_default(
-            llm,
-            "llm_max_concurrent_calls",
-            env_llm_max_concurrent,
-            DEFAULTS.LLM_DEFAULT_MAX_CONCURRENT_CALLS,
-        )
-        or changed
-    )
+    if env_llm_max_concurrent is not None:
+        llm_data["llm_max_concurrent_calls"] = env_llm_max_concurrent
 
     env_llm_max_retries = _parse_int(os.environ.get("LLM_MAX_RETRY_ATTEMPTS"))
-    changed = (
-        _set_if_default(
-            llm,
-            "llm_max_retry_attempts",
-            env_llm_max_retries,
-            DEFAULTS.LLM_DEFAULT_MAX_RETRY_ATTEMPTS,
-        )
-        or changed
-    )
+    if env_llm_max_retries is not None:
+        llm_data["llm_max_retry_attempts"] = env_llm_max_retries
 
     env_llm_enable_token_rl = _parse_bool(
         os.environ.get("LLM_ENABLE_TOKEN_RATE_LIMITING")
     )
-    if (
-        llm.llm_enable_token_rate_limiting == DEFAULTS.LLM_ENABLE_TOKEN_RATE_LIMITING
-        and env_llm_enable_token_rl is not None
-    ):
-        llm.llm_enable_token_rate_limiting = bool(env_llm_enable_token_rl)
-        changed = True
+    if env_llm_enable_token_rl is not None:
+        llm_data["llm_enable_token_rate_limiting"] = bool(env_llm_enable_token_rl)
 
     env_llm_max_input_tokens_per_call = _parse_int(
         os.environ.get("LLM_MAX_INPUT_TOKENS_PER_CALL")
     )
-    if (
-        llm.llm_max_input_tokens_per_call is None
-        and env_llm_max_input_tokens_per_call is not None
-    ):
-        llm.llm_max_input_tokens_per_call = env_llm_max_input_tokens_per_call
-        changed = True
+    if env_llm_max_input_tokens_per_call is not None:
+        llm_data["llm_max_input_tokens_per_call"] = env_llm_max_input_tokens_per_call
 
     env_llm_max_input_tokens_per_minute = _parse_int(
         os.environ.get("LLM_MAX_INPUT_TOKENS_PER_MINUTE")
     )
-    if (
-        llm.llm_max_input_tokens_per_minute is None
-        and env_llm_max_input_tokens_per_minute is not None
-    ):
-        llm.llm_max_input_tokens_per_minute = env_llm_max_input_tokens_per_minute
-        changed = True
-
-    return changed
+    if env_llm_max_input_tokens_per_minute is not None:
+        llm_data["llm_max_input_tokens_per_minute"] = (
+            env_llm_max_input_tokens_per_minute
+        )
 
 
-def _apply_whisper_env_overrides_to_db(whisper: Any) -> bool:
-    """Apply Whisper-related environment variable overrides to database settings.
+def _apply_whisper_env_overlay(whisper_data: dict[str, Any]) -> None:
+    """Overlay environment variables onto the whisper config dict (no DB writes)."""
+    env_whisper_key = (
+        os.environ.get("WHISPER_API_KEY")
+        or os.environ.get("WHISPER_REMOTE_API_KEY")
+        or os.environ.get("OPENAI_API_KEY")
+    )
+    if env_whisper_key:
+        whisper_data["api_key"] = env_whisper_key
 
-    Returns True if any settings were changed.
+    env_whisper_base = (
+        os.environ.get("WHISPER_BASE_URL")
+        or os.environ.get("WHISPER_REMOTE_BASE_URL")
+        or os.environ.get("OPENAI_BASE_URL")
+    )
+    if env_whisper_base:
+        whisper_data["base_url"] = env_whisper_base
+
+    env_whisper_model = os.environ.get("WHISPER_MODEL") or os.environ.get(
+        "WHISPER_REMOTE_MODEL"
+    )
+    if env_whisper_model:
+        whisper_data["model"] = env_whisper_model
+
+    env_whisper_timeout = _parse_int(
+        os.environ.get("WHISPER_TIMEOUT_SEC")
+        or os.environ.get("WHISPER_REMOTE_TIMEOUT_SEC")
+    )
+    if env_whisper_timeout is not None:
+        whisper_data["timeout_sec"] = env_whisper_timeout
+
+    env_whisper_chunksize = _parse_int(
+        os.environ.get("WHISPER_CHUNKSIZE_MB")
+        or os.environ.get("WHISPER_REMOTE_CHUNKSIZE_MB")
+    )
+    if env_whisper_chunksize is not None:
+        whisper_data["chunksize_mb"] = env_whisper_chunksize
+
+
+def read_combined() -> dict[str, Any]:
+    """Read combined config from DB, then overlay any environment variable overrides.
+
+    Environment variables always win over DB-stored values at read time.
+    Nothing is written to the DB here — env values are ephemeral overlays.
     """
-    changed = False
-
-    # Respect explicit whisper type env if still default
-    env_whisper_type = os.environ.get("WHISPER_TYPE")
-    if env_whisper_type and isinstance(env_whisper_type, str):
-        env_whisper_type_norm = env_whisper_type.strip().lower()
-        if env_whisper_type_norm in {"remote", "groq"}:
-            changed = (
-                _set_if_default(
-                    whisper,
-                    "whisper_type",
-                    env_whisper_type_norm,
-                    DEFAULTS.WHISPER_DEFAULT_TYPE,
-                )
-                or changed
-            )
-
-    # If GROQ_API_KEY is provided, seed both LLM key and Groq whisper key if empty
-    groq_key = os.environ.get("GROQ_API_KEY")
-    changed = _set_if_empty(whisper, "groq_api_key", groq_key) or changed
-
-    if whisper.whisper_type == "remote":
-        remote_key = os.environ.get("WHISPER_REMOTE_API_KEY") or os.environ.get(
-            "OPENAI_API_KEY"
-        )
-        changed = _set_if_empty(whisper, "remote_api_key", remote_key) or changed
-
-        remote_base = os.environ.get("WHISPER_REMOTE_BASE_URL") or os.environ.get(
-            "OPENAI_BASE_URL"
-        )
-        changed = (
-            _set_if_default(
-                whisper,
-                "remote_base_url",
-                remote_base,
-                DEFAULTS.WHISPER_REMOTE_BASE_URL,
-            )
-            or changed
-        )
-
-        remote_model = os.environ.get("WHISPER_REMOTE_MODEL")
-        changed = (
-            _set_if_default(
-                whisper, "remote_model", remote_model, DEFAULTS.WHISPER_REMOTE_MODEL
-            )
-            or changed
-        )
-
-        remote_timeout = _parse_int(os.environ.get("WHISPER_REMOTE_TIMEOUT_SEC"))
-        changed = (
-            _set_if_default(
-                whisper,
-                "remote_timeout_sec",
-                remote_timeout,
-                DEFAULTS.WHISPER_REMOTE_TIMEOUT_SEC,
-            )
-            or changed
-        )
-
-        remote_chunksize = _parse_int(os.environ.get("WHISPER_REMOTE_CHUNKSIZE_MB"))
-        changed = (
-            _set_if_default(
-                whisper,
-                "remote_chunksize_mb",
-                remote_chunksize,
-                DEFAULTS.WHISPER_REMOTE_CHUNKSIZE_MB,
-            )
-            or changed
-        )
-
-    elif whisper.whisper_type == "groq":
-        groq_model_env = os.environ.get("GROQ_WHISPER_MODEL") or os.environ.get(
-            "WHISPER_GROQ_MODEL"
-        )
-        changed = (
-            _set_if_default(
-                whisper, "groq_model", groq_model_env, DEFAULTS.WHISPER_GROQ_MODEL
-            )
-            or changed
-        )
-
-        groq_max_retries_env = _parse_int(os.environ.get("GROQ_MAX_RETRIES"))
-        changed = (
-            _set_if_default(
-                whisper,
-                "groq_max_retries",
-                groq_max_retries_env,
-                DEFAULTS.WHISPER_GROQ_MAX_RETRIES,
-            )
-            or changed
-        )
-
-    return changed
-
-
-def _apply_env_overrides_to_db_first_boot() -> None:
-    """Persist environment-provided overrides into the DB on first boot.
-
-    Only updates fields that are at default/empty values so we don't clobber
-    user-changed settings after first start.
-    """
-    llm = LLMSettings.query.get(1)
-    whisper = WhisperSettings.query.get(1)
-    processing = ProcessingSettings.query.get(1)
-    output = OutputSettings.query.get(1)
-    app_s = AppSettings.query.get(1)
-
-    assert llm and whisper and processing and output and app_s
-
-    changed = False
-    changed = _apply_llm_env_overrides_to_db(llm) or changed
-    changed = _apply_whisper_env_overrides_to_db(whisper) or changed
-
-    # Future: add processing/output/app env-to-db seeding if envs defined
-
-    if changed:
-        safe_commit(
-            db.session,
-            must_succeed=True,
-            context="env_overrides_to_db",
-            logger_obj=logger,
-        )
-
-
-def read_combined() -> Dict[str, Any]:
     ensure_defaults()
 
     llm = LLMSettings.query.get(1)
@@ -408,7 +257,7 @@ def read_combined() -> Dict[str, Any]:
 
     assert llm and whisper and processing and output and app_s
 
-    whisper_payload: Dict[str, Any] = {"whisper_type": whisper.whisper_type}
+    whisper_payload: dict[str, Any] = {"whisper_type": whisper.whisper_type}
     if whisper.whisper_type == "remote":
         whisper_payload.update(
             {
@@ -420,34 +269,34 @@ def read_combined() -> Dict[str, Any]:
                 "chunksize_mb": whisper.remote_chunksize_mb,
             }
         )
-    elif whisper.whisper_type == "groq":
-        whisper_payload.update(
-            {
-                "api_key": whisper.groq_api_key,
-                "model": whisper.groq_model,
-                "language": whisper.groq_language,
-                "max_retries": whisper.groq_max_retries,
-            }
-        )
     elif whisper.whisper_type == "test":
         whisper_payload.update({})
 
+    llm_payload: dict[str, Any] = {
+        "llm_api_key": llm.llm_api_key,
+        "github_pat": llm.llm_github_pat,
+        "llm_github_pat": llm.llm_github_pat,
+        "llm_github_model": llm.llm_github_model,
+        "llm_model": llm.llm_model,
+        "openai_base_url": llm.openai_base_url,
+        "openai_timeout": llm.openai_timeout,
+        "openai_max_tokens": llm.openai_max_tokens,
+        "llm_max_concurrent_calls": llm.llm_max_concurrent_calls,
+        "llm_max_retry_attempts": llm.llm_max_retry_attempts,
+        "llm_max_input_tokens_per_call": llm.llm_max_input_tokens_per_call,
+        "llm_enable_token_rate_limiting": llm.llm_enable_token_rate_limiting,
+        "llm_max_input_tokens_per_minute": llm.llm_max_input_tokens_per_minute,
+        "enable_boundary_refinement": llm.enable_boundary_refinement,
+        "enable_word_level_boundary_refinder": llm.enable_word_level_boundary_refinder,
+    }
+
+    # Overlay env vars — env always wins, but nothing is persisted
+    _apply_llm_env_overlay(llm_payload)
+    if whisper.whisper_type == "remote":
+        _apply_whisper_env_overlay(whisper_payload)
+
     return {
-        "llm": {
-            "llm_api_key": llm.llm_api_key,
-            "github_pat": llm.llm_github_pat,
-            "llm_model": llm.llm_model,
-            "openai_base_url": llm.openai_base_url,
-            "openai_timeout": llm.openai_timeout,
-            "openai_max_tokens": llm.openai_max_tokens,
-            "llm_max_concurrent_calls": llm.llm_max_concurrent_calls,
-            "llm_max_retry_attempts": llm.llm_max_retry_attempts,
-            "llm_max_input_tokens_per_call": llm.llm_max_input_tokens_per_call,
-            "llm_enable_token_rate_limiting": llm.llm_enable_token_rate_limiting,
-            "llm_max_input_tokens_per_minute": llm.llm_max_input_tokens_per_minute,
-            "enable_boundary_refinement": llm.enable_boundary_refinement,
-            "enable_word_level_boundary_refinder": llm.enable_word_level_boundary_refinder,
-        },
+        "llm": llm_payload,
         "whisper": whisper_payload,
         "processing": {
             "num_segments_to_input_to_prompt": processing.num_segments_to_input_to_prompt,
@@ -470,12 +319,13 @@ def read_combined() -> Dict[str, Any]:
     }
 
 
-def _update_section_llm(data: Dict[str, Any]) -> None:
+def _update_section_llm(data: dict[str, Any]) -> None:
     row = LLMSettings.query.get(1)
     assert row is not None
     for key in [
         "llm_api_key",
         "llm_github_pat",
+        "llm_github_model",
         "llm_model",
         "openai_base_url",
         "openai_timeout",
@@ -506,12 +356,11 @@ def _update_section_llm(data: Dict[str, Any]) -> None:
     )
 
 
-def _update_section_whisper(data: Dict[str, Any]) -> None:
+def _update_section_whisper(data: dict[str, Any]) -> None:
     row = WhisperSettings.query.get(1)
     assert row is not None
     if "whisper_type" in data and data["whisper_type"] in {
         "remote",
-        "groq",
         "test",
     }:
         row.whisper_type = data["whisper_type"]
@@ -530,19 +379,6 @@ def _update_section_whisper(data: Dict[str, Any]) -> None:
                 if src == "api_key" and _is_empty(new_val):
                     continue
                 setattr(row, dst, new_val)
-    elif row.whisper_type == "groq":
-        for key_map in [
-            ("api_key", "groq_api_key"),
-            ("model", "groq_model"),
-            ("language", "groq_language"),
-            ("max_retries", "groq_max_retries"),
-        ]:
-            src, dst = key_map
-            if src in data:
-                new_val = data[src]
-                if src == "api_key" and _is_empty(new_val):
-                    continue
-                setattr(row, dst, new_val)
     else:
         # test type has no extra fields
         pass
@@ -554,7 +390,7 @@ def _update_section_whisper(data: Dict[str, Any]) -> None:
     )
 
 
-def _update_section_processing(data: Dict[str, Any]) -> None:
+def _update_section_processing(data: dict[str, Any]) -> None:
     row = ProcessingSettings.query.get(1)
     assert row is not None
     for key in [
@@ -570,7 +406,7 @@ def _update_section_processing(data: Dict[str, Any]) -> None:
     )
 
 
-def _update_section_output(data: Dict[str, Any]) -> None:
+def _update_section_output(data: dict[str, Any]) -> None:
     row = OutputSettings.query.get(1)
     assert row is not None
     for key in [
@@ -589,11 +425,11 @@ def _update_section_output(data: Dict[str, Any]) -> None:
     )
 
 
-def _update_section_app(data: Dict[str, Any]) -> Tuple[Optional[int], Optional[int]]:
+def _update_section_app(data: dict[str, Any]) -> tuple[int | None, int | None]:
     row = AppSettings.query.get(1)
     assert row is not None
-    old_interval: Optional[int] = row.background_update_interval_minute
-    old_retention: Optional[int] = row.post_cleanup_retention_days
+    old_interval: int | None = row.background_update_interval_minute
+    old_retention: int | None = row.post_cleanup_retention_days
     for key in [
         "background_update_interval_minute",
         "automatically_whitelist_new_episodes",
@@ -615,7 +451,7 @@ def _update_section_app(data: Dict[str, Any]) -> Tuple[Optional[int], Optional[i
 
 
 def _maybe_reschedule_refresh_job(
-    old_interval: Optional[int], new_interval: Optional[int]
+    old_interval: int | None, new_interval: int | None
 ) -> None:
     if old_interval == new_interval:
         return
@@ -643,7 +479,7 @@ def _maybe_reschedule_refresh_job(
 
 
 def _maybe_disable_cleanup_job(
-    old_retention: Optional[int], new_retention: Optional[int]
+    old_retention: int | None, new_retention: int | None
 ) -> None:
     if old_retention == new_retention:
         return
@@ -659,7 +495,7 @@ def _maybe_disable_cleanup_job(
                 pass
 
 
-def update_combined(payload: Dict[str, Any]) -> Dict[str, Any]:
+def update_combined(payload: dict[str, Any]) -> dict[str, Any]:
     if "llm" in payload:
         _update_section_llm(payload["llm"] or {})
     if "whisper" in payload:
@@ -684,9 +520,7 @@ def update_combined(payload: Dict[str, Any]) -> Dict[str, Any]:
 def to_pydantic_config() -> PydanticConfig:
     data = read_combined()
     # Map whisper section to discriminated union config
-    whisper_obj: Optional[
-        RemoteWhisperConfig | TestWhisperConfig | GroqWhisperConfig
-    ] = None
+    whisper_obj: RemoteWhisperConfig | TestWhisperConfig | None = None
     w = data["whisper"]
     wtype = w.get("whisper_type")
     if wtype == "remote":
@@ -699,20 +533,14 @@ def to_pydantic_config() -> PydanticConfig:
             timeout_sec=w.get("timeout_sec", 600),
             chunksize_mb=w.get("chunksize_mb", 24),
         )
-    elif wtype == "groq":
-        whisper_obj = GroqWhisperConfig(
-            # Allow boot without a Groq API key so the UI can be used to set it
-            api_key=w.get("api_key") or "",
-            model=w.get("model", DEFAULTS.WHISPER_GROQ_MODEL),
-            language=w.get("language", "en"),
-            max_retries=w.get("max_retries", 3),
-        )
     elif wtype == "test":
         whisper_obj = TestWhisperConfig()
 
     return PydanticConfig(
         llm_api_key=data["llm"].get("llm_api_key"),
-        llm_github_pat=data["llm"].get("github_pat"),
+        llm_github_pat=data["llm"].get("llm_github_pat")
+        or data["llm"].get("github_pat"),
+        llm_github_model=data["llm"].get("llm_github_model"),
         llm_model=data["llm"].get("llm_model", DEFAULTS.LLM_DEFAULT_MODEL),
         openai_base_url=data["llm"].get("openai_base_url"),
         openai_max_tokens=int(
@@ -795,7 +623,7 @@ def to_pydantic_config() -> PydanticConfig:
     )
 
 
-def hydrate_runtime_config_inplace(db_config: Optional[PydanticConfig] = None) -> None:
+def hydrate_runtime_config_inplace(db_config: PydanticConfig | None = None) -> None:
     """Hydrate the in-process runtime config from DB-backed settings in-place.
 
     Preserves the identity of the `app.config` Pydantic instance so any modules
@@ -829,11 +657,7 @@ def _log_initial_snapshot(cfg: PydanticConfig) -> None:
 
 
 def _apply_top_level_env_overrides(cfg: PydanticConfig) -> None:
-    env_llm_key = (
-        os.environ.get("LLM_API_KEY")
-        or os.environ.get("OPENAI_API_KEY")
-        or os.environ.get("GROQ_API_KEY")
-    )
+    env_llm_key = os.environ.get("LLM_API_KEY") or os.environ.get("OPENAI_API_KEY")
     if env_llm_key:
         cfg.llm_api_key = env_llm_key
 
@@ -847,13 +671,19 @@ def _apply_whisper_env_overrides(cfg: PydanticConfig) -> None:
         return
     wtype = getattr(cfg.whisper, "whisper_type", None)
     if wtype == "remote":
-        remote_key = os.environ.get("WHISPER_REMOTE_API_KEY") or os.environ.get(
-            "OPENAI_API_KEY"
+        remote_key = (
+            os.environ.get("WHISPER_API_KEY")
+            or os.environ.get("WHISPER_REMOTE_API_KEY")
+            or os.environ.get("OPENAI_API_KEY")
         )
-        remote_base = os.environ.get("WHISPER_REMOTE_BASE_URL") or os.environ.get(
-            "OPENAI_BASE_URL"
+        remote_base = (
+            os.environ.get("WHISPER_BASE_URL")
+            or os.environ.get("WHISPER_REMOTE_BASE_URL")
+            or os.environ.get("OPENAI_BASE_URL")
         )
-        remote_model = os.environ.get("WHISPER_REMOTE_MODEL")
+        remote_model = os.environ.get("WHISPER_MODEL") or os.environ.get(
+            "WHISPER_REMOTE_MODEL"
+        )
         if isinstance(cfg.whisper, RemoteWhisperConfig):
             if remote_key:
                 cfg.whisper.api_key = remote_key
@@ -861,16 +691,6 @@ def _apply_whisper_env_overrides(cfg: PydanticConfig) -> None:
                 cfg.whisper.base_url = remote_base
             if remote_model:
                 cfg.whisper.model = remote_model
-    elif wtype == "groq":
-        groq_key = os.environ.get("GROQ_API_KEY")
-        groq_model = os.environ.get("GROQ_WHISPER_MODEL") or os.environ.get(
-            "WHISPER_GROQ_MODEL"
-        )
-        if isinstance(cfg.whisper, GroqWhisperConfig):
-            if groq_key:
-                cfg.whisper.api_key = groq_key
-            if groq_model:
-                cfg.whisper.model = groq_model
 
 
 def _apply_llm_model_override(cfg: PydanticConfig) -> None:
@@ -885,7 +705,9 @@ def _configure_remote_whisper(cfg: PydanticConfig) -> None:
     existing_model = (
         existing_model_any if isinstance(existing_model_any, str) else "whisper-1"
     )
-    rem_model_env = os.environ.get("WHISPER_REMOTE_MODEL")
+    rem_model_env = os.environ.get("WHISPER_MODEL") or os.environ.get(
+        "WHISPER_REMOTE_MODEL"
+    )
     rem_model: str = (
         rem_model_env
         if isinstance(rem_model_env, str) and rem_model_env
@@ -894,8 +716,10 @@ def _configure_remote_whisper(cfg: PydanticConfig) -> None:
 
     existing_key_any = getattr(cfg.whisper, "api_key", "")
     existing_key = existing_key_any if isinstance(existing_key_any, str) else ""
-    rem_api_key_env = os.environ.get("WHISPER_REMOTE_API_KEY") or os.environ.get(
-        "OPENAI_API_KEY"
+    rem_api_key_env = (
+        os.environ.get("WHISPER_API_KEY")
+        or os.environ.get("WHISPER_REMOTE_API_KEY")
+        or os.environ.get("OPENAI_API_KEY")
     )
     rem_api_key: str = (
         rem_api_key_env
@@ -909,8 +733,10 @@ def _configure_remote_whisper(cfg: PydanticConfig) -> None:
         if isinstance(existing_base_any, str)
         else "https://api.openai.com/v1"
     )
-    rem_base_env = os.environ.get("WHISPER_REMOTE_BASE_URL") or os.environ.get(
-        "OPENAI_BASE_URL"
+    rem_base_env = (
+        os.environ.get("WHISPER_BASE_URL")
+        or os.environ.get("WHISPER_REMOTE_BASE_URL")
+        or os.environ.get("OPENAI_BASE_URL")
     )
     rem_base_url: str = (
         rem_base_env
@@ -922,16 +748,14 @@ def _configure_remote_whisper(cfg: PydanticConfig) -> None:
     lang: str = existing_lang_any if isinstance(existing_lang_any, str) else "en"
 
     timeout_sec: int = int(
-        os.environ.get(
-            "WHISPER_REMOTE_TIMEOUT_SEC",
-            str(getattr(cfg.whisper, "timeout_sec", 600)),
-        )
+        os.environ.get("WHISPER_TIMEOUT_SEC")
+        or os.environ.get("WHISPER_REMOTE_TIMEOUT_SEC")
+        or str(getattr(cfg.whisper, "timeout_sec", 600))
     )
     chunksize_mb: int = int(
-        os.environ.get(
-            "WHISPER_REMOTE_CHUNKSIZE_MB",
-            str(getattr(cfg.whisper, "chunksize_mb", 24)),
-        )
+        os.environ.get("WHISPER_CHUNKSIZE_MB")
+        or os.environ.get("WHISPER_REMOTE_CHUNKSIZE_MB")
+        or str(getattr(cfg.whisper, "chunksize_mb", 24))
     )
 
     cfg.whisper = RemoteWhisperConfig(
@@ -944,61 +768,17 @@ def _configure_remote_whisper(cfg: PydanticConfig) -> None:
     )
 
 
-def _configure_groq_whisper(cfg: PydanticConfig) -> None:
-    """Configure groq whisper type."""
-    existing_key_any = getattr(cfg.whisper, "api_key", "")
-    existing_key = existing_key_any if isinstance(existing_key_any, str) else ""
-    groq_key_env = os.environ.get("GROQ_API_KEY")
-    groq_api_key: str = (
-        groq_key_env if isinstance(groq_key_env, str) and groq_key_env else existing_key
-    )
-
-    existing_model_any = getattr(cfg.whisper, "model", DEFAULTS.WHISPER_GROQ_MODEL)
-    existing_model = (
-        existing_model_any
-        if isinstance(existing_model_any, str)
-        else DEFAULTS.WHISPER_GROQ_MODEL
-    )
-    groq_model_env = os.environ.get("GROQ_WHISPER_MODEL") or os.environ.get(
-        "WHISPER_GROQ_MODEL"
-    )
-    groq_model_val: str = (
-        groq_model_env
-        if isinstance(groq_model_env, str) and groq_model_env
-        else existing_model
-    )
-
-    existing_lang_any = getattr(cfg.whisper, "language", "en")
-    groq_lang: str = existing_lang_any if isinstance(existing_lang_any, str) else "en"
-
-    max_retries: int = int(
-        os.environ.get("GROQ_MAX_RETRIES", str(getattr(cfg.whisper, "max_retries", 3)))
-    )
-
-    cfg.whisper = GroqWhisperConfig(
-        api_key=groq_api_key,
-        model=groq_model_val,
-        language=groq_lang,
-        max_retries=max_retries,
-    )
-
-
 def _apply_whisper_type_override(cfg: PydanticConfig) -> None:
     env_whisper_type = os.environ.get("WHISPER_TYPE")
 
     # Auto-detect whisper type from API key environment variables if not explicitly set
     if not env_whisper_type:
-        if os.environ.get("WHISPER_REMOTE_API_KEY"):
+        if os.environ.get("WHISPER_API_KEY") or os.environ.get(
+            "WHISPER_REMOTE_API_KEY"
+        ):
             env_whisper_type = "remote"
             logger.info(
-                "Auto-detected WHISPER_TYPE=remote from WHISPER_REMOTE_API_KEY environment variable"
-            )
-        elif os.environ.get("GROQ_API_KEY") and not os.environ.get("LLM_API_KEY"):
-            # Only auto-detect groq for whisper if LLM_API_KEY is not set
-            # (to avoid confusion when GROQ_API_KEY is only meant for LLM)
-            env_whisper_type = "groq"
-            logger.info(
-                "Auto-detected WHISPER_TYPE=groq from GROQ_API_KEY environment variable"
+                "Auto-detected WHISPER_TYPE=remote from WHISPER_API_KEY / WHISPER_REMOTE_API_KEY environment variable"
             )
 
     if not env_whisper_type:
@@ -1007,8 +787,6 @@ def _apply_whisper_type_override(cfg: PydanticConfig) -> None:
     wtype = env_whisper_type.strip().lower()
     if wtype == "remote":
         _configure_remote_whisper(cfg)
-    elif wtype == "groq":
-        _configure_groq_whisper(cfg)
     elif wtype == "test":
         cfg.whisper = TestWhisperConfig()
 
@@ -1037,261 +815,10 @@ def _log_final_snapshot() -> None:
 
 
 def ensure_defaults_and_hydrate() -> None:
-    """Ensure default rows exist, then hydrate the runtime config from DB."""
+    """Ensure default rows exist, then hydrate the runtime config from DB.
+
+    Environment variable overrides are applied at read time (in read_combined
+    and hydrate_runtime_config_inplace) — they are never written to the DB.
+    """
     ensure_defaults()
-
-    # Check if environment variables have changed since last boot
-    _check_and_apply_env_changes()
-
-    _apply_env_overrides_to_db_first_boot()
     hydrate_runtime_config_inplace()
-
-
-def _calculate_env_hash() -> str:
-    """Calculate a hash of all configuration-related environment variables."""
-    keys = [
-        # LLM
-        "LLM_API_KEY",
-        "OPENAI_API_KEY",
-        "GROQ_API_KEY",
-        "LLM_MODEL",
-        "OPENAI_BASE_URL",
-        "OPENAI_TIMEOUT",
-        "OPENAI_MAX_TOKENS",
-        "LLM_MAX_CONCURRENT_CALLS",
-        "LLM_MAX_RETRY_ATTEMPTS",
-        "LLM_ENABLE_TOKEN_RATE_LIMITING",
-        "LLM_MAX_INPUT_TOKENS_PER_CALL",
-        "LLM_MAX_INPUT_TOKENS_PER_MINUTE",
-        # Whisper
-        "WHISPER_TYPE",
-        "WHISPER_REMOTE_API_KEY",
-        "WHISPER_REMOTE_BASE_URL",
-        "WHISPER_REMOTE_MODEL",
-        "WHISPER_REMOTE_TIMEOUT_SEC",
-        "WHISPER_REMOTE_CHUNKSIZE_MB",
-        "GROQ_WHISPER_MODEL",
-        "WHISPER_GROQ_MODEL",
-        "GROQ_MAX_RETRIES",
-        # App
-        "PODLY_APP_ROLE",
-        "DEVELOPER_MODE",
-    ]
-
-    # Sort keys to ensure stable hash
-    keys.sort()
-
-    hasher = hashlib.sha256()
-    for key in keys:
-        val = os.environ.get(key, "")
-        hasher.update(f"{key}={val}".encode("utf-8"))
-
-    return hasher.hexdigest()
-
-
-def _check_and_apply_env_changes() -> None:
-    """Check if env hash changed and force-apply overrides if so."""
-    try:
-        app_s = AppSettings.query.get(1)
-        if not app_s:
-            return
-
-        # Check if column exists (handle pre-migration state gracefully)
-        if not hasattr(app_s, "env_config_hash"):
-            return
-
-        current_hash = _calculate_env_hash()
-        stored_hash = app_s.env_config_hash
-
-        if stored_hash != current_hash:
-            logger.info(
-                "Environment configuration changed (hash mismatch). "
-                "Applying environment overrides to database settings."
-            )
-            _apply_env_overrides_to_db_force()
-
-            app_s.env_config_hash = current_hash
-            safe_commit(
-                db.session,
-                must_succeed=True,
-                context="update_env_hash",
-                logger_obj=logger,
-            )
-
-    except Exception as e:
-        logger.warning(f"Failed to check/update environment hash: {e}")
-
-
-def _apply_llm_env_overrides(llm: LLMSettings) -> bool:
-    """Apply environment overrides to LLM settings."""
-    changed = False
-
-    env_llm_key = (
-        os.environ.get("LLM_API_KEY")
-        or os.environ.get("OPENAI_API_KEY")
-        or os.environ.get("GROQ_API_KEY")
-    )
-    if env_llm_key:
-        llm.llm_api_key = env_llm_key
-        changed = True
-
-    env_llm_model = os.environ.get("LLM_MODEL")
-    if env_llm_model:
-        llm.llm_model = env_llm_model
-        changed = True
-
-    env_openai_base_url = os.environ.get("OPENAI_BASE_URL")
-    if env_openai_base_url:
-        llm.openai_base_url = env_openai_base_url
-        changed = True
-
-    env_openai_timeout = _parse_int(os.environ.get("OPENAI_TIMEOUT"))
-    if env_openai_timeout is not None:
-        llm.openai_timeout = env_openai_timeout
-        changed = True
-
-    env_openai_max_tokens = _parse_int(os.environ.get("OPENAI_MAX_TOKENS"))
-    if env_openai_max_tokens is not None:
-        llm.openai_max_tokens = env_openai_max_tokens
-        changed = True
-
-    env_llm_max_concurrent = _parse_int(os.environ.get("LLM_MAX_CONCURRENT_CALLS"))
-    if env_llm_max_concurrent is not None:
-        llm.llm_max_concurrent_calls = env_llm_max_concurrent
-        changed = True
-
-    env_llm_max_retries = _parse_int(os.environ.get("LLM_MAX_RETRY_ATTEMPTS"))
-    if env_llm_max_retries is not None:
-        llm.llm_max_retry_attempts = env_llm_max_retries
-        changed = True
-
-    env_llm_enable_token_rl = _parse_bool(
-        os.environ.get("LLM_ENABLE_TOKEN_RATE_LIMITING")
-    )
-    if (
-        llm.llm_enable_token_rate_limiting == DEFAULTS.LLM_ENABLE_TOKEN_RATE_LIMITING
-        and env_llm_enable_token_rl is not None
-    ):
-        llm.llm_enable_token_rate_limiting = bool(env_llm_enable_token_rl)
-        changed = True
-
-    env_llm_max_input_tokens_per_call = _parse_int(
-        os.environ.get("LLM_MAX_INPUT_TOKENS_PER_CALL")
-    )
-    if (
-        llm.llm_max_input_tokens_per_call is None
-        and env_llm_max_input_tokens_per_call is not None
-    ):
-        llm.llm_max_input_tokens_per_call = env_llm_max_input_tokens_per_call
-        changed = True
-
-    env_llm_max_input_tokens_per_minute = _parse_int(
-        os.environ.get("LLM_MAX_INPUT_TOKENS_PER_MINUTE")
-    )
-    if (
-        llm.llm_max_input_tokens_per_minute is None
-        and env_llm_max_input_tokens_per_minute is not None
-    ):
-        llm.llm_max_input_tokens_per_minute = env_llm_max_input_tokens_per_minute
-        changed = True
-
-    return changed
-
-
-def _apply_whisper_remote_overrides(whisper: WhisperSettings) -> bool:
-    """Apply environment overrides for Remote Whisper settings."""
-    changed = False
-    remote_key = os.environ.get("WHISPER_REMOTE_API_KEY") or os.environ.get(
-        "OPENAI_API_KEY"
-    )
-    if remote_key:
-        whisper.remote_api_key = remote_key
-        changed = True
-
-    remote_base = os.environ.get("WHISPER_REMOTE_BASE_URL") or os.environ.get(
-        "OPENAI_BASE_URL"
-    )
-    if remote_base:
-        whisper.remote_base_url = remote_base
-        changed = True
-
-    remote_model = os.environ.get("WHISPER_REMOTE_MODEL")
-    if remote_model:
-        whisper.remote_model = remote_model
-        changed = True
-
-    remote_timeout = _parse_int(os.environ.get("WHISPER_REMOTE_TIMEOUT_SEC"))
-    if remote_timeout is not None:
-        whisper.remote_timeout_sec = remote_timeout
-        changed = True
-
-    remote_chunksize = _parse_int(os.environ.get("WHISPER_REMOTE_CHUNKSIZE_MB"))
-    if remote_chunksize is not None:
-        whisper.remote_chunksize_mb = remote_chunksize
-        changed = True
-    return changed
-
-
-def _apply_whisper_groq_overrides(whisper: WhisperSettings) -> bool:
-    """Apply environment overrides for Groq Whisper settings."""
-    changed = False
-    groq_model_env = os.environ.get("GROQ_WHISPER_MODEL") or os.environ.get(
-        "WHISPER_GROQ_MODEL"
-    )
-    if groq_model_env:
-        whisper.groq_model = groq_model_env
-        changed = True
-
-    groq_max_retries_env = _parse_int(os.environ.get("GROQ_MAX_RETRIES"))
-    if groq_max_retries_env is not None:
-        whisper.groq_max_retries = groq_max_retries_env
-        changed = True
-    return changed
-
-
-def _apply_whisper_env_overrides_force(whisper: WhisperSettings) -> bool:
-    """Apply environment overrides to Whisper settings."""
-    changed = False
-
-    env_whisper_type = os.environ.get("WHISPER_TYPE")
-    if env_whisper_type:
-        wtype = env_whisper_type.strip().lower()
-        if wtype in {"remote", "groq"}:
-            whisper.whisper_type = wtype
-            changed = True
-
-    # Always update Groq API key if present in env
-    groq_key = os.environ.get("GROQ_API_KEY")
-    if groq_key:
-        whisper.groq_api_key = groq_key
-        changed = True
-
-    if whisper.whisper_type == "remote":
-        if _apply_whisper_remote_overrides(whisper):
-            changed = True
-
-    elif whisper.whisper_type == "groq":
-        if _apply_whisper_groq_overrides(whisper):
-            changed = True
-
-    return changed
-
-
-def _apply_env_overrides_to_db_force() -> None:
-    """Force-apply environment overrides to DB, overwriting existing values."""
-    llm = LLMSettings.query.get(1)
-    whisper = WhisperSettings.query.get(1)
-
-    if not llm or not whisper:
-        return
-
-    llm_changed = _apply_llm_env_overrides(llm)
-    whisper_changed = _apply_whisper_env_overrides_force(whisper)
-
-    if llm_changed or whisper_changed:
-        safe_commit(
-            db.session,
-            must_succeed=True,
-            context="force_env_overrides",
-            logger_obj=logger,
-        )

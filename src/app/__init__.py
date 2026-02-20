@@ -1,9 +1,6 @@
-import importlib
-import json
 import logging
 import os
 import secrets
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -13,10 +10,9 @@ from flask_migrate import upgrade
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
-from app import models
+from app import models as models
 from app.auth import AuthSettings, load_auth_settings
 from app.auth.bootstrap import bootstrap_admin_user
-from app.auth.discord_settings import load_discord_settings
 from app.auth.middleware import init_auth_middleware
 from app.background import add_background_job, schedule_cleanup_job
 from app.config_store import (
@@ -33,7 +29,7 @@ from app.processor import (
 )
 from app.routes import register_routes
 from app.runtime_config import config, is_test
-from app.writer.client import writer_client
+from app.writer.client import writer_client as writer_client
 from shared.processing_paths import get_in_root, get_srv_root
 
 setup_logger("global_logger", "src/instance/logs/app.log")
@@ -172,18 +168,8 @@ def _create_configured_app(
         else:
             _hydrate_web_config()
 
-        discord_settings = load_discord_settings()
-        app.config["DISCORD_SETTINGS"] = discord_settings
-
     app.config["AUTH_SETTINGS"] = auth_settings.without_password()
 
-    if app.config["DISCORD_SETTINGS"].enabled:
-        logger.info(
-            "Discord SSO enabled (guild restriction: %s)",
-            "yes" if app.config["DISCORD_SETTINGS"].guild_ids else "no",
-        )
-
-    _validate_env_key_conflicts()
     if start_scheduler:
         _start_scheduler_and_jobs(app)
     return app
@@ -229,32 +215,6 @@ def _clear_scheduler_jobstore() -> None:
         logger.warning(
             "Startup: failed to clear APScheduler jobs at %s: %s", jobstore_path, exc
         )
-
-
-def _validate_env_key_conflicts() -> None:
-    """Validate that environment API key variables are not conflicting.
-
-    Rules:
-    - If both LLM_API_KEY and GROQ_API_KEY are set and differ -> error
-    """
-    llm_key = os.environ.get("LLM_API_KEY")
-    groq_key = os.environ.get("GROQ_API_KEY")
-
-    conflicts: list[str] = []
-    if llm_key and groq_key and llm_key != groq_key:
-        conflicts.append(
-            "LLM_API_KEY and GROQ_API_KEY are both set but have different values"
-        )
-
-    if conflicts:
-        details = "; ".join(conflicts)
-        message = (
-            "Configuration error: Conflicting environment API keys detected. "
-            f"{details}. To use Groq, prefer setting GROQ_API_KEY only; "
-            "alternatively, set the variables to the same value."
-        )
-        # Crash the process so Docker start fails clearly
-        raise SystemExit(message)
 
 
 def _create_flask_app() -> Flask:
@@ -348,8 +308,7 @@ def _configure_database(app: Flask) -> None:
 
 
 def _configure_external_loggers() -> None:
-    groq_logger = logging.getLogger("groq")
-    groq_logger.setLevel(logging.INFO)
+    pass
 
 
 def _configure_readonly_sessions(app: Flask) -> None:

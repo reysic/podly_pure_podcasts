@@ -2,8 +2,9 @@ import logging
 import os
 import shutil
 import threading
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 import litellm
 from jinja2 import Template
@@ -32,7 +33,7 @@ from shared.processing_paths import (
 logger = logging.getLogger("global_logger")
 
 
-def get_post_processed_audio_path(post: Post) -> Optional[ProcessingPaths]:
+def get_post_processed_audio_path(post: Post) -> ProcessingPaths | None:
     """
     Generate the processed audio path based on the post's unprocessed audio path.
     Returns None if unprocessed_audio_path is not set.
@@ -52,7 +53,7 @@ def get_post_processed_audio_path(post: Post) -> Optional[ProcessingPaths]:
 
 def get_post_processed_audio_path_cached(
     post: Post, feed_title: str
-) -> Optional[ProcessingPaths]:
+) -> ProcessingPaths | None:
     """
     Generate the processed audio path using cached feed title to avoid ORM access.
     Returns None if unprocessed_audio_path is not set.
@@ -76,18 +77,18 @@ class PodcastProcessor:
     """
 
     lock_lock = threading.Lock()
-    locks: Dict[str, threading.Lock] = {}  # Now keyed by post GUID instead of file path
+    locks: dict[str, threading.Lock] = {}  # Now keyed by post GUID instead of file path
 
     def __init__(
         self,
         config: Config,
-        logger: Optional[logging.Logger] = None,
-        transcription_manager: Optional[TranscriptionManager] = None,
-        ad_classifier: Optional[AdClassifier] = None,
-        audio_processor: Optional[AudioProcessor] = None,
-        status_manager: Optional[ProcessingStatusManager] = None,
-        db_session: Optional[Any] = None,
-        downloader: Optional[PodcastDownloader] = None,
+        logger: logging.Logger | None = None,
+        transcription_manager: TranscriptionManager | None = None,
+        ad_classifier: AdClassifier | None = None,
+        audio_processor: AudioProcessor | None = None,
+        status_manager: ProcessingStatusManager | None = None,
+        db_session: Any | None = None,
+        downloader: PodcastDownloader | None = None,
     ) -> None:
         super().__init__()
         self.logger = logger or logging.getLogger("global_logger")
@@ -127,7 +128,7 @@ class PodcastProcessor:
         self,
         post: Post,
         job_id: str,
-        cancel_callback: Optional[Callable[[], bool]] = None,
+        cancel_callback: Callable[[], bool] | None = None,
     ) -> str:
         """
         Process a podcast by downloading, transcribing, identifying ads, and removing ad segments.
@@ -264,7 +265,7 @@ class PodcastProcessor:
                 exc_info=True,
             )
             self.status_manager.update_job_status(
-                job, "failed", cached_current_step, f"Unexpected error: {str(e)}"
+                job, "failed", cached_current_step, f"Unexpected error: {e!s}"
             )
             raise
 
@@ -325,7 +326,7 @@ class PodcastProcessor:
         post: Post,
         job: ProcessingJob,
         processed_audio_path: str,
-        cancel_callback: Optional[Callable[[], bool]] = None,
+        cancel_callback: Callable[[], bool] | None = None,
     ) -> None:
         """
         Perform the main processing steps: transcription, ad classification, and audio processing.
@@ -375,7 +376,7 @@ class PodcastProcessor:
         self,
         job: ProcessingJob,
         current_step: int,
-        cancel_callback: Optional[Callable[[], bool]],
+        cancel_callback: Callable[[], bool] | None,
     ) -> None:
         """Helper to centralize cancellation checking and update job state."""
         if cancel_callback and cancel_callback():
@@ -388,7 +389,7 @@ class PodcastProcessor:
         self,
         post: Post,
         job: ProcessingJob,
-        transcript_segments: List[TranscriptSegment],
+        transcript_segments: list[TranscriptSegment],
     ) -> None:
         """
         Classify ad segments in the transcript.
@@ -420,7 +421,7 @@ class PodcastProcessor:
         post_title: str,
         feed_title: str,
         job_id: str,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Short-circuit processing for developer-mode test feeds.
 
         When developer mode is enabled and a post comes from a synthetic test feed
@@ -576,15 +577,15 @@ class PodcastProcessor:
 
     def get_system_prompt(self, system_prompt_path: str) -> str:
         """Load the system prompt from a file."""
-        with open(system_prompt_path, "r") as f:
+        with open(system_prompt_path) as f:
             return f.read()
 
     def get_user_prompt_template(self, prompt_template_path: str) -> Template:
         """Load the user prompt template from a file."""
-        with open(prompt_template_path, "r") as f:
+        with open(prompt_template_path) as f:
             return Template(f.read())
 
-    def remove_audio_files_and_reset_db(self, post_id: Optional[int]) -> None:
+    def remove_audio_files_and_reset_db(self, post_id: int | None) -> None:
         """
         Removes unprocessed/processed audio for the given post from disk,
         and resets the DB fields so the next run will re-download the files.

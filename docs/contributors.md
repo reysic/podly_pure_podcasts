@@ -11,8 +11,6 @@ chmod +x run_podly_docker.sh
 ./run_podly_docker.sh -d # or detached
 ```
 
-This automatically detects NVIDIA GPUs and uses them if available.
-
 After the server starts:
 
 - Open `http://localhost:5001` in your browser
@@ -31,16 +29,14 @@ Once the server is running:
 
 ## Transcription Options
 
-Podly supports multiple options for audio transcription:
+Podly uses remote APIs for audio transcription:
 
-1. **Local Whisper (Default)**
-   - Slower but self-contained
-2. **OpenAI Hosted Whisper**
-   - Fast and accurate; billed per-feed via Stripe
-3. **Groq Hosted Whisper**
+1. **OpenAI Hosted Whisper**
+   - Fast and accurate
+2. **Groq Hosted Whisper**
    - Fast and cost-effective
 
-Select your preferred method in the Config page (`/config`).
+Select your preferred provider in the Config page (`/config`).
 
 ## Remote Setup
 
@@ -102,7 +98,7 @@ After=network.target
 User=yourusername
 Group=yourusername
 WorkingDirectory=/path/to/your/app
-ExecStart=/usr/bin/pipenv run python src/main.py
+ExecStart=/usr/bin/env uv run python src/main.py
 Restart=always
 
 [Install]
@@ -123,7 +119,7 @@ The database auto-migrates on launch.
 To add a migration after data model change:
 
 ```bash
-pipenv run flask --app ./src/main.py db migrate -m "[change description]"
+uv run flask --app ./src/main.py db migrate -m "[change description]"
 ```
 
 On next launch, the database updates automatically.
@@ -143,16 +139,13 @@ If no Conventional Commit is present, the release pipeline will have nothing to 
 
 ## Docker Support
 
-Podly can be run in Docker with support for both NVIDIA GPU and non-NVIDIA environments.
+Podly can be run in Docker for local development or production deployment.
 
 ### Docker Options
 
 ```bash
 ./run_podly_docker.sh --dev          # rebuild containers for local changes
 ./run_podly_docker.sh --production   # use published images
-./run_podly_docker.sh --lite         # smaller image without local Whisper
-./run_podly_docker.sh --cpu          # force CPU mode
-./run_podly_docker.sh --gpu          # force GPU mode
 ./run_podly_docker.sh --build        # build only
 ./run_podly_docker.sh --test-build   # test build
 ./run_podly_docker.sh -d             # detached
@@ -190,7 +183,6 @@ Podly can be run in Docker with support for both NVIDIA GPU and non-NVIDIA envir
 **Environment Variables**:
 
 - `PUID`/`PGID`: User/group IDs for file permissions (automatically set by run script)
-- `CUDA_VISIBLE_DEVICES`: GPU device selection for CUDA acceleration
 - `CORS_ORIGINS`: Backend CORS configuration (defaults to accept requests from any origin)
 
 ## FAQ
@@ -198,21 +190,6 @@ Podly can be run in Docker with support for both NVIDIA GPU and non-NVIDIA envir
 Q: What does "whitelisted" mean in the UI?
 
 A: It means an episode is eligible for download and ad removal. By default, new episodes are automatically whitelisted (`automatically_whitelist_new_episodes`), and only a limited number of old episodes are auto-whitelisted (`number_of_episodes_to_whitelist_from_archive_of_new_feed`). Adjust these settings in the Config page (/config).
-
-Q: How can I enable whisper GPU acceleration?
-
-A: There are two ways to enable GPU acceleration:
-
-1. **Using Docker**:
-
-   - Use the provided Docker setup with `run_podly_docker.sh` which automatically detects and uses NVIDIA GPUs if available
-   - You can force GPU mode with `./run_podly_docker.sh --gpu` or force CPU mode with `./run_podly_docker.sh --cpu`
-
-2. **In a local environment**:
-   - Install the CUDA version of PyTorch to your virtual environment:
-   ```bash
-   pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-   ```
 
 ## Contributing
 
@@ -257,7 +234,7 @@ Both scripts provide equivalent core functionality with some unique features:
 
 - **Development mode**: `./run_podly_docker.sh --dev` - rebuilds containers with code changes
 - **Production mode**: `./run_podly_docker.sh --production` - uses pre-built images
-- **Docker-specific options**: `--build`, `--test-build`, `--gpu`, `--cpu`, `--cuda=VERSION`, `--rocm=VERSION`, `--branch=BRANCH`
+- **Docker-specific options**: `--build`, `--test-build`, `--branch=TAG` (e.g. `v1.2.3`, `latest`, `main`)
 
 **Functional Equivalence**:
 Both scripts provide the same core user experience:
@@ -271,10 +248,20 @@ Both scripts provide the same core user experience:
 
 Before submitting a pull request, you can run the same tests that run in CI:
 
-To prep your pipenv environment to run this script, you will need to first run:
+Ensure the `ffmpeg` system package is installed (required for audio processing tests):
 
 ```bash
-pipenv install --dev
+# Ubuntu/Debian
+sudo apt-get install -y ffmpeg
+
+# macOS
+brew install ffmpeg
+```
+
+To prep your local uv environment to run this script, you will need to first run:
+
+```bash
+uv sync --extra dev
 ```
 
 Then, to run the checks,
@@ -285,10 +272,9 @@ scripts/ci.sh
 
 This will run all the necessary checks including:
 
-- Type checking with mypy
-- Code formatting checks
+- Code formatting and linting with ruff
+- Type checking with ty
 - Unit tests
-- Linting
 
 ### Pull Request Process
 
@@ -299,6 +285,6 @@ This will run all the necessary checks including:
 
 ### Code Style
 
-- We use black for code formatting
+- We use ruff for code formatting
 - Type hints are required for all new code
 - Follow existing patterns in the codebase

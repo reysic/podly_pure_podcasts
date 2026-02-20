@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 from app.extensions import db
 from app.models import (
@@ -13,6 +16,10 @@ from app.models import (
     TranscriptSegment,
 )
 from app.post_cleanup import cleanup_processed_posts, count_cleanup_candidates
+from app.posts import (
+    clear_post_identifications_only,
+    snapshot_post_processing_data,
+)
 
 
 def _create_feed() -> Feed:
@@ -452,3 +459,125 @@ def test_cleanup_with_single_old_post_per_feed(app, tmp_path) -> None:
         post_after = Post.query.filter_by(guid="only-post").first()
         assert post_after is not None
         assert post_after.processed_audio_path is not None
+
+
+@patch("app.posts.writer_client")
+def test_clear_post_identifications_only_archives_processed_audio(
+    mock_writer_client, app, tmp_path
+):
+    """Reprocess clear should archive processed audio and trigger writer cleanup."""
+    with app.app_context():
+        processed_audio = tmp_path / "episode.mp3"
+        processed_audio.write_bytes(b"test-audio")
+        post = Post(
+            id=None, title="Test Episode", processed_audio_path=str(processed_audio)
+        )
+
+        mock_writer_client.action.return_value = SimpleNamespace(
+            success=True, data={"segments_preserved": 12}
+        )
+
+        clear_post_identifications_only(post)
+
+        backups = sorted(tmp_path.glob("episode.mp3.reprocess-*.bak"))
+        assert len(backups) == 1
+        assert backups[0].read_bytes() == b"test-audio"
+        assert not processed_audio.exists()
+
+        mock_writer_client.action.assert_called_once_with(
+            "clear_post_identifications_only",
+            {"post_id": post.id},
+            wait=True,
+        )
+
+
+def test_snapshot_post_processing_data_exports_existing_state(
+    app, tmp_path, monkeypatch
+):
+    """Snapshot should preserve transcript/model-call/identification/job state."""
+    podcast_data_dir = tmp_path / "podcast-data"
+    monkeypatch.setenv("PODLY_PODCAST_DATA_DIR", str(podcast_data_dir))
+
+    with app.app_context():
+        feed = Feed(title="Snapshot Feed", rss_url="https://example.com/snapshot.xml")
+        db.session.add(feed)
+        db.session.commit()
+
+        processed_audio = tmp_path / "processed.mp3"
+        processed_audio.write_bytes(b"processed")
+        unprocessed_audio = tmp_path / "unprocessed.mp3"
+        unprocessed_audio.write_bytes(b"unprocessed")
+
+        post = Post(
+            feed_id=feed.id,
+            guid="snapshot-guid",
+            download_url="https://example.com/audio.mp3",
+            title="Snapshot Episode",
+            processed_audio_path=str(processed_audio),
+            unprocessed_audio_path=str(unprocessed_audio),
+            chapter_data='{"chapters":[]}',
+            whitelisted=True,
+        )
+        db.session.add(post)
+        db.session.commit()
+
+        segment = TranscriptSegment(
+            post_id=post.id,
+            sequence_num=0,
+            start_time=0.0,
+            end_time=5.0,
+            text="hello world",
+        )
+        db.session.add(segment)
+        db.session.commit()
+
+        model_call = ModelCall(
+            post_id=post.id,
+            first_segment_sequence_num=0,
+            last_segment_sequence_num=0,
+            model_name="openai/gpt-4o",
+            prompt="prompt",
+            response='{"ad_segments":[]}',
+            status="success",
+        )
+        db.session.add(model_call)
+        db.session.commit()
+
+        db.session.add(
+            Identification(
+                transcript_segment_id=segment.id,
+                model_call_id=model_call.id,
+                label="ad",
+                confidence=0.9,
+            )
+        )
+        db.session.add(
+            ProcessingJob(
+                post_guid=post.guid,
+                status="completed",
+                current_step=4,
+                total_steps=4,
+                progress_percentage=100.0,
+            )
+        )
+        db.session.commit()
+
+        snapshot_path = snapshot_post_processing_data(
+            post,
+            trigger="reprocess",
+            force_retranscribe=False,
+            requested_by_user_id=7,
+        )
+
+        assert snapshot_path is not None
+        assert snapshot_path.exists()
+        payload = json.loads(snapshot_path.read_text(encoding="utf-8"))
+
+        assert payload["request"]["trigger"] == "reprocess"
+        assert payload["request"]["force_retranscribe"] is False
+        assert payload["request"]["requested_by_user_id"] == 7
+        assert payload["post"]["guid"] == "snapshot-guid"
+        assert payload["counts"]["transcript_segments"] == 1
+        assert payload["counts"]["model_calls"] == 1
+        assert payload["counts"]["identifications"] == 1
+        assert payload["counts"]["processing_jobs"] == 1

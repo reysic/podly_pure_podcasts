@@ -3,17 +3,14 @@ name: Build and Publish Docker Images
 on:
   push:
     branches: [main]
-    tags: ["v*"]
   pull_request:
     branches: [main]
-  release:
-    types: [published]
   workflow_dispatch:
 
 permissions:
   contents: read
   packages: write
-  
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository_owner }}/podly-pure-podcasts
@@ -32,29 +29,16 @@ jobs:
       - name: Check for documentation-only changes
         id: check_files
         run: |
-          # For PRs, compare against the base branch. For pushes, compare against the previous commit.
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             BASE_REF="${{ github.event.pull_request.base.ref }}"
-            echo "Fetching base branch origin/$BASE_REF"
             git fetch --no-tags origin "$BASE_REF"
             BASE_SHA=$(git rev-parse "origin/$BASE_REF")
             HEAD_SHA=$(git rev-parse "${{ github.sha }}")
-            echo "Comparing PR commits: $BASE_SHA...$HEAD_SHA"
             files_changed=$(git diff --name-only "$BASE_SHA"..."$HEAD_SHA")
-          elif [ "${{ github.event_name }}" = "release" ]; then
-            echo "Release event detected; building images for release tag"
-            TARGET_REF="${{ github.event.release.target_commitish }}"
-            echo "Fetching release target origin/$TARGET_REF"
-            git fetch --no-tags origin "$TARGET_REF" || true
-            HEAD_SHA=$(git rev-parse "${{ github.sha }}")
-            BASE_SHA=$(git rev-parse "origin/$TARGET_REF" 2>/dev/null || git rev-parse "$TARGET_REF" 2>/dev/null || echo "$HEAD_SHA")
-            files_changed=$(git diff --name-only "$BASE_SHA"..."$HEAD_SHA" 2>/dev/null || echo "release-trigger")
           else
-            echo "Comparing push commits: HEAD~1...HEAD"
             if git rev-parse HEAD~1 >/dev/null 2>&1; then
               files_changed=$(git diff --name-only HEAD~1 HEAD)
             else
-              echo "Single commit push detected; using initial commit diff"
               files_changed=$(git diff-tree --no-commit-id --name-only -r HEAD)
             fi
           fi
@@ -62,32 +46,25 @@ jobs:
           echo "Files changed:"
           echo "$files_changed"
 
-          # If no files are documentation, then we should continue
-          non_doc_files=$(echo "$files_changed" | grep -v -E '(\.md$|^docs/|LICENCE)')
+          non_doc_files=$(echo "$files_changed" | grep -v -E '(\.md$|^docs/|LICENSE)')
 
-          # Check if current commit has a version tag (is a release)
           if git tag --points-at HEAD | grep -q '^v[0-9]'; then
             echo "Release commit detected (has version tag). Always building."
             echo "skip=false" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event_name }}" = "release" ]; then
-            echo "Release build detected. Skipping documentation-only shortcut."
-            echo "skip=false" >> $GITHUB_OUTPUT
           elif [ -z "$non_doc_files" ]; then
-            echo "Only documentation files were changed. Skipping build and publish."
+            echo "Only documentation files changed. Skipping build."
             echo "skip=true" >> $GITHUB_OUTPUT
           else
-            echo "Code files were changed. Proceeding with build and publish."
+            echo "Code files changed. Proceeding with build."
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
         shell: bash
 
-  ## test if build is successful, but don't run every permutation on PRs
-  build-amd64-pr:
+  # PR builds: validate the image builds correctly; push a testable image
+  build-pr:
     needs: changes
     if: ${{ needs.changes.outputs.skip == 'false' && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
-    env:
-      ARCH: amd64
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -97,8 +74,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
-          driver-opts: |
-            image=moby/buildkit:v0.12.0
+          driver-opts: image=moby/buildkit:v0.12.0
 
       - name: Log in to Container Registry
         uses: docker/login-action@v3
@@ -113,7 +89,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=pr,suffix=-${{ env.ARCH }}
+            type=ref,event=pr
 
       - name: Build and push
         uses: docker/build-push-action@v5
@@ -121,16 +97,15 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          platforms: linux/${{ env.ARCH }}
+          platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  build-amd64:
+  # Main/release builds: produce the intermediate arch-specific image
+  build:
     needs: changes
     if: ${{ needs.changes.outputs.skip == 'false' && github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
-    env:
-      ARCH: amd64
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -140,8 +115,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
-          driver-opts: |
-            image=moby/buildkit:v0.12.0
+          driver-opts: image=moby/buildkit:v0.12.0
 
       - name: Log in to Container Registry
         uses: docker/login-action@v3
@@ -149,40 +123,12 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Check if commit is a release
-        id: is_release
-        run: |
-          # Check if current commit has a version tag
-          if git tag --points-at HEAD | grep -q '^v[0-9]'; then
-            echo "is_release=true" >> $GITHUB_OUTPUT
-            echo "Current commit is tagged as a release"
-          else
-            echo "is_release=false" >> $GITHUB_OUTPUT
-            echo "Current commit is not a release"
-          fi
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch,suffix=-lite-${{ env.ARCH }}
-            type=semver,pattern={{version}},suffix=-lite-${{ env.ARCH }}
-            type=raw,value=lite-${{ env.ARCH }},enable={{is_default_branch}}
-            type=raw,value=latest-lite-${{ env.ARCH }},enable=${{ steps.is_release.outputs.is_release == 'true' }}
-            type=raw,value=latest-lite,enable=${{ steps.is_release.outputs.is_release == 'true' }}
 
       - name: Get version
         id: version
         run: |
-          if [ "${{ github.event_name }}" = "release" ]; then
-            echo "version=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
-          else
-            VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "dev")
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-          fi
+          VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "dev")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build and push
         uses: docker/build-push-action@v5
@@ -190,14 +136,16 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          platforms: linux/${{ env.ARCH }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64
+          # main-amd64 is the stable intermediate tag consumed by the publish job.
+          # The -amd64 suffix keeps the door open for adding arm64 later.
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-amd64
           build-args: |
             VERSION=${{ steps.version.outputs.version }}
 
-  manifest:
-    needs: [changes, build-amd64]
+  # Publish: create the final arch-agnostic manifest tags from the intermediate
+  publish:
+    needs: [changes, build]
     if: ${{ needs.changes.outputs.skip == 'false' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
@@ -213,11 +161,43 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Re-tag lite-amd64 as lite and main-lite (main branch)
+      - name: Detect release and resolve semver
+        id: release_info
         run: |
+          if git tag --points-at HEAD | grep -q '^v[0-9]'; then
+            VERSION=$(git tag --points-at HEAD | grep '^v[0-9]' | sort -V | tail -1)
+            VERSION_NO_V="${VERSION#v}"
+            MAJOR=$(echo "$VERSION_NO_V" | cut -d. -f1)
+            MINOR=$(echo "$VERSION_NO_V" | cut -d. -f1-2)
+            echo "is_release=true" >> $GITHUB_OUTPUT
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+            echo "version_no_v=${VERSION_NO_V}" >> $GITHUB_OUTPUT
+            echo "version_major=${MAJOR}" >> $GITHUB_OUTPUT
+            echo "version_minor=${MINOR}" >> $GITHUB_OUTPUT
+          else
+            echo "is_release=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish rolling tags (main, main-latest)
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
           docker buildx imagetools create \
-            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:lite \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:lite-amd64
+            -t "${IMAGE}:main" \
+            -t "${IMAGE}:main-latest" \
+            "${IMAGE}:main-amd64"
+
+      - name: Publish release tags (latest, semver)
+        if: steps.release_info.outputs.is_release == 'true'
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          V="${{ steps.release_info.outputs.version }}"
+          V_NO_V="${{ steps.release_info.outputs.version_no_v }}"
+          MINOR="${{ steps.release_info.outputs.version_minor }}"
+          MAJOR="${{ steps.release_info.outputs.version_major }}"
           docker buildx imagetools create \
-            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-lite \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:lite-amd64
+            -t "${IMAGE}:latest" \
+            -t "${IMAGE}:${V}" \
+            -t "${IMAGE}:${V_NO_V}" \
+            -t "${IMAGE}:${MINOR}" \
+            -t "${IMAGE}:${MAJOR}" \
+            "${IMAGE}:main-amd64"

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence, cast
+from typing import cast
 
 from app.extensions import db
 from app.models import User

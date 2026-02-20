@@ -1,11 +1,11 @@
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 from app.extensions import db
 from app.models import FeedAccessToken, User
 
 
-def create_user_action(params: Dict[str, Any]) -> Dict[str, Any]:
+def create_user_action(params: dict[str, Any]) -> dict[str, Any]:
     username = (params.get("username") or "").strip().lower()
     password = params.get("password")
     role = params.get("role") or "user"
@@ -26,7 +26,7 @@ def create_user_action(params: Dict[str, Any]) -> Dict[str, Any]:
     return {"user_id": user.id}
 
 
-def update_user_password_action(params: Dict[str, Any]) -> Dict[str, Any]:
+def update_user_password_action(params: dict[str, Any]) -> dict[str, Any]:
     user_id = params.get("user_id")
     new_password = params.get("new_password")
     if not user_id:
@@ -43,7 +43,7 @@ def update_user_password_action(params: Dict[str, Any]) -> Dict[str, Any]:
     return {"user_id": user.id}
 
 
-def delete_user_action(params: Dict[str, Any]) -> Dict[str, Any]:
+def delete_user_action(params: dict[str, Any]) -> dict[str, Any]:
     user_id = params.get("user_id")
     if not user_id:
         raise ValueError("user_id is required")
@@ -66,7 +66,7 @@ def delete_user_action(params: Dict[str, Any]) -> Dict[str, Any]:
     return {"deleted": True}
 
 
-def set_user_role_action(params: Dict[str, Any]) -> Dict[str, Any]:
+def set_user_role_action(params: dict[str, Any]) -> dict[str, Any]:
     user_id = params.get("user_id")
     role = params.get("role")
     if not user_id or not role:
@@ -81,7 +81,7 @@ def set_user_role_action(params: Dict[str, Any]) -> Dict[str, Any]:
     return {"user_id": user.id}
 
 
-def set_manual_feed_allowance_action(params: Dict[str, Any]) -> Dict[str, Any]:
+def set_manual_feed_allowance_action(params: dict[str, Any]) -> dict[str, Any]:
     user_id = params.get("user_id")
     allowance = params.get("allowance")
 
@@ -104,45 +104,7 @@ def set_manual_feed_allowance_action(params: Dict[str, Any]) -> Dict[str, Any]:
     return {"user_id": user.id}
 
 
-def upsert_discord_user_action(params: Dict[str, Any]) -> Dict[str, Any]:
-    discord_id = params.get("discord_id")
-    discord_username = params.get("discord_username")
-    allow_registration = bool(params.get("allow_registration", True))
-
-    if not discord_id or not discord_username:
-        raise ValueError("discord_id and discord_username are required")
-
-    existing_user: User | None = User.query.filter_by(
-        discord_id=str(discord_id)
-    ).first()
-    if existing_user:
-        existing_user.discord_username = str(discord_username)
-        db.session.flush()
-        return {"user_id": existing_user.id, "created": False}
-
-    if not allow_registration:
-        raise ValueError("Self-registration via Discord is disabled")
-
-    base_username = str(discord_username).lower().replace(" ", "_")[:50]
-    username = base_username
-    counter = 1
-    while User.query.filter_by(username=username).first():
-        username = f"{base_username}_{counter}"
-        counter += 1
-
-    new_user = User(
-        username=username,
-        password_hash="",
-        role="user",
-        discord_id=str(discord_id),
-        discord_username=str(discord_username),
-    )
-    db.session.add(new_user)
-    db.session.flush()
-    return {"user_id": new_user.id, "created": True}
-
-
-def set_user_billing_fields_action(params: Dict[str, Any]) -> Dict[str, Any]:
+def set_user_billing_fields_action(params: dict[str, Any]) -> dict[str, Any]:
     user_id = params.get("user_id")
     if not user_id:
         raise ValueError("user_id is required")
@@ -164,7 +126,7 @@ def set_user_billing_fields_action(params: Dict[str, Any]) -> Dict[str, Any]:
     return {"user_id": user.id}
 
 
-def set_user_billing_by_customer_id_action(params: Dict[str, Any]) -> Dict[str, Any]:
+def set_user_billing_by_customer_id_action(params: dict[str, Any]) -> dict[str, Any]:
     customer_id = params.get("stripe_customer_id")
     if not customer_id:
         raise ValueError("stripe_customer_id is required")
@@ -184,7 +146,7 @@ def set_user_billing_by_customer_id_action(params: Dict[str, Any]) -> Dict[str, 
     return {"updated": True, "user_id": user.id}
 
 
-def update_user_last_active_action(params: Dict[str, Any]) -> Dict[str, Any]:
+def update_user_last_active_action(params: dict[str, Any]) -> dict[str, Any]:
     user_id = params.get("user_id")
     if not user_id:
         raise ValueError("user_id is required")

@@ -3,13 +3,7 @@
 
 </h2>
 
-<p align="center">
 <p align="center">Ad-block for podcasts. Create an ad-free RSS feed.</p>
-<p align="center">
-  <a href="https://discord.gg/FRB98GtF6N" target="_blank">
-      <img src="https://img.shields.io/badge/discord-join-blue.svg?logo=discord&logoColor=white" alt="Discord">
-  </a>
-</p>
 
 ## Overview
 
@@ -19,28 +13,15 @@ Podly uses Whisper and an LLM to remove ads from podcasts.
 
 ## Fork Differences
 
-This fork adds several features and improvements:
-
-### Removed Features
-
-- **No local transcription or ad identification**: This fork does not support local Whisper transcription (requires GPU/CUDA) or local LLM-based ad identification. Only remote transcription providers (OpenAI-compatible API, Groq) and remote LLM providers are supported. Use the `latest-lite` Docker image.
+This fork adds several features and improvements and has some notable removals:
 
 ### User Interface
-
-<p align="center">
-<img width="75%" src="docs/images/dark_mode.png" />
-</p>
 
 - Dark mode theme with automatic system preference detection
 - Click the version number in the header to view the changelog
 - Expandable episode descriptions in the feed view
 - Better mobile support
-
-<p align="center">
-<img width="75%" src="docs/images/prompt_configuration.png" />
-</p>
-
-- Edit system and user prompts directly in the UI (Config > Advanced > Prompts)
+- Edit system and user prompts directly in the UI (Config > Prompts)
 
 ### Performance Improvements
 - Frontend caching cuts down on redundant API calls when switching pages (30-60s cache)
@@ -49,31 +30,68 @@ This fork adds several features and improvements:
 - Home tab loads 90% faster when using cached data, episode lists load 93% faster on large feeds
 
 ### Docker & Deployment
-- `latest-lite` tag gets created automatically on each release
+- Streamlined single image — no GPU/CUDA variants, no `-lite` suffix
+- Semantic versioning tags: `latest`, `v1.2.3`, `1.2.3`, `1.2`, `1`, `main-latest`
 
 ### GitHub Copilot Support
 
-<p align="center">
-<img width="75%" src="docs/images/copilot_integration.png" />
-</p>
-
 - Works with GitHub Copilot models (gpt-4o, claude-sonnet-4.5, o1-mini, etc.) if you have a GitHub PAT
 - Some Copilot models are free (shown with 0x cost multiplier in UI)
-- Copilot SDK comes pre-installed in Docker images
+- Copilot SDK included as a standard dependency — no extra installation required
+
+### Removed Features
+
+- No local transcription or ad identification support
+- Only remote transcription and LLM providers are supported
 
 ## How To Run
 
-You have a few options to get started:
+### Run Locally
 
-- [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/podly?referralCode=NMdeg5&utm_medium=integration&utm_source=template&utm_campaign=generic)
-   - quick and easy setup in the cloud, follow our [Railway deployment guide](docs/how_to_run_railway.md). 
-   - Use this if you want to share your Podly server with others.
-- **Run Locally**: 
-   - For local development and customization, 
-   - see our [beginner's guide for running locally](docs/how_to_run_beginners.md). 
-   - Use this for the most cost-optimal & private setup.
-- **[Join The Preview Server](https://podly.up.railway.app/)**: 
-   - pay what you want (limited sign ups available)
+For local development and self-hosting, see the [beginner's guide for running locally](docs/how_to_run_beginners.md).
+
+### Run with Docker Compose (recommended)
+
+The easiest way to get started is to pull the pre-built image and run it with Docker Compose.
+
+Create a `docker-compose.yml`:
+
+```yaml
+services:
+  podly:
+    image: ghcr.io/reysic/podly-pure-podcasts:latest
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./config:/app/src/instance/config
+      - ./data:/app/src/instance/data
+      - ./db:/app/src/instance/db
+      - ./logs:/app/src/instance/logs
+    environment:
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_MODEL=${LLM_MODEL}
+      - WHISPER_API_KEY=${WHISPER_API_KEY}
+      - WHISPER_MODEL=${WHISPER_MODEL}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5001/')",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+```
+
+Then run:
+
+```bash
+docker compose up -d
+```
 
 ## How it works
 
@@ -84,27 +102,28 @@ You have a few options to get started:
 - Podly removes the ad segments
 - Podly delivers the ad-free version of the podcast to you
 
-### Cost Breakdown
-*Monthly cost breakdown for 5 podcasts*
-
-| Cost    | Hosting  | Transcription | LLM    |
-|---------|----------|---------------|--------|
-| **$2**  | local    | remote (Groq) | remote (Groq) |
-| **$5**  | local    | remote        | remote |
-| **$10** | public (railway)  | remote        | remote |
-| **Pay What You Want** | [preview server](https://podly.up.railway.app/)    | n/a         | n/a  |
-| **$5.99/mo** | https://zeroads.ai/ | production fork of podly | |
-
 ## Docker Image Tags
 
 | Tag | Description | Updates |
 |-----|-------------|---------|
-| `latest-lite` | Latest **release** | On each release |
-| `main-lite` | Latest **main branch** | On each commit to main |
+| `latest` | Latest **release** | On each release |
+| `v1.2.3` / `1.2.3` | Exact release (with and without `v` prefix) | On each release |
+| `1.2` / `1` | Minor- and major-pinned aliases | On each release |
+| `main-latest` | Latest **main branch** build | On every commit to main |
+| `main` | Same as `main-latest` (shorter alias) | On every commit to main |
+| `main-amd64` | Intermediate arch-specific manifest | Build artifact; not for direct use |
+| `pr-{N}` | Pull request build | On PR pushes |
 
 **Example:**
 ```bash
-docker pull ghcr.io/reysic/podly-pure-podcasts:latest-lite
+# Latest stable release
+docker pull ghcr.io/reysic/podly-pure-podcasts:latest
+
+# Pin to a specific version
+docker pull ghcr.io/reysic/podly-pure-podcasts:v1.2.3
+
+# Latest main branch (rolling)
+docker pull ghcr.io/reysic/podly-pure-podcasts:main-latest
 ```
 
 ## LLM Provider Options
@@ -137,12 +156,16 @@ Use GitHub Copilot models for ad identification:
    - Can use 'Fetch Models' button in UI after PAT entry
 
 **Features:**
-- The Copilot SDK is included in Docker images by default
+- The Copilot SDK is included as a standard dependency — no extra installation required
 - Supports all three LLM operations: ad classification, boundary refinement, and word-level refinement
 - Free models available (look for 0x cost multiplier in the UI)
 - Test connection via Settings → LLM Configuration → "Test LLM" button
 
 **Note:** The application automatically detects Copilot models by checking if a GitHub PAT is configured and the model name doesn't contain a provider prefix (`/`).
+
+## Configuration Reference
+
+All configurable environment variables (LLM provider, Whisper, authentication, app behaviour, rate limiting, etc.) are documented in the [configuration reference](docs/configuration.md).
 
 ## Contributing
 

@@ -152,9 +152,6 @@ class User(db.Model):  # type: ignore[name-defined, misc]
     updated_at = db.Column(
         db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
-    # Discord SSO fields
-    discord_id = db.Column(db.String(32), unique=True, nullable=True, index=True)
-    discord_username = db.Column(db.String(100), nullable=True)
     last_active = db.Column(db.DateTime, nullable=True)
 
     # Admin override for feed allowance (if set, overrides plan-based allowance)
@@ -355,6 +352,8 @@ class LLMSettings(db.Model):  # type: ignore[name-defined, misc]
     llm_model = db.Column(db.Text, nullable=False, default=DEFAULTS.LLM_DEFAULT_MODEL)
     # Optional GitHub Personal Access Token for GitHub Copilot model usage
     llm_github_pat = db.Column(db.Text, nullable=True)
+    # GitHub Copilot model name (separate from llm_model which is for OpenAI-compat providers)
+    llm_github_model = db.Column(db.Text, nullable=True)
     openai_base_url = db.Column(db.Text, nullable=True)
     openai_timeout = db.Column(
         db.Integer, nullable=False, default=DEFAULTS.OPENAI_DEFAULT_TIMEOUT_SEC
@@ -392,13 +391,11 @@ class WhisperSettings(db.Model):  # type: ignore[name-defined, misc]
     id = db.Column(db.Integer, primary_key=True, default=1)
     whisper_type = db.Column(
         db.Text, nullable=False, default=DEFAULTS.WHISPER_DEFAULT_TYPE
-    )  # remote|groq|test
+    )  # remote|test
 
     # Local (kept for DB migration compatibility; can be dropped once all
     # existing deployments have run a migration removing this column)
-    local_model = db.Column(
-        db.Text, nullable=False, default="base.en"
-    )
+    local_model = db.Column(db.Text, nullable=False, default="base.en")
 
     # Remote
     remote_model = db.Column(
@@ -416,16 +413,6 @@ class WhisperSettings(db.Model):  # type: ignore[name-defined, misc]
     )
     remote_chunksize_mb = db.Column(
         db.Integer, nullable=False, default=DEFAULTS.WHISPER_REMOTE_CHUNKSIZE_MB
-    )
-
-    # Groq
-    groq_api_key = db.Column(db.Text, nullable=True)
-    groq_model = db.Column(db.Text, nullable=False, default=DEFAULTS.WHISPER_GROQ_MODEL)
-    groq_language = db.Column(
-        db.Text, nullable=False, default=DEFAULTS.WHISPER_GROQ_LANGUAGE
-    )
-    groq_max_retries = db.Column(
-        db.Integer, nullable=False, default=DEFAULTS.WHISPER_GROQ_MAX_RETRIES
     )
 
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -513,20 +500,6 @@ class AppSettings(db.Model):  # type: ignore[name-defined, misc]
     # Hash of the environment variables used to seed configuration.
     # Used to detect changes in environment variables between restarts.
     env_config_hash = db.Column(db.String(64), nullable=True)
-
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-
-
-class DiscordSettings(db.Model):  # type: ignore[name-defined, misc]
-    __tablename__ = "discord_settings"
-
-    id = db.Column(db.Integer, primary_key=True, default=1)
-    client_id = db.Column(db.Text, nullable=True)
-    client_secret = db.Column(db.Text, nullable=True)
-    redirect_uri = db.Column(db.Text, nullable=True)
-    guild_ids = db.Column(db.Text, nullable=True)  # Comma-separated list
-    allow_registration = db.Column(db.Boolean, nullable=False, default=True)
 
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)

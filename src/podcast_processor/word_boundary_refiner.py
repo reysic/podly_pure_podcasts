@@ -11,7 +11,7 @@ import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, cast
+from typing import Any, cast
 
 import litellm
 from jinja2 import Template
@@ -43,7 +43,7 @@ class WordBoundaryRefiner:
     timestamps today.
     """
 
-    def __init__(self, config: Config, logger: Optional[logging.Logger] = None):
+    def __init__(self, config: Config, logger: logging.Logger | None = None):
         self.config = config
         self.logger = logger or logging.getLogger(__name__)
         self.template = self._load_template()
@@ -67,11 +67,11 @@ Ad: {{ad_start}}s-{{ad_end}}s
         ad_start: float,
         ad_end: float,
         confidence: float,
-        all_segments: List[Dict[str, Any]],
+        all_segments: list[dict[str, Any]],
         *,
-        post_id: Optional[int] = None,
-        first_seq_num: Optional[int] = None,
-        last_seq_num: Optional[int] = None,
+        post_id: int | None = None,
+        first_seq_num: int | None = None,
+        last_seq_num: int | None = None,
     ) -> WordBoundaryRefinement:
         context = self._get_context(
             ad_start,
@@ -95,12 +95,11 @@ Ad: {{ad_start}}s-{{ad_end}}s
             log_prefix="Word boundary refine",
         )
 
-        raw_response: Optional[str] = None
+        raw_response: str | None = None
 
         try:
-            # Check if this is a GitHub Copilot model
-            github_pat = getattr(self.config, "llm_github_pat", None)
-            is_copilot_model = bool(github_pat) and "/" not in self.config.llm_model
+            # Use Copilot SDK when both a PAT and a github_model are configured.
+            is_copilot_model = self.config.is_copilot_configured
 
             if is_copilot_model:
                 # Use Copilot SDK
@@ -109,10 +108,12 @@ Ad: {{ad_start}}s-{{ad_end}}s
                 async def _call_copilot() -> str:
                     from copilot import CopilotClient
 
-                    client = CopilotClient(options={"github_token": github_pat})  # type: ignore[arg-type]
+                    client = CopilotClient(
+                        options={"github_token": self.config.llm_github_pat}
+                    )  # type: ignore[arg-type]
                     await client.start()
                     session = await client.create_session(
-                        {"model": self.config.llm_model}
+                        {"model": self.config.llm_github_model}
                     )
                     try:
                         timeout = getattr(self.config, "openai_timeout", 300)
@@ -251,14 +252,14 @@ Ad: {{ad_start}}s-{{ad_end}}s
         # Allow slight forward extension (for late boundary) but cap it.
         return min(estimated_end, orig_end + MAX_END_EXTENSION_SECONDS)
 
-    def _parse_json(self, content: str) -> Optional[Dict[str, Any]]:
+    def _parse_json(self, content: str) -> dict[str, Any] | None:
         cleaned = re.sub(r"```json|```", "", (content or "").strip())
         json_candidates = re.findall(r"\{.*?\}", cleaned, re.DOTALL)
         for candidate in json_candidates:
             try:
                 loaded = json.loads(candidate)
                 if isinstance(loaded, dict):
-                    return cast(Dict[str, Any], loaded)
+                    return cast(dict[str, Any], loaded)
             except Exception:
                 continue
         return None
@@ -272,7 +273,7 @@ Ad: {{ad_start}}s-{{ad_end}}s
         except Exception:
             return False
 
-    def _extract_payload(self, parsed: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_payload(self, parsed: dict[str, Any]) -> dict[str, Any]:
         occurrence = parsed.get("occurrence")
         if occurrence is None:
             occurrence = parsed.get("occurance")
@@ -297,7 +298,7 @@ Ad: {{ad_start}}s-{{ad_end}}s
 
     @staticmethod
     def _result_status(
-        start_changed: bool, end_changed: bool, partial_errors: List[str]
+        start_changed: bool, end_changed: bool, partial_errors: list[str]
     ) -> str:
         if partial_errors and not start_changed and not end_changed:
             return "success_heuristic"
@@ -307,15 +308,15 @@ Ad: {{ad_start}}s-{{ad_end}}s
         self,
         *,
         ad_start: float,
-        all_segments: List[Dict[str, Any]],
-        context_segments: List[Dict[str, Any]],
+        all_segments: list[dict[str, Any]],
+        context_segments: list[dict[str, Any]],
         start_segment_seq: Any,
         start_phrase: Any,
         start_word: Any,
         start_occurrence: Any,
         start_word_index: Any,
         start_reason: str,
-    ) -> Tuple[float, bool, str, Optional[str]]:
+    ) -> tuple[float, bool, str, str | None]:
         if self._has_text(start_phrase):
             estimated_start = self._estimate_phrase_time(
                 all_segments=all_segments,
@@ -354,12 +355,12 @@ Ad: {{ad_start}}s-{{ad_end}}s
         self,
         *,
         ad_end: float,
-        all_segments: List[Dict[str, Any]],
-        context_segments: List[Dict[str, Any]],
+        all_segments: list[dict[str, Any]],
+        context_segments: list[dict[str, Any]],
         end_segment_seq: Any,
         end_phrase: Any,
         end_reason: str,
-    ) -> Tuple[float, bool, str, Optional[str]]:
+    ) -> tuple[float, bool, str, str | None]:
         if not self._has_text(end_phrase):
             return float(ad_end), False, (end_reason or "unchanged"), None
 
@@ -384,11 +385,11 @@ Ad: {{ad_start}}s-{{ad_end}}s
         self,
         ad_start: float,
         ad_end: float,
-        all_segments: List[Dict[str, Any]],
+        all_segments: list[dict[str, Any]],
         *,
-        first_seq_num: Optional[int],
-        last_seq_num: Optional[int],
-    ) -> List[Dict[str, Any]]:
+        first_seq_num: int | None,
+        last_seq_num: int | None,
+    ) -> list[dict[str, Any]]:
         selected = self._context_by_seq_window(
             all_segments,
             first_seq_num=first_seq_num,
@@ -401,15 +402,15 @@ Ad: {{ad_start}}s-{{ad_end}}s
 
     def _context_by_seq_window(
         self,
-        all_segments: List[Dict[str, Any]],
+        all_segments: list[dict[str, Any]],
         *,
-        first_seq_num: Optional[int],
-        last_seq_num: Optional[int],
-    ) -> List[Dict[str, Any]]:
+        first_seq_num: int | None,
+        last_seq_num: int | None,
+    ) -> list[dict[str, Any]]:
         if first_seq_num is None or last_seq_num is None or not all_segments:
             return []
 
-        seq_values: List[int] = []
+        seq_values: list[int] = []
         for segment in all_segments:
             try:
                 seq_values.append(int(segment.get("sequence_num", -1)))
@@ -423,7 +424,7 @@ Ad: {{ad_start}}s-{{ad_end}}s
         start_seq = max(min_seq, int(first_seq_num) - 2)
         end_seq = min(max_seq, int(last_seq_num) + 2)
 
-        selected: List[Dict[str, Any]] = []
+        selected: list[dict[str, Any]] = []
         for segment in all_segments:
             try:
                 seq = int(segment.get("sequence_num", -1))
@@ -438,8 +439,8 @@ Ad: {{ad_start}}s-{{ad_end}}s
         self,
         ad_start: float,
         ad_end: float,
-        all_segments: List[Dict[str, Any]],
-    ) -> List[Dict[str, Any]]:
+        all_segments: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
         ad_segs = [
             s for s in all_segments if self._segment_overlaps(s, ad_start, ad_end)
         ]
@@ -454,7 +455,7 @@ Ad: {{ad_start}}s-{{ad_end}}s
 
     @staticmethod
     def _segment_overlaps(
-        segment: Dict[str, Any], ad_start: float, ad_end: float
+        segment: dict[str, Any], ad_start: float, ad_end: float
     ) -> bool:
         try:
             seg_start = float(segment.get("start_time", 0.0))
@@ -469,13 +470,13 @@ Ad: {{ad_start}}s-{{ad_end}}s
     def _estimate_phrase_times(
         self,
         *,
-        all_segments: List[Dict[str, Any]],
-        context_segments: List[Dict[str, Any]],
+        all_segments: list[dict[str, Any]],
+        context_segments: list[dict[str, Any]],
         start_segment_seq: Any,
         start_phrase: Any,
         end_segment_seq: Any,
         end_phrase: Any,
-    ) -> Tuple[Optional[float], Optional[float]]:
+    ) -> tuple[float | None, float | None]:
         start_time = self._estimate_phrase_time(
             all_segments=all_segments,
             context_segments=context_segments,
@@ -495,12 +496,12 @@ Ad: {{ad_start}}s-{{ad_end}}s
     def _estimate_phrase_time(
         self,
         *,
-        all_segments: List[Dict[str, Any]],
-        context_segments: List[Dict[str, Any]],
+        all_segments: list[dict[str, Any]],
+        context_segments: list[dict[str, Any]],
         preferred_segment_seq: Any,
         phrase: Any,
         direction: str,
-    ) -> Optional[float]:
+    ) -> float | None:
         phrase_tokens = self._split_words(str(phrase or ""))
         phrase_tokens = [t.lower() for t in phrase_tokens if t]
         if not phrase_tokens:
@@ -509,7 +510,7 @@ Ad: {{ad_start}}s-{{ad_end}}s
         # Search order:
         # 1) preferred segment (if provided)
         # 2) other provided context segments (ad-range ±2)
-        candidates: List[Dict[str, Any]] = []
+        candidates: list[dict[str, Any]] = []
         preferred_seg = self._find_segment(all_segments, preferred_segment_seq)
         if preferred_seg is not None:
             candidates.append(preferred_seg)
@@ -523,7 +524,7 @@ Ad: {{ad_start}}s-{{ad_end}}s
         if direction == "end":
             ordered_context = list(reversed(ordered_context))
 
-        preferred_seq_int: Optional[int]
+        preferred_seq_int: int | None
         try:
             preferred_seq_int = int(preferred_segment_seq)
         except Exception:
@@ -570,11 +571,11 @@ Ad: {{ad_start}}s-{{ad_end}}s
     def _find_phrase_match(
         self,
         *,
-        words: List[str],
-        phrase_tokens: List[str],
+        words: list[str],
+        phrase_tokens: list[str],
         direction: str,
         max_words: int,
-    ) -> Optional[Tuple[int, int]]:
+    ) -> tuple[int, int] | None:
         if not words or not phrase_tokens:
             return None
 
@@ -597,12 +598,12 @@ Ad: {{ad_start}}s-{{ad_end}}s
         return None
 
     def _find_subsequence(
-        self, words: List[str], target: List[str], *, choose: str
-    ) -> Optional[Tuple[int, int]]:
+        self, words: list[str], target: list[str], *, choose: str
+    ) -> tuple[int, int] | None:
         if not target or len(target) > len(words):
             return None
 
-        matches: List[Tuple[int, int]] = []
+        matches: list[tuple[int, int]] = []
         k = len(target)
         for i in range(0, len(words) - k + 1):
             if words[i : i + k] == target:
@@ -617,7 +618,7 @@ Ad: {{ad_start}}s-{{ad_end}}s
     def _estimate_word_time(
         self,
         *,
-        all_segments: List[Dict[str, Any]],
+        all_segments: list[dict[str, Any]],
         segment_seq: Any,
         word: Any,
         occurrence: Any,
@@ -651,8 +652,8 @@ Ad: {{ad_start}}s-{{ad_end}}s
         return min(estimated, float(seg.get("end_time", end_time)))
 
     def _find_segment(
-        self, all_segments: List[Dict[str, Any]], segment_seq: Any
-    ) -> Optional[Dict[str, Any]]:
+        self, all_segments: list[dict[str, Any]], segment_seq: Any
+    ) -> dict[str, Any] | None:
         if segment_seq is None:
             return None
         try:
@@ -665,7 +666,7 @@ Ad: {{ad_start}}s-{{ad_end}}s
                 return seg
         return None
 
-    def _split_words(self, text: str) -> List[str]:
+    def _split_words(self, text: str) -> list[str]:
         # Word count/indexing heuristic: split on whitespace, then normalize away
         # leading/trailing punctuation to keep indices stable.
         raw_tokens = [t for t in re.split(r"\s+", (text or "").strip()) if t]
@@ -681,7 +682,7 @@ Ad: {{ad_start}}s-{{ad_end}}s
         return re.sub(r"(^[^A-Za-z0-9']+)|([^A-Za-z0-9']+$)", "", token)
 
     def _resolve_word_index(
-        self, words: List[str], *, word: Any, occurrence: Any, word_index: Any
+        self, words: list[str], *, word: Any, occurrence: Any, word_index: Any
     ) -> int:
         # Prefer the verbatim word match if provided.
         # `occurance` chooses which matching instance to use.
@@ -709,11 +710,11 @@ Ad: {{ad_start}}s-{{ad_end}}s
 
     def _update_model_call(
         self,
-        model_call_id: Optional[int],
+        model_call_id: int | None,
         *,
         status: str,
-        response: Optional[str],
-        error_message: Optional[str],
+        response: str | None,
+        error_message: str | None,
     ) -> None:
         try_update_model_call(
             model_call_id,

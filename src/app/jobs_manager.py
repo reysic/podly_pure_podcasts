@@ -2,7 +2,7 @@ import logging
 import os
 from datetime import datetime, timedelta
 from threading import Event, Lock, Thread
-from typing import Any, Dict, List, Optional, Tuple, cast
+from typing import Any, cast
 
 from sqlalchemy import case
 
@@ -39,7 +39,7 @@ class JobsManager:
 
         # Track the singleton run id with thread-safe access
         self._run_lock = Lock()
-        self._run_id: Optional[str] = None
+        self._run_id: str | None = None
 
         # Persistent worker thread coordination
         self._stop_event = Event()
@@ -62,11 +62,11 @@ class JobsManager:
             except Exception as e:
                 logger.error(f"Failed to initialize run: {e}")
 
-    def _set_run_id(self, run_id: Optional[str]) -> None:
+    def _set_run_id(self, run_id: str | None) -> None:
         with self._run_lock:
             self._run_id = run_id
 
-    def _get_run_id(self) -> Optional[str]:
+    def _get_run_id(self) -> str | None:
         with self._run_lock:
             return self._run_id
 
@@ -84,9 +84,9 @@ class JobsManager:
         post_guid: str,
         priority: str = "interactive",
         *,
-        requested_by_user_id: Optional[int] = None,
-        billing_user_id: Optional[int] = None,
-    ) -> Dict[str, Any]:
+        requested_by_user_id: int | None = None,
+        billing_user_id: int | None = None,
+    ) -> dict[str, Any]:
         """
         Idempotently start processing for a post. If an active job exists, return it.
         """
@@ -118,8 +118,8 @@ class JobsManager:
     def enqueue_pending_jobs(
         self,
         trigger: str = "system",
-        context: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        context: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Ensure all posts have job records and enqueue pending work.
 
@@ -152,7 +152,7 @@ class JobsManager:
             self._wake_worker()
         return response
 
-    def _ensure_jobs_for_all_posts(self, run_id: Optional[str]) -> int:
+    def _ensure_jobs_for_all_posts(self, run_id: str | None) -> int:
         """Ensure every post has an associated ProcessingJob record."""
         posts_without_jobs = (
             Post.query.outerjoin(ProcessingJob, ProcessingJob.post_guid == Post.guid)
@@ -172,7 +172,7 @@ class JobsManager:
                 created += 1
         return created
 
-    def get_post_status(self, post_guid: str) -> Dict[str, Any]:
+    def get_post_status(self, post_guid: str) -> dict[str, Any]:
         with scheduler.app.app_context():
             post = Post.query.filter_by(guid=post_guid).first()
             if not post:
@@ -233,7 +233,7 @@ class JobsManager:
                 response["message"] = job.error_message
             return response
 
-    def get_job_status(self, job_id: str) -> Dict[str, Any]:
+    def get_job_status(self, job_id: str) -> dict[str, Any]:
         with scheduler.app.app_context():
             job = _db.session.get(ProcessingJob, job_id)
             if not job:
@@ -257,7 +257,7 @@ class JobsManager:
                 "error": job.error_message,
             }
 
-    def list_active_jobs(self, limit: int = 100) -> List[Dict[str, Any]]:
+    def list_active_jobs(self, limit: int = 100) -> list[dict[str, Any]]:
         with scheduler.app.app_context():
             # Derive a simple priority from status: running > pending
             priority_order = case(
@@ -275,7 +275,7 @@ class JobsManager:
                 .all()
             )
 
-            results: List[Dict[str, Any]] = []
+            results: list[dict[str, Any]] = []
             for job, post, prio in rows:
                 results.append(
                     {
@@ -304,7 +304,7 @@ class JobsManager:
 
             return results
 
-    def list_all_jobs_detailed(self, limit: int = 200) -> List[Dict[str, Any]]:
+    def list_all_jobs_detailed(self, limit: int = 200) -> list[dict[str, Any]]:
         with scheduler.app.app_context():
             # Priority by status, others ranked lowest
             priority_order = case(
@@ -321,7 +321,7 @@ class JobsManager:
                 .all()
             )
 
-            results: List[Dict[str, Any]] = []
+            results: list[dict[str, Any]] = []
             for job, post, prio in rows:
                 results.append(
                     {
@@ -350,7 +350,7 @@ class JobsManager:
 
             return results
 
-    def cancel_job(self, job_id: str) -> Dict[str, Any]:
+    def cancel_job(self, job_id: str) -> dict[str, Any]:
         with scheduler.app.app_context():
             job = _db.session.get(ProcessingJob, job_id)
             if not job:
@@ -376,7 +376,7 @@ class JobsManager:
                 "message": "Job cancelled",
             }
 
-    def cancel_post_jobs(self, post_guid: str) -> Dict[str, Any]:
+    def cancel_post_jobs(self, post_guid: str) -> dict[str, Any]:
         with scheduler.app.app_context():
             # Find active jobs for this post in database
             active_jobs = (
@@ -438,7 +438,7 @@ class JobsManager:
 
             return count
 
-    def clear_all_jobs(self) -> Dict[str, Any]:
+    def clear_all_jobs(self) -> dict[str, Any]:
         """
         Clear all processing jobs from the database.
         This is typically called during application startup to ensure a clean state.
@@ -454,13 +454,13 @@ class JobsManager:
             }
         except Exception as e:
             logger.error(f"Error clearing all jobs: {e}")
-            return {"status": "error", "message": f"Failed to clear jobs: {str(e)}"}
+            return {"status": "error", "message": f"Failed to clear jobs: {e!s}"}
 
     def start_refresh_all_feeds(
         self,
         trigger: str = "scheduled",
-        context: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        context: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Refresh feeds and enqueue per-post processing into internal worker pool.
         """
@@ -487,8 +487,8 @@ class JobsManager:
             )
 
     def _cleanup_and_process_new_posts(
-        self, active_run: Optional[JobsManagerRun]
-    ) -> Tuple[int, int]:
+        self, active_run: JobsManagerRun | None
+    ) -> tuple[int, int]:
         """Ensure all posts have jobs and return counts for monitoring."""
         run_id = active_run.id if active_run else None
         created_jobs = self._ensure_jobs_for_all_posts(run_id)
@@ -522,7 +522,7 @@ class JobsManager:
 
     # ------------------------ Internal helpers ------------------------
 
-    def _dequeue_next_job(self) -> Optional[Tuple[str, str]]:
+    def _dequeue_next_job(self) -> tuple[str, str] | None:
         """Return the next pending job id and post guid, or None if idle.
 
         CRITICAL: This method atomically marks the job as "running" when dequeuing
@@ -659,9 +659,7 @@ class JobsManager:
                                     f"Job execution failed: {exc}",
                                     failed_job.progress_percentage or 0.0,
                                 )
-                        except (
-                            Exception
-                        ) as cleanup_error:  # pylint: disable=broad-except
+                        except Exception as cleanup_error:  # pylint: disable=broad-except
                             logger.error(
                                 "Failed to update job status after error: %s",
                                 cleanup_error,

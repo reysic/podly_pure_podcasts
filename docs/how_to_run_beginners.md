@@ -21,8 +21,8 @@ After the project is cloned, help me:
 - run `./run_podly_docker.sh --build` then `./run_podly_docker.sh -d`
 - configure the app via the web UI at http://localhost:5001/config
 Be sure to check if a dependency is already installed before downloading.
-We recommend Docker because installing ffmpeg & local whisper can be difficult.
-The Docker image has both ffmpeg & local whisper preconfigured.
+We recommend Docker because installing ffmpeg can be difficult.
+The Docker image has ffmpeg preconfigured.
 Podly works with many different LLMs, it does not require an OpenAI key.
 Check your work by retrieving the index page from localhost:5001 at the end.
 ```
@@ -36,8 +36,8 @@ Briefly, help me:
 - run `./run_podly_docker.sh --build` and then `./run_podly_docker.sh -d`
 - configure the app via the web UI at http://localhost:5001/config
 Be sure to check if a dependency is already installed before downloading.
-We recommend docker because installing ffmpeg & local whisper can be difficult.
-The docker image has both ffmpeg & local whisper preconfigured.
+We recommend docker because installing ffmpeg can be difficult.
+The docker image has ffmpeg preconfigured.
 Podly works with many different LLMs; it does not need to work with OpenAI.
 Check your work by retrieving the index page from localhost:5001 at the end.
 ```
@@ -141,7 +141,7 @@ export PODLY_SECRET_KEY='replace-with-a-strong-64-char-secret'
 2. Look for "Running on http://0.0.0.0:5001"
 3. Open your browser to `http://localhost:5001`
 4. Configure settings at `http://localhost:5001/config`
-   - Alternatively, set secrets via Docker env file `.env.local` in the project root and restart the container. See .env.local.example
+   - Alternatively, set secrets via Docker env file `.env` in the project root and restart the container. See `.env.example` for the full list of available variables.
 
 ## Advanced Options
 
@@ -200,7 +200,7 @@ export PODLY_SECRET_KEY='replace-with-a-strong-64-char-secret'
 ### Port 5001 already in use
 
 - Another application is using port 5001
-- **Docker users**: Either stop that application or modify the port in `compose.dev.cpu.yml` and `compose.yml`
+- **Docker users**: Either stop that application or modify the port in `compose.dev.yml` and `compose.yml`
 - **Native users**: Change the port in the Config page under App settings
 - To kill processes on that port run `lsof -i :5001 | grep LISTEN | awk '{print $2}' | xargs kill -9`
 

@@ -1,7 +1,7 @@
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from app.extensions import db
 from app.jobs_manager_run_service import recalculate_run_counts
@@ -16,7 +16,7 @@ from app.models import (
 logger = logging.getLogger("writer")
 
 
-def cleanup_missing_audio_paths_action(params: Dict[str, Any]) -> int:
+def cleanup_missing_audio_paths_action(params: dict[str, Any]) -> int:
     inconsistent_posts = Post.query.filter(
         Post.whitelisted,
         (
@@ -57,7 +57,7 @@ def cleanup_missing_audio_paths_action(params: Dict[str, Any]) -> int:
     return count
 
 
-def clear_post_processing_data_action(params: Dict[str, Any]) -> Dict[str, Any]:
+def clear_post_processing_data_action(params: dict[str, Any]) -> dict[str, Any]:
     post_id = params.get("post_id")
     post = db.session.get(Post, post_id)
     if not post:
@@ -107,7 +107,7 @@ def clear_post_processing_data_action(params: Dict[str, Any]) -> Dict[str, Any]:
     return {"post_id": post.id}
 
 
-def cleanup_processed_post_action(params: Dict[str, Any]) -> Dict[str, Any]:
+def cleanup_processed_post_action(params: dict[str, Any]) -> dict[str, Any]:
     post_id = params.get("post_id")
     if not post_id:
         raise ValueError("post_id is required")
@@ -129,7 +129,7 @@ def cleanup_processed_post_action(params: Dict[str, Any]) -> Dict[str, Any]:
     return {"post_id": post.id}
 
 
-def cleanup_processed_post_files_only_action(params: Dict[str, Any]) -> Dict[str, Any]:
+def cleanup_processed_post_files_only_action(params: dict[str, Any]) -> dict[str, Any]:
     """Remove audio files but preserve processing metadata."""
     post_id = params.get("post_id")
     if not post_id:
@@ -174,3 +174,77 @@ def cleanup_processed_post_files_only_action(params: Dict[str, Any]) -> Dict[str
     )
 
     return {"post_id": post.id}
+
+
+def clear_post_identifications_only_action(params: dict[str, Any]) -> dict[str, Any]:
+    """Clear identifications and LLM model calls but preserve transcript segments.
+
+    Preserves: TranscriptSegment records, Whisper ModelCall records,
+               post unprocessed_audio_path and duration.
+    Deletes:   Identification records, non-Whisper ModelCall records,
+               ProcessingJob records, refined ad boundaries.
+    """
+    post_id = params.get("post_id")
+    post = db.session.get(Post, post_id)
+    if not post:
+        raise ValueError(f"Post {post_id} not found")
+
+    logger.info("[WRITER] clear_post_identifications_only_action: post_id=%s", post_id)
+
+    # Get all transcript segment IDs for this post
+    segment_ids = [
+        row[0]
+        for row in db.session.query(TranscriptSegment.id)
+        .filter_by(post_id=post.id)
+        .all()
+    ]
+
+    # Delete all identifications for these segments
+    if segment_ids:
+        deleted_ids = (
+            db.session.query(Identification)
+            .filter(Identification.transcript_segment_id.in_(segment_ids))
+            .delete(synchronize_session=False)
+        )
+        logger.debug(
+            "[WRITER] clear_post_identifications_only_action: deleted %d identifications",
+            deleted_ids,
+        )
+
+    # Delete non-Whisper model calls (keep transcription records).
+    # Preserve Whisper transcription calls by canonical prompt and model-name patterns.
+    deleted_calls = (
+        db.session.query(ModelCall)
+        .filter(
+            ModelCall.post_id == post.id,
+            ~(ModelCall.prompt == "Whisper transcription job"),
+            ~ModelCall.model_name.like("whisper%"),
+            ~ModelCall.model_name.like("groq:whisper%"),
+            ~ModelCall.model_name.like("groq_whisper%"),
+            ~ModelCall.model_name.like("local_%"),
+            ModelCall.model_name != "test_whisper",
+        )
+        .delete(synchronize_session=False)
+    )
+    logger.debug(
+        "[WRITER] clear_post_identifications_only_action: deleted %d model calls",
+        deleted_calls,
+    )
+
+    # Delete processing jobs
+    db.session.query(ProcessingJob).filter_by(post_guid=post.guid).delete()
+
+    # Clear refined boundaries (will be recalculated)
+    post.refined_ad_boundaries = None
+    post.refined_ad_boundaries_updated_at = None
+
+    # Clear processed path so reprocess does not short-circuit as "already processed".
+    # Keep unprocessed path/duration to preserve source metadata.
+    post.processed_audio_path = None
+
+    logger.info(
+        "[WRITER] clear_post_identifications_only_action: completed post_id=%s",
+        post_id,
+    )
+
+    return {"post_id": post.id, "segments_preserved": len(segment_ids)}

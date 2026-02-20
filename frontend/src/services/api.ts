@@ -176,8 +176,11 @@ export const feedsApi = {
     return response.data;
   },
 
-  reprocessPost: async (guid: string): Promise<{ status: string; job_id?: string; message: string; download_url?: string }> => {
-    const response = await api.post(`/api/posts/${guid}/reprocess`);
+  reprocessPost: async (
+    guid: string,
+    payload?: { force_retranscribe?: boolean }
+  ): Promise<{ status: string; job_id?: string; message: string; download_url?: string }> => {
+    const response = await api.post(`/api/posts/${guid}/reprocess`, payload ?? {});
     return response.data;
   },
 
@@ -510,54 +513,6 @@ export const landingApi = {
   },
 };
 
-export const discordApi = {
-  getStatus: async (): Promise<{ enabled: boolean }> => {
-    const response = await api.get('/api/auth/discord/status');
-    return response.data;
-  },
-
-  getLoginUrl: async (): Promise<{ authorization_url: string }> => {
-    const response = await api.get('/api/auth/discord/login');
-    return response.data;
-  },
-
-  getConfig: async (): Promise<{
-    config: {
-      enabled: boolean;
-      client_id: string | null;
-      client_secret_preview: string | null;
-      redirect_uri: string | null;
-      guild_ids: string;
-      allow_registration: boolean;
-    };
-    env_overrides: Record<string, { env_var: string; value?: string; is_secret?: boolean }>;
-  }> => {
-    const response = await api.get('/api/auth/discord/config');
-    return response.data;
-  },
-
-  updateConfig: async (payload: {
-    client_id?: string;
-    client_secret?: string;
-    redirect_uri?: string;
-    guild_ids?: string;
-    allow_registration?: boolean;
-  }): Promise<{
-    status: string;
-    config: {
-      enabled: boolean;
-      client_id: string | null;
-      client_secret_preview: string | null;
-      redirect_uri: string | null;
-      guild_ids: string;
-      allow_registration: boolean;
-    };
-  }> => {
-    const response = await api.put('/api/auth/discord/config', payload);
-    return response.data;
-  },
-};
-
 export const configApi = {
   getConfig: async (): Promise<ConfigResponse> => {
     const response = await api.get('/api/config');
@@ -659,4 +614,33 @@ export const versionApi = {
     const response = await api.get('/api/version');
     return response.data;
   }
+};
+
+export interface StatsResponse {
+  feeds: { total: number };
+  episodes: { total: number; processed: number; unprocessed: number };
+  transcript: { total_segments: number; total_transcribed_hours: number };
+  model_calls: {
+    total: number;
+    by_model: Record<string, number>;
+    by_status: Record<string, number>;
+  };
+  ad_detection: {
+    total_identifications: number;
+    ad_identifications: number;
+    estimated_ad_minutes: number;
+    estimated_ad_hours: number;
+  };
+  processing_jobs: {
+    total: number;
+    by_status: Record<string, number>;
+    success_rate_percent: number | null;
+  };
+}
+
+export const statsApi = {
+  getStats: async (): Promise<StatsResponse> => {
+    const response = await api.get('/api/stats');
+    return response.data;
+  },
 };

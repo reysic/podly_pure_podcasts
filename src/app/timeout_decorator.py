@@ -1,6 +1,7 @@
 import functools
 import threading
-from typing import Any, Callable, List, Optional, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 T = TypeVar("T")
 
@@ -19,7 +20,7 @@ def timeout_decorator(timeout: int) -> Callable[[Callable[..., T]], Callable[...
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> T:
             timeout_flag = threading.Event()
-            result: List[Optional[T]] = [None]
+            result: list[T | None] = [None]
 
             def target() -> None:
                 try:

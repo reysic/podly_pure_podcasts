@@ -1,18 +1,16 @@
 import logging
-from typing import Any, List, Optional
+from typing import Any
 
 from app.extensions import db
 from app.models import ModelCall, Post, TranscriptSegment
 from app.writer.client import writer_client
 from shared.config import (
     Config,
-    GroqWhisperConfig,
     RemoteWhisperConfig,
     TestWhisperConfig,
 )
 
 from .transcribe import (
-    GroqWhisperTranscriber,
     OpenAIWhisperTranscriber,
     TestWhisperTranscriber,
     Transcriber,
@@ -26,10 +24,10 @@ class TranscriptionManager:
         self,
         logger: logging.Logger,
         config: Config,
-        model_call_query: Optional[Any] = None,
-        segment_query: Optional[Any] = None,
-        db_session: Optional[Any] = None,
-        transcriber: Optional[Transcriber] = None,
+        model_call_query: Any | None = None,
+        segment_query: Any | None = None,
+        db_session: Any | None = None,
+        transcriber: Transcriber | None = None,
     ):
         self.logger = logger
         self.config = config
@@ -51,13 +49,11 @@ class TranscriptionManager:
             return TestWhisperTranscriber(self.logger)
         if isinstance(self.config.whisper, RemoteWhisperConfig):
             return OpenAIWhisperTranscriber(self.logger, self.config.whisper)
-        if isinstance(self.config.whisper, GroqWhisperConfig):
-            return GroqWhisperTranscriber(self.logger, self.config.whisper)
         raise ValueError(f"unhandled whisper config {self.config.whisper}")
 
     def _check_existing_transcription(
         self, post: Post
-    ) -> Optional[List[TranscriptSegment]]:
+    ) -> list[TranscriptSegment] | None:
         """Checks for existing successful transcription and returns segments if valid.
 
         NOTE: Defaults to using self.db_session for queries to keep a single session,
@@ -88,7 +84,7 @@ class TranscriptionManager:
             self.logger.info(
                 f"Found existing successful Whisper ModelCall {existing_whisper_call.id} for post {post.id}."
             )
-            db_segments: List[TranscriptSegment] = (
+            db_segments: list[TranscriptSegment] = (
                 segment_query.filter_by(post_id=post.id)
                 .order_by(TranscriptSegment.sequence_num)
                 .all()
@@ -139,7 +135,7 @@ class TranscriptionManager:
             raise RuntimeError(f"ModelCall {model_call_id} not found after upsert")
         return model_call
 
-    def transcribe(self, post: Post) -> List[TranscriptSegment]:
+    def transcribe(self, post: Post) -> list[TranscriptSegment]:
         """
         Transcribes a podcast audio file, or retrieves existing transcription.
 
@@ -204,7 +200,7 @@ class TranscriptionManager:
                 if self._segment_query_provided
                 else self.db_session.query(TranscriptSegment)
             )
-            db_segments: List[TranscriptSegment] = (
+            db_segments: list[TranscriptSegment] = (
                 segment_query.filter_by(post_id=post.id)
                 .order_by(TranscriptSegment.sequence_num)
                 .all()

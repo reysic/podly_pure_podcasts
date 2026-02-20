@@ -1,7 +1,8 @@
 import os
 import uuid
+from collections.abc import Callable
 from queue import Empty
-from typing import Any, Callable, Dict, Optional, cast
+from typing import Any, cast
 
 from flask import current_app
 
@@ -35,7 +36,7 @@ class WriterClient:
         from app import models  # pylint: disable=import-outside-toplevel
         from app.extensions import db  # pylint: disable=import-outside-toplevel
 
-        model_map: Dict[str, Any] = {}
+        model_map: dict[str, Any] = {}
         for name, obj in vars(models).items():
             if isinstance(obj, type) and issubclass(obj, db.Model) and obj != db.Model:
                 model_map[name] = obj
@@ -55,14 +56,14 @@ class WriterClient:
             return WriteResult(cmd.id, False, error=str(exc))
 
     def _local_execute_single(
-        self, cmd: WriteCommand, model_map: Dict[str, Any]
+        self, cmd: WriteCommand, model_map: dict[str, Any]
     ) -> WriteResult:
         if cmd.type == WriteCommandType.ACTION:
             return self._local_execute_action(cmd)
         return self._local_execute_model(cmd, model_map)
 
     def _local_execute_transaction(
-        self, cmd: WriteCommand, model_map: Dict[str, Any]
+        self, cmd: WriteCommand, model_map: dict[str, Any]
     ) -> WriteResult:
         # Import locally to avoid cyclic dependencies
         from app.extensions import db  # pylint: disable=import-outside-toplevel
@@ -103,7 +104,7 @@ class WriterClient:
         if func_obj is None or not callable(func_obj):
             return WriteResult(cmd.id, False, error=f"Unknown action: {action_name}")
 
-        func = cast(Callable[[Dict[str, Any]], Any], func_obj)
+        func = cast(Callable[[dict[str, Any]], Any], func_obj)
         result = func(cmd.data.get("params", {}))  # pylint: disable=not-callable
         return WriteResult(
             cmd.id,
@@ -112,7 +113,7 @@ class WriterClient:
         )
 
     def _local_execute_model(
-        self, cmd: WriteCommand, model_map: Dict[str, Any]
+        self, cmd: WriteCommand, model_map: dict[str, Any]
     ) -> WriteResult:
         # Import locally to avoid cyclic dependencies
         from app.extensions import db  # pylint: disable=import-outside-toplevel
@@ -127,7 +128,7 @@ class WriterClient:
 
     def submit(
         self, cmd: WriteCommand, wait: bool = False, timeout: int = 10
-    ) -> Optional[WriteResult]:
+    ) -> WriteResult | None:
         if not self.queue:
             try:
                 self.connect()
@@ -155,23 +156,23 @@ class WriterClient:
         return None
 
     def create(
-        self, model: str, data: Dict[str, Any], wait: bool = True
-    ) -> Optional[WriteResult]:
+        self, model: str, data: dict[str, Any], wait: bool = True
+    ) -> WriteResult | None:
         cmd = WriteCommand(
             id=str(uuid.uuid4()), type=WriteCommandType.CREATE, model=model, data=data
         )
         return self.submit(cmd, wait=wait)
 
     def update(
-        self, model: str, pk: Any, data: Dict[str, Any], wait: bool = True
-    ) -> Optional[WriteResult]:
+        self, model: str, pk: Any, data: dict[str, Any], wait: bool = True
+    ) -> WriteResult | None:
         data["id"] = pk
         cmd = WriteCommand(
             id=str(uuid.uuid4()), type=WriteCommandType.UPDATE, model=model, data=data
         )
         return self.submit(cmd, wait=wait)
 
-    def delete(self, model: str, pk: Any, wait: bool = True) -> Optional[WriteResult]:
+    def delete(self, model: str, pk: Any, wait: bool = True) -> WriteResult | None:
         cmd = WriteCommand(
             id=str(uuid.uuid4()),
             type=WriteCommandType.DELETE,
@@ -181,8 +182,8 @@ class WriterClient:
         return self.submit(cmd, wait=wait)
 
     def action(
-        self, action_name: str, params: Dict[str, Any], wait: bool = True
-    ) -> Optional[WriteResult]:
+        self, action_name: str, params: dict[str, Any], wait: bool = True
+    ) -> WriteResult | None:
         cmd = WriteCommand(
             id=str(uuid.uuid4()),
             type=WriteCommandType.ACTION,

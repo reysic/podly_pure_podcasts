@@ -11,7 +11,7 @@ import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import litellm
 from jinja2 import Template
@@ -33,7 +33,7 @@ class BoundaryRefinement:
 
 
 class BoundaryRefiner:
-    def __init__(self, config: Config, logger: Optional[logging.Logger] = None):
+    def __init__(self, config: Config, logger: logging.Logger | None = None):
         self.config = config
         self.logger = logger or logging.getLogger(__name__)
         self.template = self._load_template()
@@ -59,11 +59,11 @@ Return JSON: {"refined_start": {{ad_start}}, "refined_end": {{ad_end}}, "start_r
         ad_start: float,
         ad_end: float,
         confidence: float,
-        all_segments: List[Dict[str, Any]],
+        all_segments: list[dict[str, Any]],
         *,
-        post_id: Optional[int] = None,
-        first_seq_num: Optional[int] = None,
-        last_seq_num: Optional[int] = None,
+        post_id: int | None = None,
+        first_seq_num: int | None = None,
+        last_seq_num: int | None = None,
     ) -> BoundaryRefinement:
         """Refine ad boundaries using LLM analysis and record the call in ModelCall."""
         self.logger.debug(
@@ -91,8 +91,8 @@ Return JSON: {"refined_start": {{ad_start}}, "refined_end": {{ad_end}}, "start_r
             context_segments=context,
         )
 
-        model_call_id: Optional[int] = None
-        raw_response: Optional[str] = None
+        model_call_id: int | None = None
+        raw_response: str | None = None
 
         # Record the intent to call the LLM when we have enough context to do so
         if (
@@ -120,9 +120,8 @@ Return JSON: {"refined_start": {{ad_start}}, "refined_end": {{ad_end}}, "start_r
                 )
 
         try:
-            # Check if this is a GitHub Copilot model
-            github_pat = getattr(self.config, "llm_github_pat", None)
-            is_copilot_model = bool(github_pat) and "/" not in self.config.llm_model
+            # Use Copilot SDK when both a PAT and a github_model are configured.
+            is_copilot_model = self.config.is_copilot_configured
 
             if is_copilot_model:
                 # Use Copilot SDK
@@ -131,10 +130,12 @@ Return JSON: {"refined_start": {{ad_start}}, "refined_end": {{ad_end}}, "start_r
                 async def _call_copilot() -> str:
                     from copilot import CopilotClient
 
-                    client = CopilotClient(options={"github_token": github_pat})  # type: ignore[arg-type]
+                    client = CopilotClient(
+                        options={"github_token": self.config.llm_github_pat}
+                    )  # type: ignore[arg-type]
                     await client.start()
                     session = await client.create_session(
-                        {"model": self.config.llm_model}
+                        {"model": self.config.llm_github_model}
                     )
                     try:
                         timeout = getattr(self.config, "openai_timeout", 300)
@@ -213,8 +214,8 @@ Return JSON: {"refined_start": {{ad_start}}, "refined_end": {{ad_end}}, "start_r
             # Parse JSON (strip markdown fences). Log parse diagnostics so failures are actionable.
             cleaned = re.sub(r"```json|```", "", content.strip())
             json_candidates = re.findall(r"\{.*?\}", cleaned, re.DOTALL)
-            parse_error: Optional[str] = None
-            parsed: Optional[Dict[str, Any]] = None
+            parse_error: str | None = None
+            parsed: dict[str, Any] | None = None
 
             for candidate in json_candidates:
                 try:
@@ -296,11 +297,11 @@ Return JSON: {"refined_start": {{ad_start}}, "refined_end": {{ad_end}}, "start_r
 
     def _update_model_call(
         self,
-        model_call_id: Optional[int],
+        model_call_id: int | None,
         *,
         status: str,
-        response: Optional[str],
-        error_message: Optional[str],
+        response: str | None,
+        error_message: str | None,
     ) -> None:
         """Best-effort ModelCall updater; no-op if call creation failed."""
         if model_call_id is None:
@@ -325,8 +326,8 @@ Return JSON: {"refined_start": {{ad_start}}, "refined_end": {{ad_end}}, "start_r
             )
 
     def _get_context(
-        self, ad_start: float, ad_end: float, all_segments: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+        self, ad_start: float, ad_end: float, all_segments: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Get ±8 segments around ad"""
         ad_segs = [s for s in all_segments if ad_start <= s["start_time"] <= ad_end]
         if not ad_segs:
@@ -341,7 +342,7 @@ Return JSON: {"refined_start": {{ad_start}}, "refined_end": {{ad_end}}, "start_r
         return all_segments[start_idx:end_idx]
 
     def _heuristic_refine(
-        self, ad_start: float, ad_end: float, context: List[Dict[str, Any]]
+        self, ad_start: float, ad_end: float, context: list[dict[str, Any]]
     ) -> BoundaryRefinement:
         """Simple pattern-based refinement"""
         intro_patterns = ["brought to you", "sponsor", "let me tell you"]

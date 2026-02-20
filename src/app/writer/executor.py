@@ -1,5 +1,6 @@
 import logging
-from typing import Any, Callable, Dict
+from collections.abc import Callable
+from typing import Any
 
 from flask import Flask
 
@@ -16,7 +17,7 @@ class CommandExecutor:
     def __init__(self, app: Flask):
         self.app = app
         self.models = self._discover_models()
-        self.actions: Dict[str, Any] = {}  # Registry for custom actions
+        self.actions: dict[str, Any] = {}  # Registry for custom actions
         self._register_default_actions()
 
     def _register_default_actions(self) -> None:
@@ -51,6 +52,10 @@ class CommandExecutor:
         self.register_action(
             "clear_post_processing_data",
             writer_actions.clear_post_processing_data_action,
+        )
+        self.register_action(
+            "clear_post_identifications_only",
+            writer_actions.clear_post_identifications_only_action,
         )
         self.register_action(
             "cleanup_processed_post", writer_actions.cleanup_processed_post_action
@@ -96,9 +101,6 @@ class CommandExecutor:
             "delete_feed_cascade", writer_actions.delete_feed_cascade_action
         )
         self.register_action(
-            "update_discord_settings", writer_actions.update_discord_settings_action
-        )
-        self.register_action(
             "update_combined_config", writer_actions.update_combined_config_action
         )
         self.register_action(
@@ -115,9 +117,6 @@ class CommandExecutor:
         self.register_action("set_user_role", writer_actions.set_user_role_action)
         self.register_action(
             "set_manual_feed_allowance", writer_actions.set_manual_feed_allowance_action
-        )
-        self.register_action(
-            "upsert_discord_user", writer_actions.upsert_discord_user_action
         )
 
         self.register_action(
@@ -142,7 +141,7 @@ class CommandExecutor:
             "update_user_last_active", writer_actions.update_user_last_active_action
         )
 
-    def _discover_models(self) -> Dict[str, Any]:
+    def _discover_models(self) -> dict[str, Any]:
         """Discover all SQLAlchemy models in app.models"""
         model_map = {}
         for name, obj in vars(models).items():
@@ -150,7 +149,7 @@ class CommandExecutor:
                 model_map[name] = obj
         return model_map
 
-    def register_action(self, name: str, func: Callable[[Dict[str, Any]], Any]) -> None:
+    def register_action(self, name: str, func: Callable[[dict[str, Any]], Any]) -> None:
         self.actions[name] = func
 
     def process_command(self, cmd: WriteCommand) -> WriteResult:

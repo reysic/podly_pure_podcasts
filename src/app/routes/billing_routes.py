@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
 from flask import Blueprint, jsonify, request
 
@@ -15,7 +15,7 @@ logger = logging.getLogger("global_logger")
 billing_bp = Blueprint("billing", __name__)
 
 
-def _get_stripe_client() -> tuple[Optional[Any], Optional[str]]:
+def _get_stripe_client() -> tuple[Any | None, str | None]:
     secret = os.getenv("STRIPE_SECRET_KEY")
     if not secret:
         return None, "Stripe secret key missing"
@@ -27,7 +27,7 @@ def _get_stripe_client() -> tuple[Optional[Any], Optional[str]]:
     return stripe, None
 
 
-def _product_id() -> Optional[str]:
+def _product_id() -> str | None:
     return os.getenv("STRIPE_PRODUCT_ID")
 
 

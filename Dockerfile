@@ -18,6 +18,7 @@ RUN set -e && \
 
 # Backend stage
 FROM python:3.11-slim AS backend
+COPY --from=ghcr.io/astral-sh/uv:0.10.2 /uv /uvx /bin/
 
 # Build arguments
 ARG VERSION=unknown
@@ -25,6 +26,8 @@ ARG VERSION=unknown
 # Environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
 ENV PODLY_VERSION=${VERSION}
 
 WORKDIR /app
@@ -41,31 +44,17 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Copy all Pipfiles/lock files
-COPY Pipfile.lite Pipfile.lite.lock ./
+# Copy dependency manifests and lock files
+COPY pyproject.toml uv.lock ./
 
 # Remove problematic distutils-installed packages that may conflict
 RUN apt-get remove -y python3-blinker 2>/dev/null || true
 
-# Install pipenv and dependencies
-RUN pip install --no-cache-dir pipenv
-
-# Set pip timeout and retries for better reliability
-ENV PIP_DEFAULT_TIMEOUT=1000
-ENV PIP_RETRIES=3
-ENV PIP_DISABLE_PIP_VERSION_CHECK=1
-ENV PIP_NO_CACHE_DIR=1
-
-# Set pipenv configuration for better CI reliability
-ENV PIPENV_VENV_IN_PROJECT=1
-ENV PIPENV_TIMEOUT=1200
-
-RUN PIPENV_PIPFILE=Pipfile.lite pipenv install --deploy --system
+# Install dependencies
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev --no-install-project
 
 # Ensure GitHub Copilot helper binary (if installed by the SDK) is executable.
-# Some copilot SDK versions install a bundled helper at site-packages/copilot/bin/copilot
-# which may lack execute permissions when installed inside the image. Make it executable
-# if present to allow the Copilot client to spawn it at runtime.
 RUN chmod +x /usr/local/lib/python3.11/site-packages/copilot/bin/copilot || true
 
 # Copy application code
@@ -83,13 +72,16 @@ RUN groupadd -r appuser && \
     mkdir -p /home/appuser && \
     chown -R appuser:appuser /home/appuser
 
-# Create necessary directories and set permissions
+# Create necessary directories and set permissions (only dirs needing runtime writes)
 RUN mkdir -p /app/processing /app/src/instance /app/src/instance/data /app/src/instance/data/in /app/src/instance/data/srv /app/src/instance/config /app/src/instance/db && \
-    chown -R appuser:appuser /app
+    chown -R appuser:appuser /app/processing /app/src/instance
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod 755 /docker-entrypoint.sh
+
+# Add venv to PATH so we don't need uv run at runtime
+ENV PATH="/app/.venv/bin:$PATH"
 
 EXPOSE 5001
 
