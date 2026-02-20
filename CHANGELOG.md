@@ -1,3 +1,10 @@
+# [2.8.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.7.0...v2.8.0) (2026-02-20)
+
+
+### Features
+
+* remove local LLM/Whisper support, Groq easy-setup, and CUDA/GPU infrastructure ([3913a0c](https://github.com/reysic/podly_pure_podcasts/commit/3913a0cb2d299ef1c49d347b988d2842b1b1a920))
+
 # [2.7.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.6.1...v2.7.0) (2026-02-20)
 
 
