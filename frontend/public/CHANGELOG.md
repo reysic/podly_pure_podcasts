@@ -1,3 +1,10 @@
+## [2.9.2](https://github.com/reysic/podly_pure_podcasts/compare/v2.9.1...v2.9.2) (2026-02-20)
+
+
+### Bug Fixes
+
+* prevent grep exit-1 crash when all changed files are docs-only ([37351fd](https://github.com/reysic/podly_pure_podcasts/commit/37351fd645f2acd234b373022f39cdc192f073d9))
+
 ## [2.9.1](https://github.com/reysic/podly_pure_podcasts/compare/v2.9.0...v2.9.1) (2026-02-20)
 
 
