@@ -22,7 +22,10 @@ from app.models import (
 from app.posts import clear_post_processing_data
 from app.routes.post_stats_utils import (
     count_model_calls,
+    count_primary_labels,
+    group_identifications_by_segment,
     is_mixed_segment,
+    merge_time_windows,
     parse_refined_windows,
 )
 from app.runtime_config import config as runtime_config
@@ -356,6 +359,9 @@ def api_post_stats(p_guid: str) -> flask.Response:
     if post is None:
         return flask.make_response(flask.jsonify({"error": "Post not found"}), 404)
 
+    feed = db.session.get(Feed, post.feed_id)
+    ad_detection_strategy = feed.ad_detection_strategy if feed else "llm"
+
     model_calls = (
         ModelCall.query.filter_by(post_id=post.id)
         .order_by(ModelCall.model_name, ModelCall.first_segment_sequence_num)
@@ -371,20 +377,12 @@ def api_post_stats(p_guid: str) -> flask.Response:
         .all()
     )
 
-    model_call_statuses: Dict[str, int] = {}
-    model_types: Dict[str, int] = {}
+    model_call_statuses, model_types = count_model_calls(model_calls)
 
-    for call in model_calls:
-        if call.status not in model_call_statuses:
-            model_call_statuses[call.status] = 0
-        model_call_statuses[call.status] += 1
-
-        if call.model_name not in model_types:
-            model_types[call.model_name] = 0
-        model_types[call.model_name] += 1
-
-    content_segments = sum(1 for i in identifications if i.label == "content")
-    ad_segments = sum(1 for i in identifications if i.label == "ad")
+    identifications_by_segment = group_identifications_by_segment(identifications)
+    content_segments, ad_segments = count_primary_labels(
+        transcript_segments, identifications_by_segment
+    )
 
     # Refined ad windows are written by boundary refinement and are used for precise
     # cutting. We also derive a UI-only "mixed" flag for segments that overlap a
@@ -413,16 +411,17 @@ def api_post_stats(p_guid: str) -> flask.Response:
 
     transcript_segments_data = []
     segment_mixed_by_id: Dict[int, bool] = {}
+    ad_windows_from_segments: list = []
     for segment in transcript_segments:
-        segment_identifications = [
-            i for i in identifications if i.transcript_segment_id == segment.id
-        ]
+        segment_identifications = identifications_by_segment.get(segment.id, [])
 
         has_ad_label = any(i.label == "ad" for i in segment_identifications)
         primary_label = "ad" if has_ad_label else "content"
 
         seg_start = float(segment.start_time)
         seg_end = float(segment.end_time)
+        if has_ad_label:
+            ad_windows_from_segments.append((seg_start, seg_end))
         mixed = bool(has_ad_label) and is_mixed_segment(
             seg_start=seg_start, seg_end=seg_end, refined_windows=refined_windows
         )
@@ -473,6 +472,19 @@ def api_post_stats(p_guid: str) -> flask.Response:
             }
         )
 
+    # Calculate ad blocks and statistics
+    ad_windows_source = refined_windows or ad_windows_from_segments
+    ad_blocks = merge_time_windows(ad_windows_source, gap_seconds=1.0)
+    ad_time_seconds = sum(end - start for start, end in ad_blocks if end > start)
+
+    duration_seconds = float(post.duration or 0)
+    if duration_seconds <= 0 and transcript_segments:
+        duration_seconds = max(float(seg.end_time) for seg in transcript_segments)
+
+    ad_percentage = (
+        (ad_time_seconds / duration_seconds) * 100 if duration_seconds > 0 else 0.0
+    )
+
     stats_data = {
         "post": {
             "guid": post.guid,
@@ -485,12 +497,22 @@ def api_post_stats(p_guid: str) -> flask.Response:
             "has_processed_audio": post.processed_audio_path is not None,
             "download_count": post.download_count,
         },
+        "ad_detection_strategy": ad_detection_strategy,
         "processing_stats": {
             "total_segments": len(transcript_segments),
             "total_model_calls": len(model_calls),
             "total_identifications": len(identifications),
             "content_segments": content_segments,
             "ad_segments_count": ad_segments,
+            "ad_percentage": round(ad_percentage, 1),
+            "estimated_ad_time_seconds": round(ad_time_seconds, 1),
+            "ad_blocks": [
+                {
+                    "start_time": round(start, 1),
+                    "end_time": round(end, 1),
+                }
+                for start, end in ad_blocks
+            ],
             "model_call_statuses": model_call_statuses,
             "model_types": model_types,
         },
