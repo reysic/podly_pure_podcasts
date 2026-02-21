@@ -1,3 +1,10 @@
+# [2.11.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.10.0...v2.11.0) (2026-02-21)
+
+
+### Features
+
+* config UI tooltips on all options; merge Processing tab into Processing & Output ([e64c5d4](https://github.com/reysic/podly_pure_podcasts/commit/e64c5d4afb1bcaf6f949d242072088c3b593f324))
+
 # [2.10.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.9.2...v2.10.0) (2026-02-21)
 
 
