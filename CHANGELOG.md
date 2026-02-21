@@ -1,3 +1,10 @@
+# [2.10.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.9.2...v2.10.0) (2026-02-21)
+
+
+### Features
+
+* add storage stats (in-use and reclaimable) to stats page ([d7585bb](https://github.com/reysic/podly_pure_podcasts/commit/d7585bb063b02db1dd6a9b325650593ed4e14a64))
+
 ## [2.9.2](https://github.com/reysic/podly_pure_podcasts/compare/v2.9.1...v2.9.2) (2026-02-20)
 
 
