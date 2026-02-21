@@ -67,6 +67,17 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.min(
+    Math.max(0, Math.floor(Math.log(bytes) / Math.log(1024))),
+    units.length - 1
+  );
+  const value = bytes / Math.pow(1024, i);
+  return `${value.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+}
+
 // ---- page ----
 
 export default function StatsPage() {
@@ -264,6 +275,21 @@ export default function StatsPage() {
                 )}
               </div>
             )}
+          </StatCard>
+
+          {/* Storage */}
+          <StatCard title="Storage">
+            <div className="flex flex-wrap gap-6">
+              <BigNumber
+                label="in use"
+                value={formatBytes(data.storage.bytes_used)}
+              />
+              <BigNumber
+                label="reclaimable by cleanup"
+                value={formatBytes(data.storage.bytes_reclaimable)}
+                sub={data.storage.bytes_reclaimable > 0 ? 'run cleanup to free this space' : undefined}
+              />
+            </div>
           </StatCard>
         </>
       )}
