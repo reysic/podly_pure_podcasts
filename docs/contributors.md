@@ -200,7 +200,7 @@ We welcome contributions to Podly! Here's how you can help:
 1. Fork the repository
 2. Clone your fork:
    ```bash
-   git clone https://github.com/yourusername/podly.git
+   git clone https://github.com/yourusername/podly-pure-podcasts.git
    ```
 3. Create a new branch for your feature:
    ```bash
@@ -267,7 +267,7 @@ uv sync --extra dev
 Then, to run the checks,
 
 ```bash
-scripts/ci.sh
+scripts/ci.sh --tests
 ```
 
 This will run all the necessary checks including:

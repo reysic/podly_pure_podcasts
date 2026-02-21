@@ -2,46 +2,6 @@
 
 This guide will walk you through setting up Podly from scratch using Docker. Podly creates ad-free RSS feeds for podcasts by automatically detecting and removing advertisement segments.
 
-## Highly Recommend!
-
-Want an expert to guide you through the setup? Download an AI powered IDE like cursor https://www.cursor.com/ or windsurf https://windsurf.com/
-
-Most IDEs have a free tier you can use to get started. Alternatively, you can use your own [LLM API key in Cursor](https://docs.cursor.com/settings/api-keys) (you'll need a key for Podly anyways).
-
-Open the AI chat in the IDE. Enable 'Agent' mode if available, which will allow the IDE to help you run commands, view the output, and debug or take corrective steps if necessary.
-
-Paste one of the prompts below into the chat box.
-
-If you don't have the repo downloaded:
-
-```
-Help me install docker and run Podly https://github.com/podly-pure-podcasts/podly_pure_podcasts
-After the project is cloned, help me:
-- install docker & docker compose
-- run `./run_podly_docker.sh --build` then `./run_podly_docker.sh -d`
-- configure the app via the web UI at http://localhost:5001/config
-Be sure to check if a dependency is already installed before downloading.
-We recommend Docker because installing ffmpeg can be difficult.
-The Docker image has ffmpeg preconfigured.
-Podly works with many different LLMs, it does not require an OpenAI key.
-Check your work by retrieving the index page from localhost:5001 at the end.
-```
-
-If you do have the repo pulled, open this file and prompt:
-
-```
-Review this project, follow this guide and start Podly on my computer.
-Briefly, help me:
-- install docker & docker compose
-- run `./run_podly_docker.sh --build` and then `./run_podly_docker.sh -d`
-- configure the app via the web UI at http://localhost:5001/config
-Be sure to check if a dependency is already installed before downloading.
-We recommend docker because installing ffmpeg can be difficult.
-The docker image has ffmpeg preconfigured.
-Podly works with many different LLMs; it does not need to work with OpenAI.
-Check your work by retrieving the index page from localhost:5001 at the end.
-```
-
 ## Prerequisites
 
 ### Install Docker and Docker Compose
@@ -103,7 +63,7 @@ You should see version information for both commands.
 ### Download the Project
 
 ```bash
-git clone https://github.com/normand1/podly_pure_podcasts.git
+git clone https://github.com/reysic/podly_pure_podcasts.git
 cd podly_pure_podcasts
 ```
 
@@ -146,12 +106,6 @@ export PODLY_SECRET_KEY='replace-with-a-strong-64-char-secret'
 ## Advanced Options
 
 ```bash
-# Force CPU-only processing (if you have GPU issues)
-./run_podly_docker.sh --cpu
-
-# Force GPU processing
-./run_podly_docker.sh --gpu
-
 # Just build the container without running
 ./run_podly_docker.sh --build
 
@@ -235,12 +189,6 @@ To upgrade the application while you are in the terminal where it is running:
 1. [Stop it](#stopping-podly)
 2. Execute `git pull`
 3. [Run it again](#running-podly)
-
-## Getting Help
-
-If you encounter issues ask in our discord, we're friendly!
-
-https://discord.gg/FRB98GtF6N
 
 ## What's Next?
 
