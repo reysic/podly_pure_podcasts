@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 import type { UseConfigStateReturn } from '../../hooks/useConfigState';
 
-export type ConfigTabId = 'llm' | 'whisper' | 'processing' | 'output' | 'app' | 'prompts' | 'users';
+export type ConfigTabId = 'llm' | 'whisper' | 'output' | 'app' | 'prompts' | 'users';
 
 export interface ConfigContextValue extends UseConfigStateReturn {
   activeTab: ConfigTabId;

@@ -57,6 +57,7 @@ export default function WhisperSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <Field
             label="API Key"
+            hint="Your OpenAI-compatible API key used to authenticate speech-to-text transcription requests."
             envMeta={getEnvHint('whisper.api_key')}
           >
             <input
@@ -69,6 +70,7 @@ export default function WhisperSection() {
           </Field>
           <Field
             label="Model"
+            hint="Whisper model to use for transcription (e.g. whisper-1). Larger models are more accurate but slower."
             envMeta={getEnvHint('whisper.model')}
           >
             <input
@@ -78,7 +80,11 @@ export default function WhisperSection() {
               onChange={(e) => setField(['whisper', 'model'], e.target.value)}
             />
           </Field>
-          <Field label="Base URL" envMeta={getEnvHint('whisper.base_url')}>
+          <Field
+            label="Base URL"
+            hint="Override the default OpenAI API endpoint. Use this for self-hosted Whisper or compatible services like Groq audio."
+            envMeta={getEnvHint('whisper.base_url')}
+          >
             <input
               className="input"
               type="text"
@@ -87,7 +93,10 @@ export default function WhisperSection() {
               onChange={(e) => setField(['whisper', 'base_url'], e.target.value)}
             />
           </Field>
-          <Field label="Language">
+          <Field
+            label="Language"
+            hint="Two-letter BCP-47 language code for the podcast's spoken language (e.g. en, de, fr). Providing this improves transcription accuracy and speed."
+          >
             <input
               className="input"
               type="text"
@@ -95,7 +104,11 @@ export default function WhisperSection() {
               onChange={(e) => setField(['whisper', 'language'], e.target.value)}
             />
           </Field>
-          <Field label="Timeout (sec)" envMeta={getEnvHint('whisper.timeout_sec')}>
+          <Field
+            label="Timeout (sec)"
+            hint="Maximum seconds to wait for a transcription response before the request is aborted and retried."
+            envMeta={getEnvHint('whisper.timeout_sec')}
+          >
             <input
               className="input"
               type="number"
@@ -103,7 +116,11 @@ export default function WhisperSection() {
               onChange={(e) => setField(['whisper', 'timeout_sec'], Number(e.target.value))}
             />
           </Field>
-          <Field label="Chunk Size (MB)" envMeta={getEnvHint('whisper.chunksize_mb')}>
+          <Field
+            label="Chunk Size (MB)"
+            hint="Audio files larger than this size are split into chunks before transcription. Lower values reduce memory usage at the cost of more API calls."
+            envMeta={getEnvHint('whisper.chunksize_mb')}
+          >
             <input
               className="input"
               type="number"

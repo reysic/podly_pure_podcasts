@@ -228,7 +228,11 @@ export default function LLMSection() {
             )}
 
             {/* Copilot model text field */}
-            <Field label="Copilot Model" envMeta={getEnvHint('llm.llm_github_model')}>
+            <Field
+              label="Copilot Model"
+              hint="GitHub Copilot model to use for ad classification. Use Browse Models above to find available models for your subscription."
+              envMeta={getEnvHint('llm.llm_github_model')}
+            >
               <input
                 className="input"
                 type="text"
@@ -262,7 +266,11 @@ export default function LLMSection() {
               </p>
             )}
 
-            <Field label="API Key" envMeta={getEnvHint('llm.llm_api_key')}>
+            <Field
+              label="API Key"
+              hint="API key for your chosen LLM provider (OpenAI, Anthropic, Groq, etc.). Required unless using a proxy that handles auth."
+              envMeta={getEnvHint('llm.llm_api_key')}
+            >
               <input
                 className="input"
                 type="text"
@@ -299,7 +307,11 @@ export default function LLMSection() {
               </div>
             </label>
 
-            <Field label="Model" envMeta={getEnvHint('llm.llm_model')}>
+            <Field
+              label="Model"
+              hint="LLM model to use for ad classification. Use a provider prefix for non-OpenAI providers (e.g. anthropic/claude-3.5-sonnet, groq/openai/gpt-oss-120b)."
+              envMeta={getEnvHint('llm.llm_model')}
+            >
               <input
                 list="llm-model-datalist"
                 className="input"
@@ -319,28 +331,37 @@ export default function LLMSection() {
                 Provider-specific settings
               </summary>
               <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Field label="Timeout (sec)">
+                <Field
+                  label="Timeout (sec)"
+                  hint="Maximum seconds to wait for a single LLM response before the request is aborted and retried."
+                >
                   <input className="input" type="number"
                     value={(pending?.llm?.openai_timeout as number | undefined) ?? 300}
                     onChange={(e) => setField(['llm', 'openai_timeout'], Number(e.target.value))} />
                 </Field>
-                <Field label="Max Tokens">
+                <Field
+                  label="Max Tokens"
+                  hint="Maximum number of tokens the LLM can generate in a single response. Increase if responses are being truncated."
+                >
                   <input className="input" type="number"
                     value={(pending?.llm?.openai_max_tokens as number | undefined) ?? 4096}
                     onChange={(e) => setField(['llm', 'openai_max_tokens'], Number(e.target.value))} />
                 </Field>
-                <Field label="Enable Token Rate Limiting">
+                <Field
+                  label="Enable Token Rate Limiting"
+                  hint="Enables per-minute token rate limiting to avoid hitting provider API rate limits."
+                >
                   <input type="checkbox"
                     checked={!!(pending?.llm?.llm_enable_token_rate_limiting)}
                     onChange={(e) => setField(['llm', 'llm_enable_token_rate_limiting'], e.target.checked)} />
                 </Field>
-                <Field label="Max Input Tokens Per Call" hint="Optional — leave blank for no limit">
+                <Field label="Max Input Tokens Per Call" hint="Hard limit on input tokens per LLM call. Leave blank for no limit. Useful for controlling cost per request.">
                   <input className="input" type="number"
                     value={(pending?.llm?.llm_max_input_tokens_per_call as number | undefined) ?? ''}
                     onChange={(e) => setField(['llm', 'llm_max_input_tokens_per_call'],
                       e.target.value === '' ? null : Number(e.target.value))} />
                 </Field>
-                <Field label="Max Input Tokens Per Minute" hint="Optional — leave blank for no limit">
+                <Field label="Max Input Tokens Per Minute" hint="Cap total input tokens sent per minute across all concurrent calls. Leave blank for no limit. Helps avoid rate-limit errors.">
                   <input className="input" type="number"
                     value={(pending?.llm?.llm_max_input_tokens_per_minute as number | undefined) ?? ''}
                     onChange={(e) => setField(['llm', 'llm_max_input_tokens_per_minute'],
@@ -362,12 +383,18 @@ export default function LLMSection() {
             <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">applies to both providers</span>
           </div>
           <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3 bg-white dark:bg-gray-800/40">
-            <Field label="Max Concurrent LLM Calls">
+            <Field
+              label="Max Concurrent LLM Calls"
+              hint="Number of ad-classification calls that can run in parallel. Higher values speed up processing but increase simultaneous API usage."
+            >
               <input className="input" type="number"
                 value={(pending?.llm?.llm_max_concurrent_calls as number | undefined) ?? 3}
                 onChange={(e) => setField(['llm', 'llm_max_concurrent_calls'], Number(e.target.value))} />
             </Field>
-            <Field label="Max Retry Attempts">
+            <Field
+              label="Max Retry Attempts"
+              hint="How many times Podly retries a failed LLM call before giving up on that segment."
+            >
               <input className="input" type="number"
                 value={(pending?.llm?.llm_max_retry_attempts as number | undefined) ?? 5}
                 onChange={(e) => setField(['llm', 'llm_max_retry_attempts'], Number(e.target.value))} />

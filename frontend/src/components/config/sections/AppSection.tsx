@@ -10,7 +10,10 @@ export default function AppSection() {
     <div className="space-y-6">
       <Section title="App">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <Field label="Feed Refresh Background Interval (min)">
+          <Field
+            label="Feed Refresh Interval (min)"
+            hint="How often Podly polls your subscribed RSS feeds for new episodes, in minutes."
+          >
             <input
               className="input"
               type="number"
@@ -23,7 +26,10 @@ export default function AppSection() {
               }
             />
           </Field>
-          <Field label="Cleanup Retention (days)">
+          <Field
+            label="Cleanup Retention (days)"
+            hint="Processed audio files older than this many days are automatically deleted. Set to 0 to keep files indefinitely."
+          >
             <input
               className="input"
               type="number"
@@ -37,7 +43,10 @@ export default function AppSection() {
               }
             />
           </Field>
-          <Field label="Auto-whitelist new episodes">
+          <Field
+            label="Auto-whitelist new episodes"
+            hint="When a new episode is detected in a subscribed feed, automatically queue it for ad removal processing."
+          >
             <input
               type="checkbox"
               checked={!!pending?.app?.automatically_whitelist_new_episodes}
@@ -46,16 +55,20 @@ export default function AppSection() {
               }
             />
           </Field>
-          <Field label="List all episodes in RSS and queue processing on download attempt if not previously whitelisted">
-            <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={!!pending?.app?.autoprocess_on_download}
-                onChange={(e) => setField(['app', 'autoprocess_on_download'], e.target.checked)}
-              />
-            </label>
+          <Field
+            label="Autoprocess on download"
+            hint="Include all feed episodes in the RSS output. When a client downloads an unprocessed episode, trigger ad removal processing automatically."
+          >
+            <input
+              type="checkbox"
+              checked={!!pending?.app?.autoprocess_on_download}
+              onChange={(e) => setField(['app', 'autoprocess_on_download'], e.target.checked)}
+            />
           </Field>
-          <Field label="Number of episodes to whitelist from new feed archive">
+          <Field
+            label="Archive episodes on new feed"
+            hint="When you subscribe to a new feed, this many of the most recent existing episodes are immediately whitelisted and queued for processing."
+          >
             <input
               className="input"
               type="number"
@@ -68,16 +81,16 @@ export default function AppSection() {
               }
             />
           </Field>
-          <div className="col-span-1 md:col-span-2 flex items-center gap-3">
-            <label className="flex items-center gap-2 text-sm text-gray-700 font-medium">
-              <input
-                type="checkbox"
-                checked={!!pending?.app?.enable_public_landing_page}
-                onChange={(e) => setField(['app', 'enable_public_landing_page'], e.target.checked)}
-              />
-              Enable the public landing page
-            </label>
-          </div>
+          <Field
+            label="Enable public landing page"
+            hint="Show a public landing page to unauthenticated visitors instead of redirecting them to the login screen."
+          >
+            <input
+              type="checkbox"
+              checked={!!pending?.app?.enable_public_landing_page}
+              onChange={(e) => setField(['app', 'enable_public_landing_page'], e.target.checked)}
+            />
+          </Field>
         </div>
       </Section>
 

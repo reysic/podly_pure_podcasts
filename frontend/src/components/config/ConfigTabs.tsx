@@ -7,7 +7,6 @@ import { EnvOverrideWarningModal, ConnectionStatusCard } from './shared';
 import {
   LLMSection,
   WhisperSection,
-  ProcessingSection,
   OutputSection,
   AppSection,
   PromptSection,
@@ -17,8 +16,7 @@ import UserManagementTab from './tabs/UserManagementTab';
 const TABS: { id: ConfigTabId; label: string; adminOnly?: boolean }[] = [
   { id: 'whisper', label: 'Whisper' },
   { id: 'llm', label: 'LLM' },
-  { id: 'processing', label: 'Processing' },
-  { id: 'output', label: 'Output' },
+  { id: 'output', label: 'Processing & Output' },
   { id: 'app', label: 'App' },
   { id: 'prompts', label: 'Prompts' },
   { id: 'users', label: 'User Management', adminOnly: true },
@@ -133,7 +131,6 @@ export default function ConfigTabs() {
         <div className="mt-4">
           {activeTab === 'llm' && <LLMSection />}
           {activeTab === 'whisper' && <WhisperSection />}
-          {activeTab === 'processing' && <ProcessingSection />}
           {activeTab === 'output' && <OutputSection />}
           {activeTab === 'app' && <AppSection />}
           {activeTab === 'prompts' && <PromptSection />}
