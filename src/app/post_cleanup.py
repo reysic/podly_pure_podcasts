@@ -207,6 +207,63 @@ def scheduled_cleanup_processed_posts() -> None:
         reset_session(db.session, logger, "scheduled_cleanup_processed_posts", exc)
 
 
+def get_storage_bytes_used() -> int:
+    """Return total bytes currently used by processed and unprocessed audio files.
+
+    Iterates over all posts with audio paths and sums the sizes of files that
+    exist on disk.
+    """
+    posts = Post.query.filter(
+        (Post.processed_audio_path.isnot(None))
+        | (Post.unprocessed_audio_path.isnot(None))
+    ).all()
+    total = 0
+    for post in posts:
+        for path_str in [post.processed_audio_path, post.unprocessed_audio_path]:
+            if not path_str:
+                continue
+            try:
+                file_path = Path(path_str)
+                if file_path.exists():
+                    total += file_path.stat().st_size
+            except Exception:  # pylint: disable=broad-except
+                pass
+    return total
+
+
+def get_reclaimable_storage_bytes(retention_days: int | None) -> int:
+    """Return bytes that would be freed by running the cleanup job now.
+
+    Uses the same eligibility logic as :func:`cleanup_processed_posts` to
+    identify candidate posts and sums the sizes of their audio files.
+    """
+    posts_query, cutoff = _build_cleanup_query(retention_days)
+    if posts_query is None or cutoff is None:
+        return 0
+
+    posts = posts_query.all()
+    post_guids = [post.guid for post in posts]
+    latest_completed = _load_latest_completed_map(post_guids)
+    most_recent_per_feed = _get_most_recent_posts_per_feed(post_guids)
+
+    total = 0
+    for post in posts:
+        if post.guid in most_recent_per_feed:
+            continue
+        if not _processed_timestamp_before_cutoff(post, cutoff, latest_completed):
+            continue
+        for path_str in [post.processed_audio_path, post.unprocessed_audio_path]:
+            if not path_str:
+                continue
+            try:
+                file_path = Path(path_str)
+                if file_path.exists():
+                    total += file_path.stat().st_size
+            except Exception:  # pylint: disable=broad-except
+                pass
+    return total
+
+
 def _remove_associated_files(post: Post) -> None:
     """Delete processed and unprocessed audio files for a post."""
     for path_str in [post.unprocessed_audio_path, post.processed_audio_path]:

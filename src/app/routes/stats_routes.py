@@ -15,6 +15,9 @@ from app.models import (
     ProcessingJob,
     TranscriptSegment,
 )
+from app.post_cleanup import get_reclaimable_storage_bytes, get_storage_bytes_used
+from app.runtime_config import config as runtime_config
+from shared import defaults as DEFAULTS
 
 logger = logging.getLogger("global_logger")
 
@@ -114,6 +117,15 @@ def api_get_stats() -> ResponseReturnValue:
         else None
     )
 
+    # ---- Storage ----
+    retention_days: int | None = getattr(
+        runtime_config,
+        "post_cleanup_retention_days",
+        DEFAULTS.APP_POST_CLEANUP_RETENTION_DAYS,
+    )
+    storage_bytes_used: int = get_storage_bytes_used()
+    storage_bytes_reclaimable: int = get_reclaimable_storage_bytes(retention_days)
+
     return flask.jsonify(
         {
             "feeds": {
@@ -143,6 +155,10 @@ def api_get_stats() -> ResponseReturnValue:
                 "total": total_jobs,
                 "by_status": jobs_by_status,
                 "success_rate_percent": success_rate,
+            },
+            "storage": {
+                "bytes_used": storage_bytes_used,
+                "bytes_reclaimable": storage_bytes_reclaimable,
             },
         }
     )

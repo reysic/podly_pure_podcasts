@@ -636,6 +636,10 @@ export interface StatsResponse {
     by_status: Record<string, number>;
     success_rate_percent: number | null;
   };
+  storage: {
+    bytes_used: number;
+    bytes_reclaimable: number;
+  };
 }
 
 export const statsApi = {
