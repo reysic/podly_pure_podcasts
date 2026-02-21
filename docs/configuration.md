@@ -85,7 +85,7 @@ After initial ad classification, Podly can make additional LLM calls to refine t
 | Variable | Description | Default |
 |---|---|---|
 | `BACKGROUND_UPDATE_INTERVAL_MINUTE` | How often (minutes) Podly polls feeds for new episodes. | `30` |
-| `POST_CLEANUP_RETENTION_DAYS` | How many days to keep processed audio files. `0` disables cleanup. | `5` |
+| `POST_CLEANUP_RETENTION_DAYS` | How many days to keep processed audio files. `0` disables cleanup. The stats page shows current storage in-use and how many bytes are reclaimable based on this setting. | `5` |
 | `AUTOPROCESS_ON_DOWNLOAD` | Automatically start processing when an episode is first downloaded. | `false` |
 | `DEVELOPER_MODE` | Enable extra debug logging and development tools. | `false` |
 
