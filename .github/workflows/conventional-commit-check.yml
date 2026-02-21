@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Ensure at least one Conventional Commit
+      - name: Ensure all commits follow Conventional Commits format
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -30,11 +30,22 @@ jobs:
             exit 1
           fi
 
-          if echo "$subjects" | grep -Eq '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([^)]+\))?(!)?: .+'; then
-            echo "Conventional Commit found."
-          else
-            echo "No Conventional Commit found in this PR."
-            echo "Add at least one commit like: feat: ..., fix(scope): ..., chore: ..."
+          failed=0
+          while IFS= read -r subject; do
+            if echo "$subject" | grep -Eq '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([^)]+\))?(!)?: .+'; then
+              echo "✔ $subject"
+            else
+              echo "✘ Not a Conventional Commit: $subject"
+              failed=1
+            fi
+          done <<< "$subjects"
+
+          if [ "$failed" -eq 1 ]; then
+            echo ""
+            echo "All commits must follow Conventional Commits format so that rebase-and-merge"
+            echo "lands only releasable commits on main."
+            echo "Each commit must look like: feat: ..., fix(scope): ..., chore: ..."
             echo "Please refer to https://www.conventionalcommits.org/en/v1.0.0/#summary for more details."
             exit 1
           fi
+          echo "All commits follow Conventional Commits format."
