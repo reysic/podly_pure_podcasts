@@ -1,3 +1,10 @@
+# [2.12.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.11.0...v2.12.0) (2026-02-21)
+
+
+### Features
+
+* config field hints render as hover tooltip on ⓘ icon instead of always-visible text ([f23bea3](https://github.com/reysic/podly_pure_podcasts/commit/f23bea3908e321c970751c4c28773f851ddc2c00))
+
 # [2.11.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.10.0...v2.11.0) (2026-02-21)
 
 
