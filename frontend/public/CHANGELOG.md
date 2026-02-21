@@ -1,3 +1,10 @@
+## [2.12.1](https://github.com/reysic/podly_pure_podcasts/compare/v2.12.0...v2.12.1) (2026-02-21)
+
+
+### Bug Fixes
+
+* config UI dark mode and mobile responsiveness - .input class in CSS, tooltip touch support, EnvVarHint dark mode ([e957de8](https://github.com/reysic/podly_pure_podcasts/commit/e957de80f432ad0fc9a60fe78a638947a13d6f2e))
+
 # [2.12.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.11.0...v2.12.0) (2026-02-21)
 
 
