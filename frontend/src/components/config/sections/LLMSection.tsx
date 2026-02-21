@@ -423,8 +423,6 @@ export default function LLMSection() {
           <option key={m} value={m} />
         ))}
       </datalist>
-
-      <style>{`.input{width:100%;padding:0.5rem;border:1px solid #e5e7eb;border-radius:0.375rem;font-size:0.875rem}`}</style>
     </div>
   );
 }

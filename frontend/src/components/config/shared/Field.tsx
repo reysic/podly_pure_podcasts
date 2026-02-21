@@ -23,7 +23,7 @@ export default function Field({
         <span className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
           {label}
           {hint ? (
-            <span className="relative group/hint cursor-default" onClick={(e) => e.preventDefault()}>
+            <span className="relative group/hint cursor-default outline-none" tabIndex={0} onClick={(e) => e.preventDefault()}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors shrink-0"
@@ -37,9 +37,9 @@ export default function Field({
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 rounded-md bg-gray-900 dark:bg-gray-700 px-3 py-2 text-xs font-normal text-white shadow-lg opacity-0 group-hover/hint:opacity-100 transition-opacity z-50 text-left leading-relaxed whitespace-normal">
+              <span className="pointer-events-none absolute bottom-full left-0 sm:left-1/2 sm:-translate-x-1/2 mb-2 w-52 sm:w-64 rounded-md bg-gray-900 dark:bg-gray-700 px-3 py-2 text-xs font-normal text-white shadow-lg opacity-0 group-hover/hint:opacity-100 group-focus-within/hint:opacity-100 transition-opacity z-50 text-left leading-relaxed whitespace-normal">
                 {hint}
-                <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700" />
+                <span className="absolute top-full left-3 sm:left-1/2 sm:-translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700" />
               </span>
             </span>
           ) : null}

@@ -10,6 +10,6 @@ export default function EnvVarHint({ meta }: EnvVarHintProps) {
   }
 
   return (
-    <code className="mt-1 block text-xs text-gray-500 font-mono">{meta.env_var}</code>
+    <code className="mt-1 block text-xs text-gray-500 dark:text-gray-400 font-mono">{meta.env_var}</code>
   );
 }
