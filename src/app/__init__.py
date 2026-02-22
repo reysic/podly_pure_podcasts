@@ -30,6 +30,7 @@ from app.processor import (
 from app.routes import register_routes
 from app.runtime_config import config, is_test
 from app.writer.client import writer_client as writer_client
+from shared import defaults as DEFAULTS
 from shared.processing_paths import get_in_root, get_srv_root
 
 setup_logger("global_logger", "src/instance/logs/app.log")
@@ -446,3 +447,19 @@ def _start_scheduler_and_jobs(app: Flask) -> None:
         else int(config.background_update_interval_minute)
     )
     schedule_cleanup_job(getattr(config, "post_cleanup_retention_days", None))
+
+    from app.background import (  # pylint: disable=import-outside-toplevel
+        schedule_db_backup_job,
+    )
+
+    schedule_db_backup_job(
+        hours=int(
+            getattr(
+                config,
+                "db_backup_interval_hours",
+                DEFAULTS.APP_DB_BACKUP_INTERVAL_HOURS,
+            )
+            or DEFAULTS.APP_DB_BACKUP_INTERVAL_HOURS
+        ),
+        enabled=bool(getattr(config, "db_backup_enabled", False)),
+    )

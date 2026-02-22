@@ -50,4 +50,7 @@ else:
         user_limit_total=DEFAULTS.APP_USER_LIMIT_TOTAL,
         developer_mode=os.environ.get("DEVELOPER_MODE", "false").lower() == "true",
         autoprocess_on_download=DEFAULTS.APP_AUTOPROCESS_ON_DOWNLOAD,
+        db_backup_enabled=DEFAULTS.APP_DB_BACKUP_ENABLED,
+        db_backup_interval_hours=DEFAULTS.APP_DB_BACKUP_INTERVAL_HOURS,
+        db_backup_retention_count=DEFAULTS.APP_DB_BACKUP_RETENTION_COUNT,
     )

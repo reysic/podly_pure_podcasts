@@ -196,8 +196,8 @@ export default function LLMSection() {
                         type="button"
                         onClick={() => handleSelectModel(m.id)}
                         className={`w-full flex items-center justify-between px-3 py-2 text-left text-xs transition-colors ${isSelected
-                            ? 'bg-blue-50 dark:bg-blue-900/20'
-                            : 'bg-white dark:bg-gray-800/60 hover:bg-gray-50 dark:hover:bg-gray-700/40'
+                          ? 'bg-blue-50 dark:bg-blue-900/20'
+                          : 'bg-white dark:bg-gray-800/60 hover:bg-gray-50 dark:hover:bg-gray-700/40'
                           }`}
                       >
                         <span className={`font-medium ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-800 dark:text-gray-200'}`}>

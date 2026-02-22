@@ -91,6 +91,20 @@ After initial ad classification, Podly can make additional LLM calls to refine t
 
 ---
 
+## Database Backup
+
+These settings can also be configured via the UI under **Settings → App → Database Backup**.
+
+| Variable | Description | Default |
+|---|---|---|
+| `APP_DB_BACKUP_ENABLED` | Enable scheduled automatic database backups. | `false` |
+| `APP_DB_BACKUP_INTERVAL_HOURS` | How often (in hours) to create a scheduled backup. Only active when `APP_DB_BACKUP_ENABLED` is `true`. | `24` |
+| `APP_DB_BACKUP_RETENTION_COUNT` | Number of most-recent backup files to keep. Older backups are automatically deleted. | `7` |
+
+Backups are stored as timestamped SQLite files in `{instance_dir}/backups/` (e.g. `sqlite3_20250115_120000.db`). An on-demand backup can also be triggered at any time via the **Backup Now** button in the UI or by `POST /api/backup/run`.
+
+---
+
 ## Quick-Start `.env` Example
 
 ```env

@@ -144,6 +144,10 @@ export interface AppConfigUI {
   enable_public_landing_page: boolean;
   user_limit_total: number | null;
   autoprocess_on_download: boolean;
+  db_backup_enabled: boolean;
+  db_backup_interval_hours: number;
+  db_backup_retention_count: number;
+  db_backup_last_success_at?: string | null;
 }
 
 export interface CombinedConfig {

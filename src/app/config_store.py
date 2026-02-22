@@ -138,6 +138,9 @@ def ensure_defaults() -> None:
             "enable_public_landing_page": DEFAULTS.APP_ENABLE_PUBLIC_LANDING_PAGE,
             "user_limit_total": DEFAULTS.APP_USER_LIMIT_TOTAL,
             "autoprocess_on_download": DEFAULTS.APP_AUTOPROCESS_ON_DOWNLOAD,
+            "db_backup_enabled": DEFAULTS.APP_DB_BACKUP_ENABLED,
+            "db_backup_interval_hours": DEFAULTS.APP_DB_BACKUP_INTERVAL_HOURS,
+            "db_backup_retention_count": DEFAULTS.APP_DB_BACKUP_RETENTION_COUNT,
         },
     )
 
@@ -315,6 +318,14 @@ def read_combined() -> dict[str, Any]:
             "enable_public_landing_page": app_s.enable_public_landing_page,
             "user_limit_total": app_s.user_limit_total,
             "autoprocess_on_download": app_s.autoprocess_on_download,
+            "db_backup_enabled": app_s.db_backup_enabled,
+            "db_backup_interval_hours": app_s.db_backup_interval_hours,
+            "db_backup_last_success_at": (
+                app_s.db_backup_last_success_at.isoformat()
+                if app_s.db_backup_last_success_at
+                else None
+            ),
+            "db_backup_retention_count": app_s.db_backup_retention_count,
         },
     }
 
@@ -425,11 +436,15 @@ def _update_section_output(data: dict[str, Any]) -> None:
     )
 
 
-def _update_section_app(data: dict[str, Any]) -> tuple[int | None, int | None]:
+def _update_section_app(
+    data: dict[str, Any],
+) -> tuple[int | None, int | None, bool | None, int | None]:
     row = AppSettings.query.get(1)
     assert row is not None
     old_interval: int | None = row.background_update_interval_minute
     old_retention: int | None = row.post_cleanup_retention_days
+    old_backup_enabled: bool | None = row.db_backup_enabled
+    old_backup_hours: int | None = row.db_backup_interval_hours
     for key in [
         "background_update_interval_minute",
         "automatically_whitelist_new_episodes",
@@ -438,6 +453,9 @@ def _update_section_app(data: dict[str, Any]) -> tuple[int | None, int | None]:
         "enable_public_landing_page",
         "user_limit_total",
         "autoprocess_on_download",
+        "db_backup_enabled",
+        "db_backup_interval_hours",
+        "db_backup_retention_count",
     ]:
         if key in data:
             setattr(row, key, data[key])
@@ -447,7 +465,7 @@ def _update_section_app(data: dict[str, Any]) -> tuple[int | None, int | None]:
         context="update_app_settings",
         logger_obj=logger,
     )
-    return old_interval, old_retention
+    return old_interval, old_retention, old_backup_enabled, old_backup_hours
 
 
 def _maybe_reschedule_refresh_job(
@@ -495,6 +513,26 @@ def _maybe_disable_cleanup_job(
                 pass
 
 
+def _maybe_reschedule_db_backup_job(
+    old_enabled: bool | None,
+    old_hours: int | None,
+    new_enabled: bool | None,
+    new_hours: int | None,
+) -> None:
+    """Reschedule or remove the DB backup APScheduler job when settings change."""
+    if old_enabled == new_enabled and old_hours == new_hours:
+        return
+
+    from app.background import (  # pylint: disable=import-outside-toplevel
+        schedule_db_backup_job,
+    )
+
+    schedule_db_backup_job(
+        hours=new_hours if new_hours is not None else 0,
+        enabled=bool(new_enabled),
+    )
+
+
 def update_combined(payload: dict[str, Any]) -> dict[str, Any]:
     if "llm" in payload:
         _update_section_llm(payload["llm"] or {})
@@ -505,7 +543,9 @@ def update_combined(payload: dict[str, Any]) -> dict[str, Any]:
     if "output" in payload:
         _update_section_output(payload["output"] or {})
     if "app" in payload:
-        old_interval, old_retention = _update_section_app(payload["app"] or {})
+        old_interval, old_retention, old_backup_enabled, old_backup_hours = (
+            _update_section_app(payload["app"] or {})
+        )
 
         app_s = AppSettings.query.get(1)
         if app_s:
@@ -513,6 +553,12 @@ def update_combined(payload: dict[str, Any]) -> dict[str, Any]:
                 old_interval, app_s.background_update_interval_minute
             )
             _maybe_disable_cleanup_job(old_retention, app_s.post_cleanup_retention_days)
+            _maybe_reschedule_db_backup_job(
+                old_backup_enabled,
+                old_backup_hours,
+                app_s.db_backup_enabled,
+                app_s.db_backup_interval_hours,
+            )
 
     return read_combined()
 
@@ -619,6 +665,26 @@ def to_pydantic_config() -> PydanticConfig:
                 "autoprocess_on_download",
                 DEFAULTS.APP_AUTOPROCESS_ON_DOWNLOAD,
             )
+        ),
+        db_backup_enabled=bool(
+            data["app"].get(
+                "db_backup_enabled",
+                DEFAULTS.APP_DB_BACKUP_ENABLED,
+            )
+        ),
+        db_backup_interval_hours=int(
+            data["app"].get(
+                "db_backup_interval_hours",
+                DEFAULTS.APP_DB_BACKUP_INTERVAL_HOURS,
+            )
+            or DEFAULTS.APP_DB_BACKUP_INTERVAL_HOURS
+        ),
+        db_backup_retention_count=int(
+            data["app"].get(
+                "db_backup_retention_count",
+                DEFAULTS.APP_DB_BACKUP_RETENTION_COUNT,
+            )
+            or DEFAULTS.APP_DB_BACKUP_RETENTION_COUNT
         ),
     )
 

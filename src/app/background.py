@@ -42,3 +42,28 @@ def schedule_cleanup_job(retention_days: int | None) -> None:
         next_run_time=datetime.utcnow() + timedelta(minutes=15),
         replace_existing=True,
     )
+
+
+def schedule_db_backup_job(hours: int = 24, enabled: bool = False) -> None:
+    """Ensure the periodic DB backup job is scheduled or disabled as needed."""
+    from app.db_backup import (
+        scheduled_db_backup,  # pylint: disable=import-outside-toplevel
+    )
+
+    job_id = "db_backup"
+    if not enabled or hours <= 0:
+        try:
+            scheduler.remove_job(job_id)
+        except Exception:
+            # Job may not be scheduled; ignore.
+            pass
+        return
+
+    scheduler.add_job(
+        id=job_id,
+        func=scheduled_db_backup,
+        trigger="interval",
+        hours=hours,
+        next_run_time=datetime.utcnow() + timedelta(minutes=5),
+        replace_existing=True,
+    )

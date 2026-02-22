@@ -132,6 +132,9 @@ class Config(BaseModel):
     enable_public_landing_page: bool = DEFAULTS.APP_ENABLE_PUBLIC_LANDING_PAGE
     user_limit_total: int | None = DEFAULTS.APP_USER_LIMIT_TOTAL
     autoprocess_on_download: bool = DEFAULTS.APP_AUTOPROCESS_ON_DOWNLOAD
+    db_backup_enabled: bool = DEFAULTS.APP_DB_BACKUP_ENABLED
+    db_backup_interval_hours: int = DEFAULTS.APP_DB_BACKUP_INTERVAL_HOURS
+    db_backup_retention_count: int = DEFAULTS.APP_DB_BACKUP_RETENTION_COUNT
 
     @property
     def is_copilot_configured(self) -> bool:

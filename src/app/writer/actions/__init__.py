@@ -56,6 +56,7 @@ from .processor import (
     upsert_whisper_model_call_action as upsert_whisper_model_call_action,
 )
 from .system import ensure_active_run_action as ensure_active_run_action
+from .system import record_db_backup_action as record_db_backup_action
 from .system import update_combined_config_action as update_combined_config_action
 from .users import create_user_action as create_user_action
 from .users import delete_user_action as delete_user_action

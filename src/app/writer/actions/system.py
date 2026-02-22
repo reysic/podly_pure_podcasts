@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import Any
 
 from app.extensions import db
@@ -55,3 +56,39 @@ def update_combined_config_action(params: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(updated, dict):
         return {"updated": True}
     return updated
+
+
+def record_db_backup_action(params: dict[str, Any]) -> dict[str, Any]:
+    """Record a successful DB backup timestamp in AppSettings."""
+    from app.db_commit import safe_commit  # pylint: disable=import-outside-toplevel
+    from app.models import AppSettings  # pylint: disable=import-outside-toplevel
+
+    success_at_str = params.get("success_at")
+    if not success_at_str:
+        logger.warning("[WRITER] record_db_backup_action: missing success_at param")
+        return {"recorded": False}
+
+    row = AppSettings.query.get(1)
+    if row is None:
+        logger.warning("[WRITER] record_db_backup_action: no AppSettings row found")
+        return {"recorded": False}
+
+    try:
+        row.db_backup_last_success_at = datetime.fromisoformat(success_at_str)
+    except ValueError:
+        logger.warning(
+            "[WRITER] record_db_backup_action: invalid success_at value: %s",
+            success_at_str,
+        )
+        return {"recorded": False}
+
+    safe_commit(
+        db.session,
+        must_succeed=True,
+        context="record_db_backup",
+        logger_obj=logger,
+    )
+    logger.info(
+        "[WRITER] record_db_backup_action: recorded success_at=%s", success_at_str
+    )
+    return {"recorded": True}

@@ -103,6 +103,7 @@ class CommandExecutor:
         self.register_action(
             "update_combined_config", writer_actions.update_combined_config_action
         )
+        self.register_action("record_db_backup", writer_actions.record_db_backup_action)
         self.register_action(
             "create_feed_access_token", writer_actions.create_feed_access_token_action
         )

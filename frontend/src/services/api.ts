@@ -555,6 +555,27 @@ export const configApi = {
   },
 };
 
+export interface BackupStatus {
+  backup_dir: string;
+  backup_count: number;
+  backup_files: string[];
+  last_success_at: string | null;
+  enabled: boolean;
+  interval_hours: number;
+  retention_count: number;
+}
+
+export const backupApi = {
+  getStatus: async (): Promise<BackupStatus> => {
+    const response = await api.get('/api/backup/status');
+    return response.data;
+  },
+  runBackup: async (): Promise<{ ok: boolean; path?: string | null; error?: string | null }> => {
+    const response = await api.post('/api/backup/run');
+    return response.data;
+  },
+};
+
 export const billingApi = {
   getSummary: async (): Promise<BillingSummary> => {
     const response = await api.get('/api/billing/summary');

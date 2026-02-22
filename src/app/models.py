@@ -496,6 +496,22 @@ class AppSettings(db.Model):  # type: ignore[name-defined, misc]
         nullable=False,
         default=DEFAULTS.APP_AUTOPROCESS_ON_DOWNLOAD,
     )
+    db_backup_enabled = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=DEFAULTS.APP_DB_BACKUP_ENABLED,
+    )
+    db_backup_interval_hours = db.Column(
+        db.Integer,
+        nullable=False,
+        default=DEFAULTS.APP_DB_BACKUP_INTERVAL_HOURS,
+    )
+    db_backup_last_success_at = db.Column(db.DateTime, nullable=True)
+    db_backup_retention_count = db.Column(
+        db.Integer,
+        nullable=False,
+        default=DEFAULTS.APP_DB_BACKUP_RETENTION_COUNT,
+    )
 
     # Hash of the environment variables used to seed configuration.
     # Used to detect changes in environment variables between restarts.

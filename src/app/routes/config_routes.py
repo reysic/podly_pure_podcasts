@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import datetime
 from typing import Any
 
 import flask
@@ -191,6 +192,21 @@ def _hydrate_app_config(data: dict[str, Any]) -> None:
         runtime_config,
         "autoprocess_on_download",
         app_cfg.get("autoprocess_on_download"),
+    )
+    app_cfg["db_backup_enabled"] = getattr(
+        runtime_config,
+        "db_backup_enabled",
+        app_cfg.get("db_backup_enabled"),
+    )
+    app_cfg["db_backup_interval_hours"] = getattr(
+        runtime_config,
+        "db_backup_interval_hours",
+        app_cfg.get("db_backup_interval_hours"),
+    )
+    app_cfg["db_backup_retention_count"] = getattr(
+        runtime_config,
+        "db_backup_retention_count",
+        app_cfg.get("db_backup_retention_count"),
     )
 
 
@@ -746,3 +762,65 @@ def api_update_prompts() -> flask.Response:
         return flask.make_response(
             jsonify({"error": f"Failed to update prompts: {e}"}), 500
         )
+
+
+@config_bp.route("/api/backup/status", methods=["GET"])
+def api_backup_status() -> flask.Response:
+    """Return metadata about existing DB backups and current backup settings."""
+    _, err = require_admin()
+    if err is not None:
+        return err  # type: ignore[return-value]
+
+    from app.db_backup import (
+        get_backup_status,  # pylint: disable=import-outside-toplevel
+    )
+    from app.models import AppSettings  # pylint: disable=import-outside-toplevel
+
+    status = get_backup_status()
+    app_s = AppSettings.query.get(1)
+    status["last_success_at"] = (
+        app_s.db_backup_last_success_at.isoformat()
+        if app_s and app_s.db_backup_last_success_at
+        else None
+    )
+    status["enabled"] = bool(getattr(runtime_config, "db_backup_enabled", False))
+    status["interval_hours"] = int(
+        getattr(runtime_config, "db_backup_interval_hours", 24) or 24
+    )
+    status["retention_count"] = int(
+        getattr(runtime_config, "db_backup_retention_count", 7) or 7
+    )
+    return flask.jsonify(status)
+
+
+@config_bp.route("/api/backup/run", methods=["POST"])
+def api_backup_run() -> flask.Response:
+    """Trigger an on-demand DB backup immediately."""
+    _, err = require_admin()
+    if err is not None:
+        return err  # type: ignore[return-value]
+
+    from app.db_backup import perform_backup  # pylint: disable=import-outside-toplevel
+    from shared import defaults as DEFAULTS  # pylint: disable=import-outside-toplevel
+
+    retention = int(
+        getattr(
+            runtime_config,
+            "db_backup_retention_count",
+            DEFAULTS.APP_DB_BACKUP_RETENTION_COUNT,
+        )
+        or DEFAULTS.APP_DB_BACKUP_RETENTION_COUNT
+    )
+    result = perform_backup(retention_count=retention)
+
+    if result.get("ok"):
+        writer_client.action(
+            "record_db_backup",
+            {"success_at": datetime.utcnow().isoformat()},
+            wait=True,
+        )
+        status_code = 200
+    else:
+        status_code = 500
+
+    return flask.make_response(flask.jsonify(result), status_code)
