@@ -1,3 +1,10 @@
+# [2.13.0](https://github.com/reysic/podly_pure_podcasts/compare/v2.12.1...v2.13.0) (2026-02-22)
+
+
+### Features
+
+* configurable automated DB backup with on-demand trigger and UI ([754c0dc](https://github.com/reysic/podly_pure_podcasts/commit/754c0dc6a3d45536219b6bafeff1c6aafe431ea6))
+
 ## [2.12.1](https://github.com/reysic/podly_pure_podcasts/compare/v2.12.0...v2.12.1) (2026-02-21)
 
 
